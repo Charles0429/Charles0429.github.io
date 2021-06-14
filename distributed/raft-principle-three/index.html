@@ -1,0 +1,713 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.lug.ustc.edu.cn/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="分布式,Raft," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Charles的技术博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="Introduction本文收录在paper项目中，papers项目旨在学习和总结分布式系统相关的论文；同时本文也是DSTORE项目的必备知识，DSTORE的目标是自己动手实现一个分布式KV存储引擎。 本文为raft系列文章第三篇，本系列其他文章为  raft原理（一）：选举和日志复制 raft原理（二）：安全性和集群成员变更 golang实现raft（一）：选举和日志同步 golang实现raf">
+<meta property="og:type" content="article">
+<meta property="og:title" content="raft原理（三）：日志合并和客户端交互">
+<meta property="og:url" content="http://yoursite.com/distributed/raft-principle-three/index.html">
+<meta property="og:site_name" content="Charles的技术博客">
+<meta property="og:description" content="Introduction本文收录在paper项目中，papers项目旨在学习和总结分布式系统相关的论文；同时本文也是DSTORE项目的必备知识，DSTORE的目标是自己动手实现一个分布式KV存储引擎。 本文为raft系列文章第三篇，本系列其他文章为  raft原理（一）：选举和日志复制 raft原理（二）：安全性和集群成员变更 golang实现raft（一）：选举和日志同步 golang实现raf">
+<meta property="og:locale">
+<meta property="og:image" content="http://oserror.com/images/raft_log_compaction.png">
+<meta property="og:image" content="http://oserror.com/images/raft_performance.png">
+<meta property="og:image" content="http://oserror.com/images/qcode_wechat.jpg">
+<meta property="article:published_time" content="2016-10-09T02:05:28.000Z">
+<meta property="article:modified_time" content="2021-06-14T13:00:05.529Z">
+<meta property="article:author" content="Charles0429">
+<meta property="article:tag" content="分布式">
+<meta property="article:tag" content="Raft">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://oserror.com/images/raft_log_compaction.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 3109763,
+      author: 'Charles0429'
+    }
+  };
+</script>
+
+  <title> raft原理（三）：日志合并和客户端交互 | Charles的技术博客 </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Charles的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                raft原理（三）：日志合并和客户端交互
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-10-09T10:05:28+08:00" content="2016-10-09">
+              2016-10-09
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/distributed/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>本文收录在<a target="_blank" rel="noopener" href="https://github.com/Charles0429/papers">paper</a>项目中，papers项目旨在学习和总结分布式系统相关的论文；同时本文也是<a target="_blank" rel="noopener" href="https://github.com/Charles0429/dstore">DSTORE</a>项目的必备知识，DSTORE的目标是自己动手实现一个分布式KV存储引擎。</p>
+<p>本文为raft系列文章第三篇，本系列其他文章为</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="http://oserror.com/distributed/raft-principle-one/">raft原理（一）：选举和日志复制</a></li>
+<li><a target="_blank" rel="noopener" href="http://oserror.com/distributed/raft-principle-two/">raft原理（二）：安全性和集群成员变更</a></li>
+<li>golang实现raft（一）：选举和日志同步</li>
+<li>golang实现raft（二）：集群成员变更</li>
+</ul>
+<p>本文的组织结构如下</p>
+<ul>
+<li>Log compaction</li>
+<li>Client interaction</li>
+<li>Evaluation</li>
+</ul>
+<h1 id="Log-compaction"><a href="#Log-compaction" class="headerlink" title="Log compaction"></a>Log compaction</h1><p>Raft的日志会随着处理客户端请求数量的增多而不断增大，在实际系统中，日志不可能会无限地增长，原因如下：</p>
+<ul>
+<li>占用的存储空间随着日志增多而增加</li>
+<li>日志越多，server当掉重启时需要回放的时间就越长</li>
+</ul>
+<p>因此，需要定期地清理日志，Raft采用最简单的快照方法。对系统当前做快照时，会把当前状态持久化到存储中，然后到快照点的日志项都可以被删除。</p>
+<p><img src="http://oserror.com/images/raft_log_compaction.png" alt="raft log compaction"></p>
+<p>Raft算法中每个server单独地做快照，即把当前状态机的状态写入到存储中（状态机中的状态都是已提交的log entry回放出来的）。除了状态机的状态外，Raft快照中还需要一些元数据信息，包括如下：</p>
+<ul>
+<li>快照中包含的最后一个log entry的index和term，记录这些信息的目的是为了使得<code>AppendEntries</code>RPC的一致性检查能通过，因为，在复制紧跟着快照后的log entry时，<code>AppendEntries</code> RPC带上需要复制的log entry前一个log entry的(index, iterm)，即快照的最后一个log entry的(index，term)，因此，快照中需要记录最后一个log entry的(index，term)</li>
+<li>为了支持集群成员变更，快照中保存的元数据还会存储集群最新的配置信息。</li>
+</ul>
+<p>当server完成快照后，可以删除快照最后一个log entry及其之前所有的log entry，以及之前的快照。</p>
+<p>虽然每个server是独立地做快照的，但是也有可能存在需要leader向follower发送整个快照的情况，例如，一个follower的日志处于leader的最近一次快照之前，恰好leader做完快照之后把其快照中的log entry都删除了，这时，leader就无法通过发送log entry来同步了，只能通过发送完整快照。</p>
+<p>leader通过<code>InstallSnapshot</code> RPC来完成发送快照的功能，follower收到此RPC后，根据不同情况会有不同的处理：</p>
+<p><strong>当follower中缺失快照中的日志时</strong></p>
+<ul>
+<li>follower会删除掉其上所有日志，并清空状态机</li>
+</ul>
+<p><strong>当follower中拥有快照中所有的日志时</strong></p>
+<ul>
+<li>follower会删掉快照所覆盖的log entry，但快照后所有日志都保留。备注：这里论文中没有提是否还是从leader接受快照，个人觉得follower可以自己做快照，并拒绝掉leader发快照的RPC请求</li>
+</ul>
+<p>对于Raft快照，关于性能需要考虑的点有：</p>
+<ul>
+<li>server何时做快照，太频繁地做快照会浪费磁盘I/O；太不频繁会导致server当掉后回放时间增加，可能的方案为当日志大小到一定空间时，开始快照。备注：如果所有server做快照的阈值空间都是一样的，那么快照点也不一定相同，因为，当server检测到日志超过大小，到其真正开始做快照中间还存在时间间隔，每个server的间隔可能不一样</li>
+<li>写快照花费的时间很长，不能让其影响正常的操作。可以采用copy-on-write操作，例如linux的fork</li>
+</ul>
+<h1 id="Client-Interaction"><a href="#Client-Interaction" class="headerlink" title="Client Interaction"></a>Client Interaction</h1><p>Raft的client会把所有的请求发到leader上执行，在client刚启动时，会随机选择集群中的一个server</p>
+<ul>
+<li>如果选择的server是leader，那么client会把请求发到该server上</li>
+<li>如果选择的server不是leader，该server会把leader的地址告诉给client，后续client会把请求发给该leader</li>
+<li>如果此时没有leader，那么client会timeout，client会重试其他server，直到找到leader</li>
+</ul>
+<p>Raft的目标使得client是linerizable的，即每个操作几乎是瞬间的，在其调用到返回结果的某个时间点，执行其执行一次。由于需要client的请求正好执行一次，这就需要client的配合，当leader挂掉之后，client需要重试其请求，因为有可能leader挂掉之前请求还没有成功执行。但是，也有可能leader挂掉之前，client的请求已经执行完成了，这时候就需要新leader能识别出该请求已经执行过，并返回之前执行的结果。可以通过为client的每个请求分配唯一的编号，当leader检测到请求没有执行过时，则执行它；如果执行过，则返回之前的结果。</p>
+<p>只读的请求可以不写log就能执行，但是它有可能返回过期的数据，有如下场景：</p>
+<ul>
+<li>老的leader挂掉了，但它自身还认为自己是leader，于是client发读请求到该server时，可能获得的是老数据</li>
+</ul>
+<p>Raft通过如下方法避免上述问题：</p>
+<ul>
+<li>leader需要自己知道哪些log entry是已经提交的，在正常情况下，leader一直是有已提交过的log entry的，但是，在leader刚当选的时候，需要当场获取，可以通过提交一个空的log entry来获取已提交过的log entry（备注：个人理解是为了避免commiting from previous leader那种情况）</li>
+<li>leader在执行只读请求时，需要确定自己是否还是leader，通过和大多数的server发送heartbeat消息，来确定自己是leader，然后再决定是否执行该请求</li>
+</ul>
+<h1 id="Evaluation"><a href="#Evaluation" class="headerlink" title="Evaluation"></a>Evaluation</h1><p>Raft的性能测试配置如下：</p>
+<ul>
+<li>broadcast time = 15ms</li>
+<li>5 servers</li>
+<li>图中的时间范围是electionTimeout的随机范围</li>
+</ul>
+<p><img src="http://oserror.com/images/raft_performance.png" alt="performance"></p>
+<p>从上图的第一幅图，可以看出：</p>
+<ul>
+<li>5ms的随机范围，可以将downtime减少到平均283ms</li>
+<li>50ms的随机范围，可以将最坏的downtime减少到513ms</li>
+</ul>
+<p>从第二幅图，可以看出：</p>
+<ul>
+<li>可以通过减少electionTimeout来减少downtime</li>
+<li>过小的electionTimeout可能会造成leader的心跳没有发给其他server前，其他server就开始选举了，造成不必要的leader的切换，一般建议范围为[150ms-300ms]</li>
+</ul>
+<p>PS:<br>本博客更新会在第一时间推送到微信公众号，欢迎大家关注。</p>
+<p><img src="http://oserror.com/images/qcode_wechat.jpg" alt="qocde_wechat"></p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://pdos.csail.mit.edu/6.824/papers/raft-extended.pdf">In Search of an Understandable Consensus Algorithm(Extended Version)</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" rel="tag">#分布式</a>
+          
+            <a href="/tags/Raft/" rel="tag">#Raft</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/distributed/raft-principle-two/" rel="next" title="raft原理（二）：安全性和集群成员变更">
+                <i class="fa fa-chevron-left"></i> raft原理（二）：安全性和集群成员变更
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/distributed/network-framework-timers/" rel="prev" title="自己动手写分布式KV存储引擎（二）：网络框架中的定时器原理和实现">
+                自己动手写分布式KV存储引擎（二）：网络框架中的定时器原理和实现 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">36</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">33</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Charles0429" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Introduction"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Log-compaction"><span class="nav-number">2.</span> <span class="nav-text">Log compaction</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Client-Interaction"><span class="nav-number">3.</span> <span class="nav-text">Client Interaction</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Evaluation"><span class="nav-number">4.</span> <span class="nav-text">Evaluation</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">5.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Charles0429</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

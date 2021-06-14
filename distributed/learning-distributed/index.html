@@ -1,0 +1,712 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.lug.ustc.edu.cn/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="分布式," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Charles的技术博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="介绍博主近段时间准备学习分布式系统相关的东西，本文整理了学习分布式系统的思路，此文还未经过实践，可能还需要不断调整，仅供参考。 分布式系统一般分为分布式K&#x2F;V系统、分布式文件系统和分布式数据库等几个大类，在学习这几类系统的时候，需要掌握的知识或技能应该包括计算机基础知识、分布式算法和协议相关论文、分布式系统设计范型相关论文、开源的分布式系统案例以及造相关的轮子。 基础知识根据博主目前经验来看，学习">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式系统学习思路">
+<meta property="og:url" content="http://yoursite.com/distributed/learning-distributed/index.html">
+<meta property="og:site_name" content="Charles的技术博客">
+<meta property="og:description" content="介绍博主近段时间准备学习分布式系统相关的东西，本文整理了学习分布式系统的思路，此文还未经过实践，可能还需要不断调整，仅供参考。 分布式系统一般分为分布式K&#x2F;V系统、分布式文件系统和分布式数据库等几个大类，在学习这几类系统的时候，需要掌握的知识或技能应该包括计算机基础知识、分布式算法和协议相关论文、分布式系统设计范型相关论文、开源的分布式系统案例以及造相关的轮子。 基础知识根据博主目前经验来看，学习">
+<meta property="og:locale">
+<meta property="og:image" content="http://oserror.com/images/qcode_wechat.jpg">
+<meta property="article:published_time" content="2016-05-13T14:37:29.000Z">
+<meta property="article:modified_time" content="2021-06-14T13:00:05.525Z">
+<meta property="article:author" content="Charles0429">
+<meta property="article:tag" content="分布式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://oserror.com/images/qcode_wechat.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 3109763,
+      author: 'Charles0429'
+    }
+  };
+</script>
+
+  <title> 分布式系统学习思路 | Charles的技术博客 </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Charles的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                分布式系统学习思路
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-05-13T22:37:29+08:00" content="2016-05-13">
+              2016-05-13
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/distributed/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>博主近段时间准备学习分布式系统相关的东西，本文整理了学习分布式系统的思路，此文还未经过实践，可能还需要不断调整，仅供参考。</p>
+<p>分布式系统一般分为分布式K/V系统、分布式文件系统和分布式数据库等几个大类，在学习这几类系统的时候，需要掌握的知识或技能应该包括计算机基础知识、分布式算法和协议相关论文、分布式系统设计范型相关论文、开源的分布式系统案例以及造相关的轮子。</p>
+<h2 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h2><p>根据博主目前经验来看，学习分布式系统首先要掌握以下基础知识：</p>
+<ul>
+<li>  OS相关</li>
+<li>  体系结构相关</li>
+<li>  Unix系统编程</li>
+<li>  Unix网络编程</li>
+<li>  并发编程</li>
+<li>  常用数据结构和算法</li>
+</ul>
+<h2 id="论文"><a href="#论文" class="headerlink" title="论文"></a>论文</h2><p>分布式系统的论文主要分为两大方面，一方面是算法或者协议相关的论文，另一方面是系统设计相关的。</p>
+<h3 id="算法或者协议相关"><a href="#算法或者协议相关" class="headerlink" title="算法或者协议相关"></a>算法或者协议相关</h3><ul>
+<li><p>  Byzantine General</p>
+</li>
+<li><p>  paxos</p>
+</li>
+</ul>
+<p>paxos made simple 和 paxos made live</p>
+<ul>
+<li>  raft</li>
+<li>  cap base</li>
+<li>  2pc 3pc</li>
+<li>  leases</li>
+<li>  acid</li>
+<li>  time and ordering</li>
+</ul>
+<p>Time Clocks and the ordering of Events in a Distributed System</p>
+<p>Virtual Time and Global States of Distributed System</p>
+<p>Distributed Snapshots: Determining Global States of a Distributed System</p>
+<ul>
+<li>  mvcc</li>
+<li>  consensus</li>
+<li>  gossip</li>
+<li>  load balancing algorithms</li>
+</ul>
+<h3 id="系统设计范型相关"><a href="#系统设计范型相关" class="headerlink" title="系统设计范型相关"></a>系统设计范型相关</h3><ul>
+<li>  google file system</li>
+<li>  bigtable</li>
+<li>  mapreduce</li>
+<li>  chubby</li>
+<li>  spanner</li>
+<li>  dynamo</li>
+<li>  megastore</li>
+<li>  dremel</li>
+<li>  pregel</li>
+<li>  percolator</li>
+<li>  Sinfonia: A New Paradigm for Building Scalable Distributed Systems</li>
+<li>  google f1</li>
+<li>  Windows Azure Storage: A high available cloud storage service with strong consistency</li>
+<li>  facebook haystack</li>
+</ul>
+<h2 id="开源系统范例"><a href="#开源系统范例" class="headerlink" title="开源系统范例"></a>开源系统范例</h2><p>主要分为分布式K/V，分布式文件系统和分布式数据库三个方面。</p>
+<h3 id="分布式K-V系统"><a href="#分布式K-V系统" class="headerlink" title="分布式K/V系统"></a>分布式K/V系统</h3><ul>
+<li>  redis cluster</li>
+<li>  tair</li>
+</ul>
+<h3 id="分布式文件系统"><a href="#分布式文件系统" class="headerlink" title="分布式文件系统"></a>分布式文件系统</h3><ul>
+<li>  hdfs</li>
+<li>  ceph</li>
+<li>  swift</li>
+<li>  lustre</li>
+<li>  taobao filesystem</li>
+</ul>
+<h3 id="分布式数据库"><a href="#分布式数据库" class="headerlink" title="分布式数据库"></a>分布式数据库</h3><ul>
+<li>  clustrix</li>
+<li>  MemSQL</li>
+<li>  VoltDB</li>
+</ul>
+<h2 id="造轮子"><a href="#造轮子" class="headerlink" title="造轮子"></a>造轮子</h2><p>可以自己造分布式K/V系统、分布式文件系统、分布式数据库系统的轮子，简单的，可以从分布式K/V系统开始。</p>
+<h2 id="整个思路"><a href="#整个思路" class="headerlink" title="整个思路"></a>整个思路</h2><ul>
+<li>  对于基础知识部分，有盲点就补</li>
+<li>  对于论文模块，常见的分布式算法、协议论文，经典的系统范型相关论文需要精读</li>
+<li>  对于开源系统模块，在学习完论文之后，每个部分精读一个系统的代码，其他的系统了解实现原理</li>
+<li>  对于造轮子，可以尽早开始，先按照自己思路来造，后面通过读论文、读开源系统来发现自己系统的缺陷，不断完善即可</li>
+</ul>
+<p>最后，本文只是一个思路，很多东西还没有细化，需要不断完善。</p>
+<p>PS:<br>本博客更新会在第一时间推送到微信公众号，欢迎大家关注。</p>
+<p><img src="http://oserror.com/images/qcode_wechat.jpg" alt="qocde_wechat"></p>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><ul>
+<li>  <a target="_blank" rel="noopener" href="http://duanple.blog.163.com/blog/static/709717672011330101333271/">http://duanple.blog.163.com/blog/static/709717672011330101333271/</a></li>
+<li>  <a target="_blank" rel="noopener" href="https://github.com/ty4z2008/Qix/blob/master/ds.md">https://github.com/ty4z2008/Qix/blob/master/ds.md</a></li>
+<li>  <a target="_blank" rel="noopener" href="http://blog.ivanyang.me/distributedsystem/2016/03/06/whatwetalkaboutwhenwetalkaboutds">http://blog.ivanyang.me/distributedsystem/2016/03/06/whatwetalkaboutwhenwetalkaboutds</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" rel="tag">#分布式</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/backend/2014%E6%A0%A1%E6%8B%9B%E5%90%8E%E5%8F%B0%E5%BC%80%E5%8F%91-%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%BC%80%E5%8F%91-%E7%BB%8F%E9%AA%8C%E6%80%BB%E7%BB%93/" rel="next" title="2014校招后台开发(服务端开发)经验总结">
+                <i class="fa fa-chevron-left"></i> 2014校招后台开发(服务端开发)经验总结
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/language/effective-c-note/" rel="prev" title="Effective C++ 学习笔记">
+                Effective C++ 学习笔记 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">36</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">33</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Charles0429" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86"><span class="nav-number">2.</span> <span class="nav-text">基础知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BA%E6%96%87"><span class="nav-number">3.</span> <span class="nav-text">论文</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AE%97%E6%B3%95%E6%88%96%E8%80%85%E5%8D%8F%E8%AE%AE%E7%9B%B8%E5%85%B3"><span class="nav-number">3.1.</span> <span class="nav-text">算法或者协议相关</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E8%8C%83%E5%9E%8B%E7%9B%B8%E5%85%B3"><span class="nav-number">3.2.</span> <span class="nav-text">系统设计范型相关</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%80%E6%BA%90%E7%B3%BB%E7%BB%9F%E8%8C%83%E4%BE%8B"><span class="nav-number">4.</span> <span class="nav-text">开源系统范例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8FK-V%E7%B3%BB%E7%BB%9F"><span class="nav-number">4.1.</span> <span class="nav-text">分布式K&#x2F;V系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">4.2.</span> <span class="nav-text">分布式文件系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">4.3.</span> <span class="nav-text">分布式数据库</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%A0%E8%BD%AE%E5%AD%90"><span class="nav-number">5.</span> <span class="nav-text">造轮子</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B4%E4%B8%AA%E6%80%9D%E8%B7%AF"><span class="nav-number">6.</span> <span class="nav-text">整个思路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">7.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Charles0429</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

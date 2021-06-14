@@ -1,0 +1,949 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.lug.ustc.edu.cn/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="golang," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Charles的技术博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="Introduction本文为学习The go programming language的总结笔记，主要分为  Functions Methods Interfaces  FunctionsFunction DeclarationsGO函数声明的语法如下 123func name(parameter-list) (result-list) &amp;#123;	body&amp;#125;  在GO中，返回值是可">
+<meta property="og:type" content="article">
+<meta property="og:title" content="The go programming language 学习笔记二">
+<meta property="og:url" content="http://yoursite.com/language/the-go-programming-language-note-two/index.html">
+<meta property="og:site_name" content="Charles的技术博客">
+<meta property="og:description" content="Introduction本文为学习The go programming language的总结笔记，主要分为  Functions Methods Interfaces  FunctionsFunction DeclarationsGO函数声明的语法如下 123func name(parameter-list) (result-list) &amp;#123;	body&amp;#125;  在GO中，返回值是可">
+<meta property="og:locale">
+<meta property="og:image" content="http://oserror.com/images/interface_values.png">
+<meta property="og:image" content="http://oserror.com/images/qcode_wechat.jpg">
+<meta property="article:published_time" content="2016-06-28T00:09:23.000Z">
+<meta property="article:modified_time" content="2021-06-14T13:00:05.529Z">
+<meta property="article:author" content="Charles0429">
+<meta property="article:tag" content="golang">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://oserror.com/images/interface_values.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 3109763,
+      author: 'Charles0429'
+    }
+  };
+</script>
+
+  <title> The go programming language 学习笔记二 | Charles的技术博客 </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Charles的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                The go programming language 学习笔记二
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-06-28T08:09:23+08:00" content="2016-06-28">
+              2016-06-28
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/language/" itemprop="url" rel="index">
+                    <span itemprop="name">语言</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>本文为学习The go programming language的总结笔记，主要分为</p>
+<ul>
+<li>Functions</li>
+<li>Methods</li>
+<li>Interfaces</li>
+</ul>
+<h1 id="Functions"><a href="#Functions" class="headerlink" title="Functions"></a>Functions</h1><h2 id="Function-Declarations"><a href="#Function-Declarations" class="headerlink" title="Function Declarations"></a>Function Declarations</h2><p>GO函数声明的语法如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">name</span><span class="params">(parameter-list)</span> <span class="params">(result-list)</span></span> &#123;</span><br><span class="line">	body</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在GO中，返回值是可以命名的，这样函数初始化时会为每个命名的返回值初始化一个zero value。</p>
+<p>在GO中，有返回值的函数，必须在结束的时候有一个return语句。</p>
+<p>以下函数声明是相同的</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">f</span><span class="params">(i, j, k <span class="keyword">int</span>, s, t <span class="keyword">string</span>)</span></span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">f</span><span class="params">(i <span class="keyword">int</span>, j <span class="keyword">int</span>, k <span class="keyword">int</span>, s <span class="keyword">string</span>, t <span class="keyword">string</span>)</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">add</span><span class="params">(x <span class="keyword">int</span>, y <span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;<span class="keyword">return</span> x + y&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sub</span><span class="params">(x, y <span class="keyword">int</span>)</span> <span class="params">(z <span class="keyword">int</span>)</span></span> &#123;z = x - y; <span class="keyword">return</span>&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">first</span><span class="params">(x <span class="keyword">int</span>, _ <span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;<span class="keyword">return</span> x&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">zero</span><span class="params">(<span class="keyword">int</span>, <span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;<span class="keyword">return</span> <span class="number">0</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>GO函数是值传递的，函数内部对函数参数的修改，一般不会影响原始的变量值，除了传入的是引用类型，例如pointer、slice、map、function或channel。</p>
+<h2 id="Recursion"><a href="#Recursion" class="headerlink" title="Recursion"></a>Recursion</h2><p>GO函数是支持递归调用，本节通过一个HTML解析程序来说明。</p>
+<p>本节使用<code>golang.org/x/net/html</code>包，其中html.Parse会返回一系列的HTML的元素，例如text，comment等等，但是，我们这个程序只关注<code>&lt;name key=&#39;value&#39;&gt;</code>形式的元素。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;os&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="string">&quot;golang.org/x/net/html&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	doc, err := html.Parse(os.Stdin)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Fprintf(os.Stderr, <span class="string">&quot;findlinks1: %v\n&quot;</span>, err)</span><br><span class="line">		os.Exit(<span class="number">1</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> _, link := <span class="keyword">range</span> visit(<span class="literal">nil</span>, doc) &#123;</span><br><span class="line">		fmt.Println(link)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//!-main</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//!+visit</span></span><br><span class="line"><span class="comment">// visit appends to links each link found in n and returns the result.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">visit</span><span class="params">(links []<span class="keyword">string</span>, n *html.Node)</span> []<span class="title">string</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> n.Type == html.ElementNode &amp;&amp; n.Data == <span class="string">&quot;a&quot;</span> &#123;</span><br><span class="line">		<span class="keyword">for</span> _, a := <span class="keyword">range</span> n.Attr &#123;</span><br><span class="line">			<span class="keyword">if</span> a.Key == <span class="string">&quot;href&quot;</span> &#123;</span><br><span class="line">				links = <span class="built_in">append</span>(links, a.Val)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> c := n.FirstChild; c != <span class="literal">nil</span>; c = c.NextSibling &#123;</span><br><span class="line">		links = visit(links, c)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> links</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//!-visit</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">//!+html</span></span><br><span class="line"><span class="comment">package html</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">type Node struct &#123;</span></span><br><span class="line"><span class="comment">	Type                    NodeType</span></span><br><span class="line"><span class="comment">	Data                    string</span></span><br><span class="line"><span class="comment">	Attr                    []Attribute</span></span><br><span class="line"><span class="comment">	FirstChild, NextSibling *Node</span></span><br><span class="line"><span class="comment">&#125;</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">type NodeType int32</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">const (</span></span><br><span class="line"><span class="comment">	ErrorNode NodeType = iota</span></span><br><span class="line"><span class="comment">	TextNode</span></span><br><span class="line"><span class="comment">	DocumentNode</span></span><br><span class="line"><span class="comment">	ElementNode</span></span><br><span class="line"><span class="comment">	CommentNode</span></span><br><span class="line"><span class="comment">	DoctypeNode</span></span><br><span class="line"><span class="comment">)</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">type Attribute struct &#123;</span></span><br><span class="line"><span class="comment">	Key, Val string</span></span><br><span class="line"><span class="comment">&#125;</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">func Parse(r io.Reader) (*Node, error)</span></span><br><span class="line"><span class="comment">//!-html</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+
+<p>其中visit函数递归的调用自身，来完成对HTML元素的子元素的遍历。</p>
+<h2 id="Multiple-Return-Values"><a href="#Multiple-Return-Values" class="headerlink" title="Multiple Return Values"></a>Multiple Return Values</h2><p>GO中，支持函数有多个返回值，一般，一个返回值是结果，另外一个是标明错误情况等。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;net/http&quot;</span></span><br><span class="line">	<span class="string">&quot;os&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="string">&quot;golang.org/x/net/html&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">// visit appends to links each link found in n, and returns the result.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">visit</span><span class="params">(links []<span class="keyword">string</span>, n *html.Node)</span> []<span class="title">string</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> n.Type == html.ElementNode &amp;&amp; n.Data == <span class="string">&quot;a&quot;</span> &#123;</span><br><span class="line">		<span class="keyword">for</span> _, a := <span class="keyword">range</span> n.Attr &#123;</span><br><span class="line">			<span class="keyword">if</span> a.Key == <span class="string">&quot;href&quot;</span> &#123;</span><br><span class="line">				links = <span class="built_in">append</span>(links, a.Val)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> c := n.FirstChild; c != <span class="literal">nil</span>; c = c.NextSibling &#123;</span><br><span class="line">		links = visit(links, c)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> links</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//!+</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> _, url := <span class="keyword">range</span> os.Args[<span class="number">1</span>:] &#123;</span><br><span class="line">		links, err := findLinks(url)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			fmt.Fprintf(os.Stderr, <span class="string">&quot;findlinks2: %v\n&quot;</span>, err)</span><br><span class="line">			<span class="keyword">continue</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">for</span> _, link := <span class="keyword">range</span> links &#123;</span><br><span class="line">			fmt.Println(link)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// findLinks performs an HTTP GET request for url, parses the</span></span><br><span class="line"><span class="comment">// response as HTML, and extracts and returns the links.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">findLinks</span><span class="params">(url <span class="keyword">string</span>)</span> <span class="params">([]<span class="keyword">string</span>, error)</span></span> &#123;</span><br><span class="line">	resp, err := http.Get(url)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> resp.StatusCode != http.StatusOK &#123;</span><br><span class="line">		resp.Body.Close()</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, fmt.Errorf(<span class="string">&quot;getting %s: %s&quot;</span>, url, resp.Status)</span><br><span class="line">	&#125;</span><br><span class="line">	doc, err := html.Parse(resp.Body)</span><br><span class="line">	resp.Body.Close()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, fmt.Errorf(<span class="string">&quot;parsing %s as HTML: %v&quot;</span>, url, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> visit(<span class="literal">nil</span>, doc), <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>上述代码中，findLinks包含了html处理过程中的错误情况，方便调用者知道函数调用过程中是否发生错误，错误类型是什么。</p>
+<p>前面提到GO支持命名的返回值，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">CountWordsAndImages</span><span class="params">(url <span class="keyword">string</span>)</span> <span class="params">(words, images <span class="keyword">int</span>, err error)</span></span></span><br><span class="line">&#123;</span><br><span class="line">	resp, err := http.Get(url)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    	<span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    doc, err := html.Parse(resp.Body)</span><br><span class="line">    resp.Body.Close()</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    	err = fmt.Errorf(<span class="string">&quot;parsing HTML:%s&quot;</span>, err)</span><br><span class="line">    &#125;</span><br><span class="line">    words, images = countWordsAndImages(doc)</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如上所示，返回值的命名的，所以空的return语句等同于<code>return words, images, err</code></p>
+<h2 id="Errors"><a href="#Errors" class="headerlink" title="Errors"></a>Errors</h2><p>通常，在GO中，如果函数需要处理异常情况，会增加一个返回值err，来表示函数出错的原因。内置的error是一个interface类型，当返回的err为nil时，则表示执行成功，否则表示执行出错，可以用<code>fmt.Println(err)</code>来输出错误的信息。</p>
+<p>大部分情况下，如果err不为nil，则函数的其他返回值是无效值，不过，有些函数的部分返回值可能是有效的，例如，<code>Read</code>函数可能会返回它能够读到的字节数，对于这种函数，编写者应该清晰地在文档中注明这种情况。</p>
+<h3 id="Error-Handling-Strategies"><a href="#Error-Handling-Strategies" class="headerlink" title="Error-Handling Strategies"></a>Error-Handling Strategies</h3><p>当一个函数返回错误，调用者必须能够采取正确的行为来处理不同的错误，一般分为5种情况：</p>
+<h4 id="传播错误"><a href="#传播错误" class="headerlink" title="传播错误"></a>传播错误</h4><p>一种比较常见的方法是传播错误到当前函数的上一层，由上层来处理具体地错误。在<code>findLinks</code>函数中，有如下代码</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">resp, err := http.Get(url)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>除了上面的直接传播错误之外，还有经过稍微整合之后的传播，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">doc, err := html.Parse(resp.Body)</span><br><span class="line">resp.Body.Close()</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span>, fmt.Errorf(<span class="string">&quot;parsing %s as HTML: %v&quot;</span>, url, err)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里把出错的URL封装到err中一起传递给上层调用者。</p>
+<h4 id="重试"><a href="#重试" class="headerlink" title="重试"></a>重试</h4><p>第二种处理错误的方式是重试，对于可能是暂时的问题（例如网络问题），可以通过重试几次或一段时间，直到成功或者最终失败。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WaitForServer</span><span class="params">(url <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="keyword">const</span> timeout = <span class="number">1</span> * time.Minute</span><br><span class="line">    <span class="keyword">for</span> tries := <span class="number">0</span>; time.Now().Before(deadline); tries++ &#123;</span><br><span class="line">    	_, err := http.Head(url)</span><br><span class="line">        <span class="keyword">if</span> err == <span class="literal">nil</span> &#123;</span><br><span class="line">        	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">        &#125;</span><br><span class="line">        log.Printf(<span class="string">&quot;server not responding(%s), retrying...&quot;</span>, err)</span><br><span class="line">        time.Sleep(time.Second &lt;&lt; <span class="keyword">uint</span>(tries))</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> fmt.Error(<span class="string">&quot;server %s failed to respond after %s&quot;</span>, url, timeout)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="不可能的错误—打印错误，优雅地终止程序"><a href="#不可能的错误—打印错误，优雅地终止程序" class="headerlink" title="不可能的错误—打印错误，优雅地终止程序"></a>不可能的错误—打印错误，优雅地终止程序</h4><p>这种错误处理方式只适用于main package，对于普通的library package，只允许传播错误。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> err := WaitForServer(url); err != <span class="literal">nil</span> &#123;</span><br><span class="line">	fmt.Fprintf(os.Stderr, <span class="string">&quot;Site is down: %v\n&quot;</span>, err)</span><br><span class="line">    os.Exit(<span class="number">1</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以用<code>log.Fatalf</code>来完成上述功能</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> err := WaitForServer(url); err != <span class="literal">nil</span> &#123;</span><br><span class="line">	log.Fatalf(<span class="string">&quot;Site is down: %v\n&quot;</span>, err)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="打印出错误，继续以不完全功能执行"><a href="#打印出错误，继续以不完全功能执行" class="headerlink" title="打印出错误，继续以不完全功能执行"></a>打印出错误，继续以不完全功能执行</h4><p>有时候，可以打印出错误，然后继续以不完全功能执行</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> err := Ping(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">	fmt.Fprintf(os.Stderr, <span class="string">&quot;ping failed :%v; networking disabled\n&quot;</span>, err)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上述程序打印出网络问题，然后在没网的条件下继续执行。</p>
+<h4 id="完全忽略错误"><a href="#完全忽略错误" class="headerlink" title="完全忽略错误"></a>完全忽略错误</h4><p>少数情况下，我们可以完全地忽略错误。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">dir, err := ioutil.TempDir(<span class="string">&quot;&quot;</span>, <span class="string">&quot;scratch&quot;</span>)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> fmt.Errorf(<span class="string">&quot;failed to create temp dir: %v&quot;</span>, err)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">os.RemoveAll(dir)</span><br></pre></td></tr></table></figure>
+<p>最后的<code>os.RemoveAll(dir)</code>可能会出错，但是操作系统可以定期地清理临时文件夹，因此，这种情况下可以忽略错误，但是，如果要确定要忽略错误，则需要在代码中表明这样做的用意。</p>
+<h3 id="End-of-File-EOF"><a href="#End-of-File-EOF" class="headerlink" title="End of File(EOF)"></a>End of File(EOF)</h3><p>在文件IO中，一般EOF并不是一种错误，只是代表文件中的数据已经读完了。对于EOF，调用者一般需要做特殊的处理。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">in := bufio.NewReader(os.Stdin)</span><br><span class="line"><span class="keyword">for</span> &#123;</span><br><span class="line">	r, _, err := in.ReadRune()</span><br><span class="line">    <span class="keyword">if</span> err == io.EOF &#123;</span><br><span class="line">    	<span class="keyword">break</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    	<span class="keyword">return</span> fmt.Errorf(<span class="string">&quot;read failed: %v&quot;</span>, err)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Function-Values"><a href="#Function-Values" class="headerlink" title="Function Values"></a>Function Values</h2><p>在GO中，函数也能是值类型赋值给其他的变量，例如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">square</span><span class="params">(n <span class="keyword">int</span>)</span> <span class="title">int</span></span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">negative</span><span class="params">(n <span class="keyword">int</span>)</span> <span class="title">int</span></span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">product</span><span class="params">(m, n <span class="keyword">int</span>)</span> <span class="title">int</span></span></span><br><span class="line"></span><br><span class="line">f := square</span><br><span class="line">fmt.Println(f(<span class="number">3</span>))</span><br><span class="line"></span><br><span class="line">f = negative</span><br><span class="line">fmt.Println(f(<span class="number">3</span>))</span><br><span class="line"></span><br><span class="line">f = product <span class="comment">// compiler error: f is func(int) int</span></span><br></pre></td></tr></table></figure>
+<p>函数的zero value是nil，调用nil的函数会panic</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> f <span class="function"><span class="keyword">func</span><span class="params">(<span class="keyword">int</span>)</span> <span class="title">int</span></span></span><br><span class="line">f(<span class="number">3</span>)  <span class="comment">// f is nil, panic</span></span><br></pre></td></tr></table></figure>
+
+<p>函数可以作为另一个函数的参数，从而可以方便的自定义一些行为，例如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">add1</span><span class="params">(r <span class="keyword">rune</span>)</span> <span class="title">rune</span></span> &#123;<span class="keyword">return</span> r + <span class="number">1</span>&#125;</span><br><span class="line">fmt.Println(strings.Map(add1, <span class="string">&quot;HAL-9000&quot;</span>)) <span class="comment">// &quot;IBM.:111&quot;</span></span><br><span class="line">fmt.Println(strings.Map(add1, <span class="string">&quot;VMS&quot;</span>)) <span class="comment">//&quot;WNT&quot;</span></span><br><span class="line">fmt.Println(strings.Map(add1, <span class="string">&quot;Admix&quot;</span>)) <span class="comment">//&quot;Benjy&quot;</span></span><br></pre></td></tr></table></figure>
+<h2 id="Anonymous-Functions"><a href="#Anonymous-Functions" class="headerlink" title="Anonymous Functions"></a>Anonymous Functions</h2><p>匿名函数和普通函数类似，除了它在func之后不带名字，例如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">strings.Map(<span class="function"><span class="keyword">func</span> <span class="params">(r <span class="keyword">rune</span>)</span> <span class="title">rune</span></span> &#123;<span class="keyword">return</span> r + <span class="number">1</span>&#125;, <span class="string">&quot;HAL-9000&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p>另外，匿名函数是有状态的，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">squares</span><span class="params">()</span> <span class="title">func</span><span class="params">()</span> <span class="title">int</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> x <span class="keyword">int</span></span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">()</span> <span class="title">int</span></span> &#123;</span><br><span class="line">    	x++</span><br><span class="line">        <span class="keyword">return</span> x * x</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	f := squares()</span><br><span class="line">    fmt.Println(f())  <span class="comment">// 1</span></span><br><span class="line">    fmt.Println(f())  <span class="comment">// 4</span></span><br><span class="line">    fmt.Println(f())  <span class="comment">// 9</span></span><br><span class="line">    fmt.Println(f())  <span class="comment">// 16</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看出，x的值看起来是被保存下来，每次都是在上次的基础上加1，这种类型的function value，也称为闭包。</p>
+<h3 id="Caveat-Capturing-Iteration-Variables"><a href="#Caveat-Capturing-Iteration-Variables" class="headerlink" title="Caveat: Capturing Iteration Variables"></a>Caveat: Capturing Iteration Variables</h3><p>本节通过一个例子来说明</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> rmdirs []<span class="function"><span class="keyword">func</span><span class="params">()</span></span></span><br><span class="line"><span class="keyword">for</span> _, d := <span class="keyword">range</span> tempDirs() &#123;</span><br><span class="line">	dir := d</span><br><span class="line">    os.MkdirAll(dir, <span class="number">0755</span>)</span><br><span class="line">    rmdirs = <span class="built_in">append</span>(rmdirs, <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;os.RemoveAll(dir)&#125;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> _, rmdir := <span class="keyword">range</span> rmdirs &#123;</span><br><span class="line">	rmdir()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面为什么需要用<code>dir: = d</code>赋值语句了，直接把dir传进<code>MkdirAll</code>不就好了吗？</p>
+<p>在上面的代码中，for循环创建了一个新的作用域，其中dir被声明了，所有的在这个循环内的function value都会共享同一份dir的存储空间，因此，如果不采用上述代码，那么，传进function value的dir就会全部是一样的。</p>
+<p>下面的代码也会有上述问题</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">var rmdirs []func()</span><br><span class="line">dirs := tempDirs()</span><br><span class="line">for i:= 0; i &lt; len(dirs); i++ &#123;</span><br><span class="line">    os.MkdirAll(dir[i], 0755)</span><br><span class="line">    rmdirs = append(rmdirs, func() &#123;os.RemoveAll(dir)&#125;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">for _, rmdir := range rmdirs &#123;</span><br><span class="line">	rmdir()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中，i的值也是循环内部所有function value共享的，导致最终i都是等于<code>len(dirs) - 1</code>。</p>
+<h2 id="Variadic-Functions"><a href="#Variadic-Functions" class="headerlink" title="Variadic Functions"></a>Variadic Functions</h2><p>可变参数函数指的是函数的参数是可变的，像fmt.Printf那种。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sum</span><span class="params">(vals ...<span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line">	total := <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> _, val := <span class="keyword">range</span> vals &#123;</span><br><span class="line">    	total += val</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> total</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fmt.Println(sum())</span><br><span class="line">fmt.Println(sum(<span class="number">3</span>))</span><br><span class="line">fmt.Println(sum(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>))</span><br><span class="line"></span><br><span class="line">values := []<span class="keyword">int</span>&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>&#125;</span><br><span class="line">fmt.Println(sum(values...)) <span class="comment">//可以把slice转成函数参数转进去</span></span><br></pre></td></tr></table></figure>
+<p>上述调用会隐式地创建一个array，然后传递整个array对应的slice进入函数。</p>
+<p>可变参数的函数和传递slice参数的函数还是不一样的，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">f</span><span class="params">(...<span class="keyword">int</span>)</span></span> &#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">g</span><span class="params">([]<span class="keyword">int</span>)</span></span> &#123;&#125;</span><br><span class="line">fmt.Printf(<span class="string">&quot;%T\n&quot;</span>, f) <span class="comment">//&quot;func(...int)&quot;</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;%T\n&quot;</span>, g) <span class="comment">//&quot;func([]int)&quot;</span></span><br></pre></td></tr></table></figure>
+<p>可变参数函数通常用来字符串格式化，例如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">errorf</span><span class="params">(linenum <span class="keyword">int</span>, format <span class="keyword">string</span>, args ...<span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	fmt.Fprintf(os.Stderr, <span class="string">&quot;Line %d:&quot;</span>, linenum)</span><br><span class="line">    fmt.Fprintf(os.Stderr, format, args...)</span><br><span class="line">    fmt.Println(os.Stderr)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">linenum, name := <span class="number">12</span>, <span class="string">&quot;count&quot;</span></span><br><span class="line">errorf(linenum, <span class="string">&quot;undefined: %s&quot;</span>, name)</span><br></pre></td></tr></table></figure>
+<h2 id="Deferred-Function-Calls"><a href="#Deferred-Function-Calls" class="headerlink" title="Deferred Function Calls"></a>Deferred Function Calls</h2><p>defer语句的含义是函数和参数表达式会在语句执行的时候会被计算出来，但是函数真正的执行会在调用defer语句的函数结束后才会执行，包括函数的return语句，panic等。在一个函数中，可以有任意个defer语句，它们最终的执行是它们defer的相反顺序。</p>
+<p>defer语句可以经常用来成对的操作，例如open和close，connect和disconnect，lock和unlock，可以保证资源会被释放。defer语句的正确的顺序为当一个资源被成功获取之后。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">title</span><span class="params">(url <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	resp, err := http.Get(url)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    	<span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">defer</span> resp.Body.Close()</span><br><span class="line">    </span><br><span class="line">    ct := resp.Header.Get(<span class="string">&quot;Content-Type&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> ct != <span class="string">&quot;text/html&quot;</span> &amp;&amp; !strings.HasPrefix(ct, <span class="string">&quot;text/html;&quot;</span>) &#123;</span><br><span class="line">    	<span class="keyword">return</span> fmt.Errorf(<span class="string">&quot;%s has type %s, not text/html&quot;</span>, url, ct)</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    doc, err := html.Parse(resp.Body)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    	<span class="keyword">return</span> fmt.Errorf(<span class="string">&quot;parsing %s as HTML: %v&quot;</span>, url, err)</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ReadFile</span><span class="params">(filename <span class="keyword">string</span>)</span> <span class="params">([]<span class="keyword">byte</span>, error)</span></span> &#123;</span><br><span class="line">	f, err := os.Open(filename)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    	returun <span class="literal">nil</span>, err</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">defer</span> f.Close()</span><br><span class="line">    <span class="keyword">return</span> ReadAll(f)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> mu sync.Mutex</span><br><span class="line"><span class="keyword">var</span> m = <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">int</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">lookup</span><span class="params">(key <span class="keyword">string</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line">	mu.Lock()</span><br><span class="line">    <span class="keyword">defer</span> mu.Unlock()</span><br><span class="line">    <span class="keyword">return</span> m[key]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>defer语句也可以用来模拟”on entry”和”on exit”函数，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">bigSlowOperation</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">defer</span> trace(<span class="string">&quot;bigSlowOperation&quot;</span>)()</span><br><span class="line">    time.Sleep(<span class="number">10</span> * time.Second)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">trace</span><span class="params">(msg <span class="keyword">string</span>)</span> <span class="title">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">	start := time.Now()</span><br><span class="line">    log.Printf(<span class="string">&quot;enter %s&quot;</span>, msg)</span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">    	log.Printf(<span class="string">&quot;exit %s (%s)&quot;</span>, msg, time.Slice(start))</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>每次bigSlowOPeration被调用，它会打印entry和exit消息。</p>
+<p>defer的匿名函数可以在函数返回前，修改返回值。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">tuple</span><span class="params">(x <span class="keyword">int</span>)</span> <span class="params">(result <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;result += x&#125;</span><br><span class="line">    <span class="keyword">return</span> double(x)</span><br><span class="line">&#125;</span><br><span class="line">fmt.Println(triple(<span class="number">4</span>))</span><br></pre></td></tr></table></figure>
+<p>注意，defer的语句的最终调用是在函数结束的时候，有时候因为这个特性可能会出现问题</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> _, filename := <span class="keyword">range</span> filenames &#123;</span><br><span class="line">	f, err := os.Open(filename)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    	<span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    def f.Close()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>for循环中的所有文件不会马上被关闭，只有当函数退出时才会关闭，这可能会造成资源的浪费，可以修改如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> _, filename := <span class="keyword">range</span> filenames &#123;</span><br><span class="line">	<span class="keyword">if</span> err := doFile(filename); err != <span class="literal">nil</span> &#123;</span><br><span class="line">    	<span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">doFile</span><span class="params">(filename <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	f, err := os.Open(filename)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    	<span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    def f.Close()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述方法可以有效地解决这个问题，文件打开使用完后，马上就会被关闭。</p>
+<h2 id="Panic"><a href="#Panic" class="headerlink" title="Panic"></a>Panic</h2><p>GO的类型系统可以在编译期间检查很多错误，但是像数组的越界，空指针，需要在运行时做检查，当GO检测到这些错误的时候，它会panic。</p>
+<p>一个典型的panic的包括以下流程，如下</p>
+<ol>
+<li>正常的执行终止</li>
+<li>所有defer的语句执行</li>
+<li>打印panic消息，包括panic值，对每个goroutine，打印stack trace</li>
+</ol>
+<p>内置的panic的函数也可以显式地被调用，它可以接受任意类型的参数。panic一般发生在一些不可能的场景的情况下，例如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">switch</span> s := suit(drawCard()); s &#123;</span><br><span class="line">	<span class="keyword">case</span> <span class="string">&quot;Spades&quot;</span>:</span><br><span class="line">    <span class="keyword">case</span> <span class="string">&quot;Hearts&quot;</span>:</span><br><span class="line">    <span class="keyword">case</span> <span class="string">&quot;Diamons&quot;</span>:</span><br><span class="line">    <span class="keyword">case</span> <span class="string">&quot;Clubs&quot;</span>:</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">    	<span class="built_in">panic</span>(<span class="string">&quot;fmt.Sprintf(&quot;</span>invalid suite %q<span class="string">&quot;)&quot;</span>, s))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>由于GO的panic会导致程序终止，因此，一般用于不可恢复的错误。对于预期内的错误，采用一般的错误处理流程即可。</p>
+<h2 id="Recover"><a href="#Recover" class="headerlink" title="Recover"></a>Recover</h2><p>通常终止程序是处理panic的正确方式，但有时候也可以做一定程度的recover，例如，退出前清理，对于一个web服务器来讲，如果发生了非预期的错误，需要关闭链接，而不是让客户端hang住。</p>
+<p>如果内置的recover函数被defer的函数调用，并且调用defer语句的函数panic了，那么recover函数会结束当前的panic状态，并且返回panic值。如果没有panic，recover函数不起任何作用，并且返回nil。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Parse</span><span class="params">(input <span class="keyword">string</span>)</span> <span class="params">(s *Syntax, err error)</span></span> &#123;</span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">    	<span class="keyword">if</span> p := <span class="built_in">recover</span>(); p != <span class="literal">nil</span> &#123;</span><br><span class="line">        	err = fmt.Errorf(<span class="string">&quot;internal error: %v&quot;</span>, p)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在Parse中的defer函数从panic中recover，它使用recover返回的panic值来构建错误的消息。除了panic值之外，还有打印出<code>runtime.Stack</code>信息。</p>
+<p>最好不要recover从别的package跑出来的panic，因为无法知道是否应该recover，也不很难知道应该以何种方式recover。</p>
+<h1 id="Methods"><a href="#Methods" class="headerlink" title="Methods"></a>Methods</h1><p>在GO中，实现面向对象编程的方法，即一个对象是指一个拥有method的值或变量，method指和指定类型关联的函数。</p>
+<h2 id="Method-Declarations"><a href="#Method-Declarations" class="headerlink" title="Method Declarations"></a>Method Declarations</h2><p>method的定义比普通函数多了一个部分，即函数名前面有一个额外的参数，这个参数表明这个函数所属的类型。例如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> geometry</span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;math&quot;</span></span><br><span class="line"><span class="keyword">type</span> Point <span class="keyword">struct</span> &#123;X, Y <span class="keyword">float64</span>&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Distance</span><span class="params">(p, q Point)</span> <span class="title">float64</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> math.Hypot(q.X-p.X, q.Y-p.Y)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p Point)</span> <span class="title">Distance</span><span class="params">(q Point)</span> <span class="title">float64</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> math.Hypot(q.X-p.X, q.Y-p.Y)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">p := Point&#123;<span class="number">1</span>, <span class="number">2</span>&#125;</span><br><span class="line">q := Point&#123;<span class="number">4</span>, <span class="number">6</span>&#125;</span><br><span class="line">fmt.Println(Distance(p, q)) <span class="comment">//function call</span></span><br><span class="line">fmt.Println(p.Distance(q)) <span class="comment">//method</span></span><br></pre></td></tr></table></figure>
+
+<p>上面额外的参数p称为method receiver，在GO中不用使用特殊的this或self来命名method receiver，因为receiver的名称会被经常使用，因此，建议用短的变量名来定义它。</p>
+<p>调用method和C++调用成员函数类似，通过对象名+ <code>.</code> + method名来调用，需要注意的是，普通的函数和method是可以有相同的名称的。</p>
+<p>p.Distance称作是selector，因为，它会为找到对象p的合适的方法Distance；selector也用来访问struct类型的field，因此，对于struct类型，method和field的命名不能相同，否则会产生冲突。</p>
+<p>每个类型都有自己的method namespace，因此，不同类型的type，可以定义同名的method，例如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Path []Point</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(path Path)</span> <span class="title">Distance</span><span class="params">()</span> <span class="title">float64</span></span> &#123;</span><br><span class="line">	sum := <span class="number">0.0</span></span><br><span class="line">    <span class="keyword">for</span> i := <span class="keyword">range</span> path &#123;</span><br><span class="line">    	<span class="keyword">if</span> i &gt; <span class="number">0</span> &#123;</span><br><span class="line">        	sum += path[i<span class="number">-1</span>].Distance(path[i])</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>path是named slice类型，对于这种类型GO也支持定义method，实际上，在GO中，支持对任意的named type定义method。</p>
+<p>在GO中，定义method的时候，不推荐再带上包的名字了，这样会比较累赘，例如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;gopl.io/ch6/geometry&quot;</span></span><br><span class="line"></span><br><span class="line">perim := geometry.Path&#123;&#123;<span class="number">1</span>, <span class="number">2</span>&#125;, &#123;<span class="number">2</span>, <span class="number">2</span>&#125;, &#123;<span class="number">3</span>, <span class="number">4</span>&#125;, &#123;<span class="number">5</span>, <span class="number">6</span>&#125;&#125;</span><br><span class="line">fmt.Println(geometry.PathDistance(perim))</span><br><span class="line">fmt.Println(perim.Distance())</span><br></pre></td></tr></table></figure>
+<p>对于path的method，推荐用<code>Distance</code>而不是<code>PathDistance</code>。</p>
+<h2 id="Methods-with-a-Pointer-Receiver"><a href="#Methods-with-a-Pointer-Receiver" class="headerlink" title="Methods with a Pointer Receiver"></a>Methods with a Pointer Receiver</h2><p>由于GO中，是以值传递的方式传函数参数的，如果希望method函数能够修改对象内部的状态的话，则需要定义receiver type为对象的指针，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p *Point)</span> <span class="title">ScaleBy</span><span class="params">(factor <span class="keyword">float64</span>)</span></span> &#123;</span><br><span class="line">	p.X *= factor</span><br><span class="line">    p.Y *= factor</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>一般地，只要Point的任何method有pointer receiver，那么推荐其他method也定义一个pointer receiver。因为GO支持pointer receiver，因此，对本身是pointer类型的named type，不支持定义method。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> P *<span class="keyword">int</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(P)</span> <span class="title">f</span><span class="params">()</span></span> &#123; <span class="comment">/* do something */</span> &#125; <span class="comment">//compile error</span></span><br></pre></td></tr></table></figure>
+<p>使用pointer receiver的方法如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">r := &amp;Point&#123;<span class="number">1</span>, <span class="number">2</span>&#125;</span><br><span class="line">r.ScaleBy(<span class="number">2</span>)</span><br><span class="line">fmt.Println(*r)</span><br><span class="line"></span><br><span class="line">p := Point&#123;<span class="number">1</span>, <span class="number">2</span>&#125;</span><br><span class="line">pptr := &amp;p</span><br><span class="line">pptr.ScaleBy(<span class="number">2</span>)</span><br><span class="line">fmt.Println(p)</span><br><span class="line"></span><br><span class="line">p := Point&#123;<span class="number">1</span>, <span class="number">2</span>&#125;</span><br><span class="line">(&amp;p).ScaleBy(<span class="number">2</span>)</span><br><span class="line">fmt.Println(p)</span><br></pre></td></tr></table></figure>
+
+<p>对于后两种用法，GO提供隐式地支持，即对于一个p，如果定义了*Point类型的receiver，GO会自动动在&amp;p上调用该receiver，但这种支持仅限于变量，对于临时的值是不支持的，因为无法获得它们的地址。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Point&#123;<span class="number">1</span>, <span class="number">2</span>&#125;.ScaleBy(<span class="number">2</span>) <span class="comment">// compile error</span></span><br></pre></td></tr></table></figure>
+
+<p>对于一个*Pointer类型的变量，GO也会隐式地调用Point.Distance函数，下面两种使用方式是等价的</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pptr.Distance(q)</span><br><span class="line">(*pptr).Distance(q)</span><br></pre></td></tr></table></figure>
+<p>如上，采用第一种使用方式的时候，GO也会隐式地转成第二种使用方式。</p>
+<p>如果对于一个named type T，它们所有的method的receiver都是T，而不是*T，那么拷贝是安全的，因为任意的method都会拷贝一份参数到函数中；但如果任意的method有pointer类型的receiver，那么拷贝是不安全的，例如，拷贝一份<code>bytes.Buffer</code>会造成它们共享底层的字节数组，如果同时使用这两个变量的话，可能会造成互相干扰。</p>
+<h3 id="Nil-is-a-Valid-Reciever-Value"><a href="#Nil-is-a-Valid-Reciever-Value" class="headerlink" title="Nil is a Valid Reciever Value"></a>Nil is a Valid Reciever Value</h3><p>Nil是可以作为receiver值的，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> IntList <span class="keyword">struct</span> &#123;</span><br><span class="line">	Value <span class="keyword">int</span></span><br><span class="line">    Tail *IntList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(list *IntList)</span> <span class="title">sum</span><span class="params">()</span> <span class="title">int</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> list == <span class="literal">nil</span> &#123;</span><br><span class="line">    	<span class="keyword">return</span> <span class="number">0</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> list.Value + list.Tail.Sum()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Composing-Types-by-Struct-Embedding"><a href="#Composing-Types-by-Struct-Embedding" class="headerlink" title="Composing Types by Struct Embedding"></a>Composing Types by Struct Embedding</h2><p>和field一样，通过匿名的struct组合，大的struct可以直接调用struct内部的field的method，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Point <span class="keyword">struct</span> &#123;X, Y <span class="keyword">float64</span>&#125;</span><br><span class="line"><span class="keyword">type</span> ColoredPoint <span class="keyword">struct</span> &#123;</span><br><span class="line">	Point</span><br><span class="line">    Color color.RGBA</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> cp ColoredPoint</span><br><span class="line">cp.X = <span class="number">1</span></span><br><span class="line">cp.ScaleBy(<span class="number">2</span>) <span class="comment">// calls the method of Point</span></span><br><span class="line">fmt.Println(p.Distance(q.Point))</span><br></pre></td></tr></table></figure>
+
+<p>上面的功能相当于编译器自动帮我们实现了以下代码</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p ColoredPoint)</span> <span class="title">Distance</span><span class="params">(q Point)</span> <span class="title">float64</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> p.Point.Distance(q)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p *ColoredPoint)</span> <span class="title">ScaleBy</span><span class="params">(factor <span class="keyword">float64</span>)</span></span> &#123;</span><br><span class="line">	p.Point.ScaleBy(factor)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>一个struct可以有多个匿名的field，因此，它们的method都会自动提升给大的struct</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ColoredPoint &#123;</span><br><span class="line">	Point</span><br><span class="line">    color.RGBA</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Point和color.RGBA的method都会自动提升给ColoredPoint。</p>
+<h2 id="Method-Values-and-Expressions"><a href="#Method-Values-and-Expressions" class="headerlink" title="Method Values and Expressions"></a>Method Values and Expressions</h2><p>通常的，我们在一个操作中select和call一个method，例如<code>p.Distance()</code>，但是，也可以把select和call分开。selector p.Distance会产生一个method value，一个method绑定到了特定的对象p，这个函数可以保存起来供后面重复使用。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">p := Point&#123;<span class="number">1</span>, <span class="number">2</span>&#125;</span><br><span class="line">q := Point&#123;<span class="number">4</span>, <span class="number">5</span>&#125;</span><br><span class="line">distanceFromP := p.Distance</span><br><span class="line">fmt.Println(distanceFromP(q))</span><br><span class="line"></span><br><span class="line">ScaleP := p.ScaleBy</span><br><span class="line">ScaleP(<span class="number">2</span>)</span><br><span class="line">ScaleP(<span class="number">3</span>)</span><br><span class="line">ScaleP(<span class="number">10</span>)</span><br></pre></td></tr></table></figure>
+
+<p>method value通常在你需要一个变量表示多个method value中的一个的时候，非常有用，例如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Point <span class="keyword">struct</span> &#123;X, Y <span class="keyword">float64</span>&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p Point)</span> <span class="title">Add</span><span class="params">(q Point)</span> <span class="title">Point</span></span> &#123;<span class="keyword">return</span> Point&#123;p.X + q.X, p.Y + q.Y&#125;&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p Point)</span> <span class="title">Sub</span><span class="params">(q point)</span> <span class="title">Point</span></span> &#123;<span class="keyword">return</span> Point&#123;p.X - q.X, p.Y - q.Y&#125;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> path []Point</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(path Path)</span> <span class="title">TranslateBy</span><span class="params">(offset Point, add <span class="keyword">bool</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> op <span class="function"><span class="keyword">func</span><span class="params">(p, q Point)</span> <span class="title">Point</span></span></span><br><span class="line">    <span class="keyword">if</span> add &#123;</span><br><span class="line">    	op = Point.Add</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    	op = Point.Sub</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="keyword">range</span> path &#123;</span><br><span class="line">    	path[i] = op(path[i], offset)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Example-Bit-Vector-Type"><a href="#Example-Bit-Vector-Type" class="headerlink" title="Example: Bit Vector Type"></a>Example: Bit Vector Type</h2><p>GO中没有set类型，虽然有时可以用map[T]bool来代替，但是，有时候bit set可以解决很多空间，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> IntSet <span class="keyword">struct</span> &#123;</span><br><span class="line">	words []<span class="keyword">uint64</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *IntSet)</span> <span class="title">Has</span><span class="params">(x <span class="keyword">int</span>)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	word, bit := x/<span class="number">64</span>, <span class="keyword">uint</span>(x%<span class="number">64</span>)</span><br><span class="line">	<span class="keyword">return</span> word &lt; <span class="built_in">len</span>(s.words) &amp;&amp; s.words[word]&amp;(<span class="number">1</span>&lt;&lt;bit) != <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *IntSet)</span> <span class="title">Add</span><span class="params">(x <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	word, bit := x/<span class="number">64</span>, <span class="keyword">uint</span>(x%<span class="number">64</span>)</span><br><span class="line">	<span class="keyword">for</span> word &gt;= <span class="built_in">len</span>(s.words) &#123;</span><br><span class="line">		s.words = <span class="built_in">append</span>(s.words, <span class="number">0</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	s.words[word] |= <span class="number">1</span> &lt;&lt; bit</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *IntSet)</span> <span class="title">UnionWith</span><span class="params">(t *IntSet)</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> i, tword := <span class="keyword">range</span> t.words &#123;</span><br><span class="line">		<span class="keyword">if</span> i &lt; <span class="built_in">len</span>(s.words) &#123;</span><br><span class="line">			s.words[i] |= tword</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			s.words = <span class="built_in">append</span>(s.words, tword)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> s IntSet</span><br><span class="line">	s.Add(<span class="number">100</span>)</span><br><span class="line">	fmt.Println(s.Has(<span class="number">100</span>))</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="Encapsulation"><a href="#Encapsulation" class="headerlink" title="Encapsulation"></a>Encapsulation</h2><p>当客户端无法访问一个变量或方法时，我们称作对象的该方法和变量被封装了。GO只有一个控制访问的途径，即大写的是exported，因此，为了封装一个对象，我们可以把它设置成struct。</p>
+<p>例如IntSet</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> IntSet <span class="keyword">struct</span> &#123;</span><br><span class="line">	words []<span class="keyword">uint64</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们也可以直接定义IntSet成[]uint64，但这样客户端就可以直接修改IntSet内部的值了。</p>
+<p>封装有三大好处</p>
+<ul>
+<li>客户端不能直接修改内部的值，只需要调用几条语句就能完成复杂的功能</li>
+<li>对客户端隐藏实现细节</li>
+<li>防止客户端修改内部状态到非法的值</li>
+</ul>
+<h1 id="Interfaces"><a href="#Interfaces" class="headerlink" title="Interfaces"></a>Interfaces</h1><p>在Go中，interface为对一组函数的抽象，和其他语言不同的时，GO的接口是自动匹配的，只要一个类型有接口相应的method，那么这个类型就会自动成为接口。</p>
+<p>本章中，我们先讨论interface的基础，然后介绍标准库的几个重要的接口，最后，我们讨论<code>type assertions</code>和<code>type switches</code>。</p>
+<h2 id="Interface-as-Contracts"><a href="#Interface-as-Contracts" class="headerlink" title="Interface as Contracts"></a>Interface as Contracts</h2><p>在GO中，Interface是一种抽象类型，它不展示任何的内部的值，只提供一些method。因此，给定一个interface，你只知道它的几个method，对于内部的实现是无法知道的。</p>
+<p>在本书中，我们用了像<code>fmt.Printf</code>和<code>fmt.Sprintf</code>等函数，这两个函数都是基于<code>fmt.Fprintf</code>实现的，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> fmt</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Fprintf</span><span class="params">(w io.Writer, format <span class="keyword">string</span>, args ...<span class="keyword">interface</span>&#123;&#125;)</span><span class="params">(<span class="keyword">int</span>, error)</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Printf</span><span class="params">(format <span class="keyword">string</span>, args ...<span class="keyword">interface</span>&#123;&#125;)</span><span class="params">(<span class="keyword">int</span>, error)</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> Fprintf(os.Stdout, format, args...)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Sprintf</span><span class="params">(format <span class="keyword">string</span>, args ...<span class="keyword">interface</span>&#123;&#125;)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> buf bytes.Buffer</span><br><span class="line">    Fprintf(&amp;buf, format, args...)</span><br><span class="line">    <span class="keyword">return</span> buf.String()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面io.Writer是interface类型，其定义如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> io</span><br><span class="line"><span class="keyword">type</span> Writer <span class="keyword">interface</span> &#123;</span><br><span class="line">	Write(p []<span class="keyword">byte</span>)(n <span class="keyword">int</span>, err error)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Fprintf函数只要求它的第一个参数类型必须实现了Write函数，而具体是怎么实现的，Fprintf是不管的。我们可以自定义一个Writer来实现Write函数，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ByteCOunter <span class="keyword">int</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *ByteCounter)</span> <span class="title">Write</span><span class="params">(p []<span class="keyword">byte</span>)</span> <span class="params">(<span class="keyword">int</span>, error)</span></span> &#123;</span><br><span class="line">	*c += ByteCounter(<span class="built_in">len</span>(p))</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">len</span>(p), <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> c ByteCounter</span><br><span class="line">c.Write([]<span class="keyword">byte</span>(<span class="string">&quot;hello&quot;</span>))</span><br><span class="line">fmt.Println(c)</span><br><span class="line"></span><br><span class="line">c = <span class="number">0</span></span><br><span class="line"><span class="keyword">var</span> name = <span class="string">&quot;Dolly&quot;</span></span><br><span class="line">fmt.Fprintf(&amp;c, <span class="string">&quot;hello, %s&quot;</span>, name)</span><br><span class="line">fmt.Println(c)</span><br></pre></td></tr></table></figure>
+<p>Fprintf会调用write函数，接着c中就会写入字母的个数，然后通过<code>Println</code>输出。</p>
+<p>fmt package中还有一个很常见的interface，为<code>fmt.Stringer</code>，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> fmt</span><br><span class="line"><span class="keyword">type</span> Stringer <span class="keyword">interface</span> &#123;</span><br><span class="line">	String() <span class="keyword">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Interface-Types"><a href="#Interface-Types" class="headerlink" title="Interface Types"></a>Interface Types</h2><p>一个interface类型指定了一组method，一个具体的类型如果实现了interface里的所有方法，那么这个类型会自动地被认为是该interface的一个实例。</p>
+<p>例如，<code>Reader</code>代表任何可以读数据的interface，而<code>Closer</code>则是任何可以关闭的值，例如网络链接等。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> io</span><br><span class="line"><span class="keyword">type</span> Reader <span class="keyword">interface</span> &#123;</span><br><span class="line">	Read(p []<span class="keyword">byte</span>) (n <span class="keyword">int</span>, err error)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">type</span> Closer <span class="keyword">interface</span> &#123;</span><br><span class="line">	Close() error</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也可以基于现有的interface组合出新的interface，例如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ReadWriter <span class="keyword">interface</span> &#123;</span><br><span class="line">	Reader</span><br><span class="line">    Writer</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">type</span> ReadWriteCloser <span class="keyword">interface</span> &#123;</span><br><span class="line">	Reader</span><br><span class="line">    Writer</span><br><span class="line">    Closer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的跟结构体的匿名field一样，method会自动地提升到大的interface中，如果不用匿名filed方式，则需要重新手写方法名，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ReadWriter <span class="keyword">interface</span> &#123;</span><br><span class="line">	Read(p []<span class="keyword">byte</span>) (n <span class="keyword">int</span>, err error)</span><br><span class="line">    Writer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Interface-Satisfication"><a href="#Interface-Satisfication" class="headerlink" title="Interface Satisfication"></a>Interface Satisfication</h2><p>当一个类型包含某个interface中所有的methods时，则该类型satisfies这个interface。例如，*os.File satisfies io.Reader,Writer和Closer。</p>
+<p>在GO中，当这个类型satisfies这个interface时,则说具体的类型是某个interface，，因此*os.File是io.Reader,Writer和Closer。</p>
+<p>对于interface，赋值的规则是当且仅当表达式是某个interface时，才能够进行赋值，例如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> w io.Writer</span><br><span class="line">w = os.Stdout</span><br><span class="line">w = <span class="built_in">new</span>(bytes.Buffer)</span><br><span class="line">w = time.Second <span class="comment">//compile error</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> rwc io.ReadWriteCloser</span><br><span class="line">rwc = os.Stdout</span><br><span class="line">rwc = <span class="built_in">new</span>(bytes.Buffer) <span class="comment">//compile error, lacks close methods</span></span><br></pre></td></tr></table></figure>
+<p>上述规则也适用于右边是本身也是interface的情况</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">w = rwc</span><br><span class="line">rwc = w <span class="comment">// compile error</span></span><br></pre></td></tr></table></figure>
+
+<p>在method一章中，我们知道当一个类型T的变量，是可以隐式地使用<code>*T</code>为receiver的method的，但临时的值是不行的，这可能会造成T类型比<code>*T</code>类型能satisfies较少的interface，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> IntSet <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">//something</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(*IntSet)</span> <span class="title">String</span><span class="params">()</span> <span class="title">string</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> _ = IntSet&#123;&#125;.String() <span class="comment">// compile error</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> s IntSet</span><br><span class="line"><span class="keyword">var</span> _ = s.String() <span class="comment">// OK</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> _ fmt.Stringer = &amp;s <span class="comment">// OK</span></span><br><span class="line"><span class="keyword">var</span> _ fmt.Stringer = s <span class="comment">//compile error</span></span><br></pre></td></tr></table></figure>
+<p>由于IntSet本身没有string方法，且依赖自动地转换只能解决变量的问题，而临时的值无法转换，因此，IntSet不是Stringer类型的interface。</p>
+<p>一个interface变量只能使用它本身所有的method，即使赋值给它的具体类型还有额外的method，也是无法调用的，例如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">os.Stdout.Write([]<span class="keyword">byte</span>(<span class="string">&quot;hello&quot;</span>))</span><br><span class="line">os.Stdout.Close()</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> w io.Writer</span><br><span class="line">w = os.Stdout</span><br><span class="line">w.Write([]<span class="keyword">byte</span>(<span class="string">&quot;hello&quot;</span>))</span><br><span class="line">w.Close() <span class="comment">//compile error: interface only has write method</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>空interface</strong><br>inteface {}是一个空的interface，它的作用可以用来匹配任何的类型，例如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> any <span class="keyword">interface</span> &#123;&#125;</span><br><span class="line">any = <span class="literal">true</span></span><br><span class="line">any = <span class="number">12.34</span></span><br><span class="line">any = <span class="string">&quot;hello&quot;</span></span><br><span class="line">any = <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">int</span>&#123;<span class="string">&quot;one&quot;</span>:<span class="number">1</span>&#125;</span><br><span class="line">any = <span class="built_in">new</span>(bytes.Buffer)</span><br></pre></td></tr></table></figure>
+<p>为了从空interface中把类型信息取回来，我们需要用到<code>type assertion</code>技术，具体到本章后面会详细说明。</p>
+<p>可以通过变量的定义，来静态的assert某个type是否是某个interface类型，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> w io.Writer = <span class="built_in">new</span>(bytes.Buffer)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> _ io.Writer = (*bytes.Buffer)(<span class="literal">nil</span>) <span class="comment">//简写，io.Writer经常是pointer类型的receiver</span></span><br></pre></td></tr></table></figure>
+<p>由于GO中是自动地将具体的类型匹配成interface的，因此，对于一些第三方的无法修改源码的库是比较有用的，我们只要定义好interface，第三方的类型会自动地匹配到。</p>
+<h2 id="Parsing-Flags-with-flag-Value"><a href="#Parsing-Flags-with-flag-Value" class="headerlink" title="Parsing Flags with flag.Value"></a>Parsing Flags with flag.Value</h2><p>本节主要以例子来说明，先来看传入时间作为命令行参数的例子。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> period = flag.Duration(<span class="string">&quot;period&quot;</span>, <span class="number">1</span> * time.Second, <span class="string">&quot;sleep period&quot;</span>)</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	flag.Parse()</span><br><span class="line">    fmt.Printf(<span class="string">&quot;sleeping for %v....&quot;</span>, *period)</span><br><span class="line">    time.Sleep(*period)</span><br><span class="line">    fmt.Println()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述代码中，period的默认值是1s，如果用户通过<code>-period 时间</code>传入值的话，flag.Parse()函数会解析出来，如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">./sleep</span><br><span class="line">Sleeping for 1s...</span><br><span class="line"></span><br><span class="line">./sleep -period 50ms</span><br><span class="line">Sleeping for 50ms...</span><br></pre></td></tr></table></figure>
+<p>因为Duration类型很重要，因此它们内置到flag package中。我们也可以自定义类型，只需要满足<code>flag.Value</code>interface即可，其定义如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> flag</span><br><span class="line"><span class="keyword">type</span> Value <span class="keyword">interface</span> &#123;</span><br><span class="line">	String() <span class="keyword">string</span></span><br><span class="line">    Set(<span class="keyword">string</span>) error</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过一个例子来说明如何自定义一个flag value，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> celsiusFlag <span class="keyword">struct</span> &#123;Celsius&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(f *celsiusFlag)</span> <span class="title">Set</span><span class="params">(s <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> unit <span class="keyword">string</span></span><br><span class="line">    <span class="keyword">var</span> value <span class="keyword">float64</span></span><br><span class="line">    fmt.Sscanf(s, <span class="string">&quot;%f%s&quot;</span>, &amp;value, &amp;unit)</span><br><span class="line">    <span class="keyword">switch</span> unit &#123;</span><br><span class="line">    	<span class="keyword">case</span> <span class="string">&quot;C&quot;</span>:</span><br><span class="line">        	f.Celsius = Celsius(value)</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">        <span class="keyword">case</span> <span class="string">&quot;F&quot;</span>:</span><br><span class="line">        	f.Celsius = FToC(Fahrenheit(value))</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> fmt.Errorf(<span class="string">&quot;invalid temporature %q&quot;</span>, s)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">CelsiusFlag</span><span class="params">(name <span class="keyword">string</span>, value Celsius, usage <span class="keyword">string</span>)</span> *<span class="title">Celsius</span></span> &#123;</span><br><span class="line">	f := celsiusFlag&#123;value&#125;</span><br><span class="line">    flag.CommandLine.Var(&amp;f, name, usage)</span><br><span class="line">    <span class="keyword">return</span> &amp;f.Celsius</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> temp = tempconv.CelsiusFlag(<span class="string">&quot;temp&quot;</span>, <span class="number">20.0</span>, <span class="string">&quot;the temperature&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	flag.Parse()</span><br><span class="line">    fmt.Println(*temp)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>用法如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">./tempflag</span><br><span class="line"><span class="number">20</span>C</span><br><span class="line">./tempflag -temp <span class="number">-18</span>C</span><br><span class="line"><span class="number">-18</span>C</span><br><span class="line">./tempflag -temp <span class="number">212</span>F</span><br><span class="line"><span class="number">100</span>C</span><br></pre></td></tr></table></figure>
+<h2 id="Interface-Values"><a href="#Interface-Values" class="headerlink" title="Interface Values"></a>Interface Values</h2><p>Interface value包含两个组件，分别是具体地类型和类型的值，它们被称作interface的dynamic type和dynamic value。</p>
+<p>以一个简单的例子，来说明interface value，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> w io.Writer</span><br><span class="line">w = os.Stdout</span><br><span class="line">w = <span class="built_in">new</span>(bytes.Buffer)</span><br><span class="line">w = <span class="literal">nil</span></span><br></pre></td></tr></table></figure>
+<p>对于语句1，创建了type和value都为nil的interface。</p>
+<p>对于语句2，创建了type为*os.File，value为Os.Stdout的interface</p>
+<p>对于语句3，创建了type为*bytes.Buffer,value为[]byte的interface</p>
+<p><img src="http://oserror.com/images/interface_values.png"></p>
+<p>interface类型可以存放任意大的dynamic value，例如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x <span class="keyword">interface</span> &#123;&#125; = time.Now() <span class="comment">//包含秒，纳秒等信息</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>interface比较</strong></p>
+<p>两个interface相等的条件为</p>
+<ul>
+<li>两个interface都为nil</li>
+<li>dynamic type和dynamic value都相等</li>
+</ul>
+<p>如果interface指向了不能比较的类型，而代码中又强行比较的话，会造成panic，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x <span class="keyword">interface</span>&#123;&#125; = []<span class="keyword">int</span>&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>&#125;</span><br><span class="line">fmt.Println(x==x) <span class="comment">//panic: comparing uncomparable type []int</span></span><br></pre></td></tr></table></figure>
+<h3 id="An-interface-Containing-a-Nil-Pointer-Is-Non-Nil"><a href="#An-interface-Containing-a-Nil-Pointer-Is-Non-Nil" class="headerlink" title="An interface Containing a Nil Pointer Is Non-Nil"></a>An interface Containing a Nil Pointer Is Non-Nil</h3><p>一个nil的interface和一个interface包含一个pointer为nil情况是不同的，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> debug = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> buf *bytes.Buffer</span><br><span class="line">    <span class="keyword">if</span> debug &#123;</span><br><span class="line">    	buf = <span class="built_in">new</span>(bytes.Buffer)</span><br><span class="line">    &#125;</span><br><span class="line">    f(buf)</span><br><span class="line">    <span class="keyword">if</span> debug &#123;</span><br><span class="line">    	<span class="comment">//.... use buf</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">f</span><span class="params">(out io.Writer)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> out != <span class="literal">nil</span> &#123;</span><br><span class="line">    	out.Write([]<span class="keyword">byte</span>(<span class="string">&quot;done!\n&quot;</span>))</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上述程序会panic在out.Write函数，当main调用f时，它会把type信息*byte.Buffer赋值给out的type，nil作为value赋值给out的value，因此，此时out不是nil的interface，于是，out调用write的时候就panic了。</p>
+<p>正确的写法是</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> buf io.Writer</span><br><span class="line"><span class="keyword">if</span> debug &#123;</span><br><span class="line">	buf = <span class="built_in">new</span> (bytes.Buffer)</span><br><span class="line">&#125;</span><br><span class="line">f(buf)</span><br></pre></td></tr></table></figure>
+<p>接下来三节将会讨论GO标准库的一些interface，包括sorting、web serving和error handling。</p>
+<h2 id="Sorting-with-sort-Interface"><a href="#Sorting-with-sort-Interface" class="headerlink" title="Sorting with sort.Interface"></a>Sorting with sort.Interface</h2><p>在GO中，sort.Interface包含以下内容</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> sort</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Interface <span class="keyword">interface</span> &#123;</span><br><span class="line">	Len() <span class="keyword">int</span></span><br><span class="line">    Less(i, j <span class="keyword">int</span>) <span class="keyword">bool</span></span><br><span class="line">    Swap(i, j <span class="keyword">int</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>为了使用标准库的排序算法，我们需要定义一个类型，实现interface的三种方法，例如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> StringSlice []<span class="keyword">string</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span><span class="params">(p StringSlice)</span> <span class="title">Len</span><span class="params">()</span> <span class="title">int</span></span> &#123; <span class="keyword">return</span> <span class="built_in">len</span>(p) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span><span class="params">(p StringSlice)</span> <span class="title">Less</span><span class="params">(i, j <span class="keyword">int</span>)</span> <span class="title">bool</span></span> &#123;<span class="keyword">return</span> p[i] &lt; p[j]&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span><span class="params">(p StringSlice)</span> <span class="title">Swap</span><span class="params">(i, j <span class="keyword">int</span>)</span></span> &#123;p[i], p[j] = p[j], p[i]&#125;</span><br><span class="line"></span><br><span class="line">sort.Sort(StringSlice(names))</span><br></pre></td></tr></table></figure>
+<p>由于排序字符串数组很常见，标准库已经集成了，调用sort.Strings(names)即可。</p>
+<p>标准库定义了一个Reverse函数，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> sort</span><br><span class="line"><span class="keyword">type</span> reverse <span class="keyword">struct</span>&#123; Interface &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r reverse)</span> <span class="title">Less</span><span class="params">(i, j <span class="keyword">int</span>)</span> <span class="title">bool</span></span> &#123;<span class="keyword">return</span> r.Interface.Less(j, i)&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Reverse</span><span class="params">(data Interface)</span> <span class="title">Interface</span></span> &#123;<span class="keyword">return</span> reverse&#123;data&#125;&#125;</span><br></pre></td></tr></table></figure>
+<p>这样sort的时候，使用Reverse就能逆序排序了，<code>sort.Sort(sort.Rerverse(sort.Strings(names)))</code>。</p>
+<h2 id="The-http-Handler-Interface"><a href="#The-http-Handler-Interface" class="headerlink" title="The http.Handler Interface"></a>The <em>http.Handler</em> Interface</h2><p>在GO中，通过net/http，可以实现web server，具体地我们看其是怎么工作的。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> http</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Handler <span class="keyword">interface</span> &#123;</span><br><span class="line">	ServeHTTP(w ResponseWriter, r *Request)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ListenAndServe</span><span class="params">(address <span class="keyword">string</span>, h Handler)</span> <span class="title">error</span></span></span><br></pre></td></tr></table></figure>
+
+<p>ListenAndServe函数的第一个参数是string，一般接受<code>localhost:8000</code>之类的参数，第二个参数则是一个Handler interface，需要实现ServeHTTP method。</p>
+<p>一个简单的使用例子</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	db := database&#123;<span class="string">&quot;shoes&quot;</span>:<span class="number">50</span>， “socks”:<span class="number">5</span>&#125;</span><br><span class="line">    log.Fatal(http.ListenAndServe(<span class="string">&quot;localhost:8000&quot;</span>, db))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> dollars <span class="keyword">float32</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(d dollars)</span> <span class="title">String</span><span class="params">()</span> <span class="title">string</span></span> &#123; <span class="keyword">return</span> fmt.Sprintf(<span class="string">&quot;$%.2f&quot;</span>, d)&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> database <span class="keyword">map</span>[<span class="keyword">string</span>]dollars</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(db database)</span> <span class="title">ServeHTTP</span><span class="params">(w http.ResponseWriter, req *http.Request)</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> iterm, price := <span class="keyword">range</span> db &#123;</span><br><span class="line">    	fmt.Fprintf(w, <span class="string">&quot;%s:%s&quot;</span>, item, price)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个例子对网站的所有路径的访问都会输出相同的东西，如果我们需要通过/price获取价格信息，/list获取列表信息，可以通过以下方法实现</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(db database)</span> <span class="title">ServeHTTP</span><span class="params">(w http.ResponseWriter, req *http.Request)</span></span> &#123;</span><br><span class="line">	<span class="keyword">switch</span> req.URL.Path &#123;</span><br><span class="line">    	<span class="keyword">case</span> <span class="string">&quot;/list&quot;</span>:</span><br><span class="line">        	<span class="keyword">for</span> item, price := <span class="keyword">range</span> db &#123;</span><br><span class="line">            	fmt.FPrintf(w, <span class="string">&quot;%s:%s\n&quot;</span>, item, price)</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">&quot;/price&quot;</span>:</span><br><span class="line">        	item := req.URL.Query().Get(<span class="string">&quot;item&quot;</span>)</span><br><span class="line">            price, ok := db[item]</span><br><span class="line">            <span class="keyword">if</span> !ok &#123;</span><br><span class="line">            	w.WriteHeader(http.StatusNotFound)</span><br><span class="line">                fmt.Fprintf(w, <span class="string">&quot;no sum item : %q\n&quot;</span>, item)</span><br><span class="line">                <span class="keyword">return</span></span><br><span class="line">            &#125;</span><br><span class="line">            fmt.Fprintf(w, <span class="string">&quot;%s\n&quot;</span>, price)</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">        	w.WriteHeader(http.StatusNotFound)</span><br><span class="line">            fmt.Fprintf(w, <span class="string">&quot;no such page: %s\n&quot;</span>, req.URL)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果需要处理的访问路径越来越多，switch语句的case也会越来越多，为了方便，net/http提供了<code>ServeMux</code>，可以把一组http.Handler聚合到单个http.Handler中，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	db := database&#123;<span class="string">&quot;shoes&quot;</span>: <span class="number">50</span>, <span class="string">&quot;socks&quot;</span>: <span class="number">5</span>&#125;</span><br><span class="line">    mux := http.NewServeMux()</span><br><span class="line">    mux.Handle(<span class="string">&quot;/list&quot;</span>, http.HandlerFunc(db.list))</span><br><span class="line">    mux.Handle(<span class="string">&quot;/price&quot;</span>, http.HandlerFunc(db.price))</span><br><span class="line">    log.Fatal(http.ListenAndServe(<span class="string">&quot;localhost:8000&quot;</span>), mux)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> database <span class="keyword">map</span>[<span class="keyword">string</span>]dollors</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(db database)</span> <span class="title">list</span><span class="params">(w http.ResponseWriter, req *http.Request)</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> item, price := <span class="keyword">range</span> db &#123;</span><br><span class="line">    	fmt.Fprintf(w, <span class="string">&quot;%s:%s\n&quot;</span>, item, price)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(db database)</span> <span class="title">price</span><span class="params">(w http.ResponseWriter, req *http.Request)</span></span> &#123;</span><br><span class="line">	item := req.URL.Query().Get(<span class="string">&quot;item&quot;</span>)</span><br><span class="line">    price, ok := db[item]</span><br><span class="line">    <span class="keyword">if</span> !ok &#123;</span><br><span class="line">    	w.WriteHeader(http.StatusNotFound)</span><br><span class="line">        fmt.Fprintf(w, <span class="string">&quot;no such item: %q\n&quot;</span>, item)</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    fmt.FPrintf(w, <span class="string">&quot;%s\n&quot;</span>, price)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为db.list不满足http.Handler interface，因此使用了http.HandlerFunc，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> HandlerFunc <span class="function"><span class="keyword">func</span><span class="params">(w ResponseWriter, r *Request)</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(f HandlerFunc)</span> <span class="title">ServeHTTP</span><span class="params">(w ResponseWriter, r *Request)</span></span> &#123;</span><br><span class="line">	f(w,r)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看出，对于函数类型，也可以有method。由于上述功能经常使用到，标准库提供更简单的写法</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mux.HandleFunc(<span class="string">&quot;/list&quot;</span>, db.list)</span><br><span class="line">mux.HandleFunc(<span class="string">&quot;/price&quot;</span>, db.price)</span><br></pre></td></tr></table></figure>
+
+<h2 id="The-error-Interface"><a href="#The-error-Interface" class="headerlink" title="The error Interface"></a>The <em>error</em> Interface</h2><p>error interface的定义如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> error <span class="keyword">interface</span> &#123;</span><br><span class="line">	Error() <span class="keyword">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>error可以通过errors.New创建，其实现方法如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> errors</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">New</span><span class="params">(text <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123; <span class="keyword">return</span> &amp;errorString&#123;text&#125; &#125;</span><br><span class="line"><span class="keyword">type</span> errorString <span class="keyword">struct</span> &#123; text <span class="keyword">string</span> &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(e *errorString)</span> <span class="title">Error</span><span class="params">()</span> <span class="title">string</span></span> &#123; <span class="keyword">return</span> e.text &#125;</span><br></pre></td></tr></table></figure>
+<p>还可以使用更简便的方法，例如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> fmt</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;errors&quot;</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Errorf</span><span class="params">(format <span class="keyword">string</span>, args ...<span class="keyword">interface</span>&#123;&#125;)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> errors.New(Sprintf(format, args...))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Type-Assertions"><a href="#Type-Assertions" class="headerlink" title="Type Assertions"></a>Type Assertions</h2><p>Type Assertions一般是x.(T)，其中x是interface类型，T是类型，称为asserted类型。Type Assertion检查interface的dynamic type是否和类型T匹配。</p>
+<ul>
+<li>如果asserted类型是具体的类型，并且dynamic type与之匹配了，那么x.(T)的返回值是x的dynamic value，否则，程序panic。</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> w io.Writer</span><br><span class="line">w = os.Stdout</span><br><span class="line">f := w.(*OS.File) <span class="comment">//success, f == OS.Stdout</span></span><br><span class="line">c := w.(*bytes.Buffer) <span class="comment">// panic</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>如果asserted类型本身是interface，那么检查dynamic type是否满足T，如果检查通过，dynamic type和dynamic value保持不变，但是interface类型变为T。这种type assertion的意义是可以改变interface的method组合。</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> w io.Writer</span><br><span class="line">w = os.Stdout</span><br><span class="line">rw := w.(io.ReadWriter) <span class="comment">// success: *os.File has both Read and Write</span></span><br><span class="line"></span><br><span class="line">w = <span class="built_in">new</span>(ByteCounter)</span><br><span class="line">rw = w.(io.ReadWriter) <span class="comment">// panic: *ByteCounter has no read method</span></span><br></pre></td></tr></table></figure>
+<p>type assertion到更少的method组合通常是不必要的，因为可以直接用赋值运算就好，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">w = rw</span><br></pre></td></tr></table></figure>
+<ul>
+<li>如果type assertion带了两个返回值，那么失败的时候不会panic。</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> w io.Writer = os.Stdout</span><br><span class="line">f, ok := w.(*os.File) <span class="comment">// success: ok, f == os.Stdout</span></span><br><span class="line">b, ok := w.(*bytes.Buffer) <span class="comment">// failure: !ok, b == nil</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> f, ok := w.(*os.File); ok &#123;</span><br><span class="line">	<span class="comment">//use f</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> w, ok := w.(*os.File); ok &#123; <span class="comment">//w隐藏了原来的值</span></span><br><span class="line">	<span class="comment">//use w</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Discriminating-Errors-with-Type-Assertions"><a href="#Discriminating-Errors-with-Type-Assertions" class="headerlink" title="Discriminating Errors with Type Assertions"></a>Discriminating Errors with Type Assertions</h2><p>系统中，I/O可能因为很多原因而失败，但是有三种必须要特殊的处理：file already exist，file not found和permession denied。</p>
+<p>系统中提供了三个函数来判断三种错误，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> os</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">IsExist</span><span class="params">(err error)</span> <span class="title">bool</span></span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">IsNotExist</span><span class="params">(err error)</span> <span class="title">bool</span></span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">IsPermission</span><span class="params">(err error)</span> <span class="title">bool</span></span></span><br></pre></td></tr></table></figure>
+<p>标准库采用如下方法实现</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> os</span><br><span class="line"><span class="keyword">type</span> PathError <span class="keyword">struct</span> &#123;</span><br><span class="line">	Op <span class="keyword">string</span></span><br><span class="line">    Path <span class="keyword">string</span></span><br><span class="line">    Err error</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(e *PathError)</span> <span class="title">Error</span><span class="params">()</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> e.Op + <span class="string">&quot; &quot;</span> + e.Path + <span class="string">&quot;:&quot;</span> + e.Err.Error()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">_, err := os.Open(<span class="string">&quot;/no/such/file&quot;</span>)</span><br><span class="line">fmt.Println(err) <span class="comment">// &quot;Open /no/such/file: No such file or directory&quot;</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;%#v\n&quot;</span>, err) <span class="comment">// &amp;os.PathError&#123;Op:&quot;open&quot;, Path:&quot;/no/such/file&quot;, Err:0x2&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">IsNotExist</span><span class="params">(err error)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> pe, ok := err.(*PathError); ok &#123;</span><br><span class="line">    	err = pe.Err</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> err == syscall.ENOENT || err == ErrNotExist</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Querying-Behaviors-with-Interface-Type-Assertions"><a href="#Querying-Behaviors-with-Interface-Type-Assertions" class="headerlink" title="Querying Behaviors with Interface Type Assertions"></a>Querying Behaviors with Interface Type Assertions</h2><p>在使用net/http包时，会使用到类似下面的函数</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">writeHeader</span><span class="params">(w io.Writer, contentType <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> _, err := w.Write([]<span class="keyword">byte</span>(<span class="string">&quot;Content-Type:&quot;</span>)); err != <span class="literal">nil</span> &#123;</span><br><span class="line">    	<span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> _, err := w.Write([]<span class="keyword">byte</span>(contentType)); err != <span class="literal">nil</span> &#123;</span><br><span class="line">    	<span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为需要把string类型转成[]byte，会分配临时的内存，造成内存使用量过大。对于有些io.Writer，实际上它们是支持WriteString方法的，因此，WriteHeader可以优化成如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">writeString</span><span class="params">(w io.Writer, s <span class="keyword">string</span>)</span><span class="params">(n <span class="keyword">int</span>, err error)</span></span> &#123;</span><br><span class="line">	<span class="keyword">type</span> stringWriter <span class="keyword">interface</span> &#123;</span><br><span class="line">    	WriteString(<span class="keyword">string</span>)(n <span class="keyword">int</span>, err error)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> sw, ok := w.(stringWriter); ok &#123;</span><br><span class="line">    	<span class="keyword">return</span> sw.WriteString(s) <span class="comment">//avoid copy</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> w.Write([]<span class="keyword">byte</span>(s))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">writeHeader</span><span class="params">(w io.Writer, contentType <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> _, err := writeString(w, <span class="string">&quot;Content-Type:&quot;</span>); err != <span class="literal">nil</span> &#123;</span><br><span class="line">    	<span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> _, err := writeString(w, contentType); err != <span class="literal">nil</span> &#123;</span><br><span class="line">    	<span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Type-Switches"><a href="#Type-Switches" class="headerlink" title="Type Switches"></a>Type Switches</h2><p>Interface一般以两种不同的方式在使用。第一种是强调method，例如io.Reader等；第二种是强调type。</p>
+<p>考虑下面的代码</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;database/sql&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">listTracks</span><span class="params">(db sql.DB, artist <span class="keyword">string</span>, minYear, maxYear <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	result, err := db.Exec (</span><br><span class="line">    <span class="string">&quot;SELECT * FROM tracks WHERE artist=? AND ? &lt;= year AND year &lt;=?&quot;</span>), artist, minYear, maxYear)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>为了实现讲不同的类型转换成问号中具体的值，我们可以用以下方法</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sqlQuote</span><span class="params">(x <span class="keyword">interface</span>&#123;&#125;)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> x == <span class="literal">nil</span> &#123;</span><br><span class="line">    	<span class="keyword">return</span> <span class="string">&quot;NULL&quot;</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> _, ok := x.(<span class="keyword">int</span>); ok &#123;</span><br><span class="line">    	<span class="keyword">return</span> fmt.Sprintf(<span class="string">&quot;%d&quot;</span>, x)</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> _, ok := x.(<span class="keyword">uint</span>); ok &#123;</span><br><span class="line">    	<span class="keyword">return</span> fmt.Sprintf(<span class="string">&quot;%d&quot;</span>, x)</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> b, ok := x.(<span class="keyword">bool</span>); ok &#123;</span><br><span class="line">    	<span class="keyword">if</span> b &#123;</span><br><span class="line">        	<span class="keyword">return</span> <span class="string">&quot;TRUE&quot;</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        	<span class="keyword">return</span> <span class="string">&quot;FALSE&quot;</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> s, ok := x.(<span class="keyword">string</span>); ok &#123;</span><br><span class="line">    	<span class="keyword">return</span> sqlQuoteString(s)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    	<span class="built_in">panic</span>(fmt.Sprintf(<span class="string">&quot;unexpected type %T: %v&quot;</span>, x, x))</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面采用的方法是type assertion，需要使用大量的if-else语句，不是太方便。</p>
+<p>GO中还支持type switch的方法，支持switch语句，比较方便</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sqlQuote</span><span class="params">(x <span class="keyword">interface</span>&#123;&#125;)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	<span class="keyword">switch</span> x := x.(<span class="keyword">type</span>) &#123;</span><br><span class="line">    	<span class="keyword">case</span> <span class="literal">nil</span>:</span><br><span class="line">        	<span class="keyword">return</span> <span class="string">&quot;NULL&quot;</span></span><br><span class="line">        <span class="keyword">case</span> <span class="keyword">int</span>, <span class="keyword">uint</span>:</span><br><span class="line">        	<span class="keyword">return</span> fmt.Sprintf(<span class="string">&quot;%d&quot;</span>, x)</span><br><span class="line">        <span class="keyword">case</span> <span class="keyword">bool</span>:</span><br><span class="line">        	<span class="keyword">if</span> x &#123;</span><br><span class="line">            	<span class="keyword">return</span> <span class="string">&quot;TRUE&quot;</span></span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            	<span class="keyword">return</span> <span class="string">&quot;FALSE&quot;</span></span><br><span class="line">            &#125;</span><br><span class="line">        <span class="keyword">case</span> <span class="keyword">string</span>:</span><br><span class="line">        	<span class="keyword">return</span> sqlQuoteString(x)</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">        	<span class="built_in">panic</span>(fmt.Sprintf(<span class="string">&quot;unexpected type %T: %v&quot;</span>, x, x))</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>PS:<br>本博客更新会在第一时间推送到微信公众号，欢迎大家关注。</p>
+<p><img src="http://oserror.com/images/qcode_wechat.jpg" alt="qocde_wechat"></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/golang/" rel="tag">#golang</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/backend/libev-analysis/" rel="next" title="libev设计与实现">
+                <i class="fa fa-chevron-left"></i> libev设计与实现
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/distributed/distributed-system-time-ordering/" rel="prev" title="分布式系统时序基础">
+                分布式系统时序基础 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">36</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">33</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Charles0429" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Introduction"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Functions"><span class="nav-number">2.</span> <span class="nav-text">Functions</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Function-Declarations"><span class="nav-number">2.1.</span> <span class="nav-text">Function Declarations</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Recursion"><span class="nav-number">2.2.</span> <span class="nav-text">Recursion</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Multiple-Return-Values"><span class="nav-number">2.3.</span> <span class="nav-text">Multiple Return Values</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Errors"><span class="nav-number">2.4.</span> <span class="nav-text">Errors</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Error-Handling-Strategies"><span class="nav-number">2.4.1.</span> <span class="nav-text">Error-Handling Strategies</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%A0%E6%92%AD%E9%94%99%E8%AF%AF"><span class="nav-number">2.4.1.1.</span> <span class="nav-text">传播错误</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%87%8D%E8%AF%95"><span class="nav-number">2.4.1.2.</span> <span class="nav-text">重试</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%8D%E5%8F%AF%E8%83%BD%E7%9A%84%E9%94%99%E8%AF%AF%E2%80%94%E6%89%93%E5%8D%B0%E9%94%99%E8%AF%AF%EF%BC%8C%E4%BC%98%E9%9B%85%E5%9C%B0%E7%BB%88%E6%AD%A2%E7%A8%8B%E5%BA%8F"><span class="nav-number">2.4.1.3.</span> <span class="nav-text">不可能的错误—打印错误，优雅地终止程序</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%89%93%E5%8D%B0%E5%87%BA%E9%94%99%E8%AF%AF%EF%BC%8C%E7%BB%A7%E7%BB%AD%E4%BB%A5%E4%B8%8D%E5%AE%8C%E5%85%A8%E5%8A%9F%E8%83%BD%E6%89%A7%E8%A1%8C"><span class="nav-number">2.4.1.4.</span> <span class="nav-text">打印出错误，继续以不完全功能执行</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%8C%E5%85%A8%E5%BF%BD%E7%95%A5%E9%94%99%E8%AF%AF"><span class="nav-number">2.4.1.5.</span> <span class="nav-text">完全忽略错误</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#End-of-File-EOF"><span class="nav-number">2.4.2.</span> <span class="nav-text">End of File(EOF)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Function-Values"><span class="nav-number">2.5.</span> <span class="nav-text">Function Values</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Anonymous-Functions"><span class="nav-number">2.6.</span> <span class="nav-text">Anonymous Functions</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Caveat-Capturing-Iteration-Variables"><span class="nav-number">2.6.1.</span> <span class="nav-text">Caveat: Capturing Iteration Variables</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Variadic-Functions"><span class="nav-number">2.7.</span> <span class="nav-text">Variadic Functions</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Deferred-Function-Calls"><span class="nav-number">2.8.</span> <span class="nav-text">Deferred Function Calls</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Panic"><span class="nav-number">2.9.</span> <span class="nav-text">Panic</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Recover"><span class="nav-number">2.10.</span> <span class="nav-text">Recover</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Methods"><span class="nav-number">3.</span> <span class="nav-text">Methods</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Method-Declarations"><span class="nav-number">3.1.</span> <span class="nav-text">Method Declarations</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Methods-with-a-Pointer-Receiver"><span class="nav-number">3.2.</span> <span class="nav-text">Methods with a Pointer Receiver</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Nil-is-a-Valid-Reciever-Value"><span class="nav-number">3.2.1.</span> <span class="nav-text">Nil is a Valid Reciever Value</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Composing-Types-by-Struct-Embedding"><span class="nav-number">3.3.</span> <span class="nav-text">Composing Types by Struct Embedding</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Method-Values-and-Expressions"><span class="nav-number">3.4.</span> <span class="nav-text">Method Values and Expressions</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Example-Bit-Vector-Type"><span class="nav-number">3.5.</span> <span class="nav-text">Example: Bit Vector Type</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Encapsulation"><span class="nav-number">3.6.</span> <span class="nav-text">Encapsulation</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Interfaces"><span class="nav-number">4.</span> <span class="nav-text">Interfaces</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Interface-as-Contracts"><span class="nav-number">4.1.</span> <span class="nav-text">Interface as Contracts</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Interface-Types"><span class="nav-number">4.2.</span> <span class="nav-text">Interface Types</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Interface-Satisfication"><span class="nav-number">4.3.</span> <span class="nav-text">Interface Satisfication</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Parsing-Flags-with-flag-Value"><span class="nav-number">4.4.</span> <span class="nav-text">Parsing Flags with flag.Value</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Interface-Values"><span class="nav-number">4.5.</span> <span class="nav-text">Interface Values</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#An-interface-Containing-a-Nil-Pointer-Is-Non-Nil"><span class="nav-number">4.5.1.</span> <span class="nav-text">An interface Containing a Nil Pointer Is Non-Nil</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Sorting-with-sort-Interface"><span class="nav-number">4.6.</span> <span class="nav-text">Sorting with sort.Interface</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#The-http-Handler-Interface"><span class="nav-number">4.7.</span> <span class="nav-text">The http.Handler Interface</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#The-error-Interface"><span class="nav-number">4.8.</span> <span class="nav-text">The error Interface</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Type-Assertions"><span class="nav-number">4.9.</span> <span class="nav-text">Type Assertions</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Discriminating-Errors-with-Type-Assertions"><span class="nav-number">4.10.</span> <span class="nav-text">Discriminating Errors with Type Assertions</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Querying-Behaviors-with-Interface-Type-Assertions"><span class="nav-number">4.11.</span> <span class="nav-text">Querying Behaviors with Interface Type Assertions</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Type-Switches"><span class="nav-number">4.12.</span> <span class="nav-text">Type Switches</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Charles0429</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

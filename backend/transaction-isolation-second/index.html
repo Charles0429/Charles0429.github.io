@@ -1,0 +1,745 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.lug.ustc.edu.cn/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="数据库,事务隔离," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Charles的技术博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="引言前一篇文章中，介绍了ANSI SQL标准下的事务隔离级别及其扩展，这篇文章主要讨论了基于加锁的方式如何实现不同的事务隔离级别，全文的组织架构如下：  ANSI SQL标准下的事务隔离级别及其扩展回顾 基于加锁方式的事务隔离原理  ANSI SQL标准下的事务隔离级别及其扩展回顾ANSI SQL标准下的事务隔离级别是基于禁止某些干扰现象而制定的，这些现象如下： 脏读P1  W1(X)…R2(X)">
+<meta property="og:type" content="article">
+<meta property="og:title" content="事务隔离（二）：基于加锁方式的事务隔离原理">
+<meta property="og:url" content="http://yoursite.com/backend/transaction-isolation-second/index.html">
+<meta property="og:site_name" content="Charles的技术博客">
+<meta property="og:description" content="引言前一篇文章中，介绍了ANSI SQL标准下的事务隔离级别及其扩展，这篇文章主要讨论了基于加锁的方式如何实现不同的事务隔离级别，全文的组织架构如下：  ANSI SQL标准下的事务隔离级别及其扩展回顾 基于加锁方式的事务隔离原理  ANSI SQL标准下的事务隔离级别及其扩展回顾ANSI SQL标准下的事务隔离级别是基于禁止某些干扰现象而制定的，这些现象如下： 脏读P1  W1(X)…R2(X)">
+<meta property="og:locale">
+<meta property="og:image" content="http://oserror.com/images/ansi_sql_isolation_levels.png">
+<meta property="og:image" content="http://oserror.com/images/lock_isolation_levels.png">
+<meta property="og:image" content="http://oserror.com/images/qcode_wechat.jpg">
+<meta property="article:published_time" content="2017-02-12T02:20:39.000Z">
+<meta property="article:modified_time" content="2021-06-14T13:00:05.529Z">
+<meta property="article:author" content="Charles0429">
+<meta property="article:tag" content="数据库">
+<meta property="article:tag" content="事务隔离">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://oserror.com/images/ansi_sql_isolation_levels.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 3109763,
+      author: 'Charles0429'
+    }
+  };
+</script>
+
+  <title> 事务隔离（二）：基于加锁方式的事务隔离原理 | Charles的技术博客 </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Charles的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                事务隔离（二）：基于加锁方式的事务隔离原理
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-02-12T10:20:39+08:00" content="2017-02-12">
+              2017-02-12
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/backend/" itemprop="url" rel="index">
+                    <span itemprop="name">后台开发</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>前一篇文章中，介绍了ANSI SQL标准下的事务隔离级别及其扩展，这篇文章主要讨论了基于加锁的方式如何实现不同的事务隔离级别，全文的组织架构如下：</p>
+<ul>
+<li>ANSI SQL标准下的事务隔离级别及其扩展回顾</li>
+<li>基于加锁方式的事务隔离原理</li>
+</ul>
+<h1 id="ANSI-SQL标准下的事务隔离级别及其扩展回顾"><a href="#ANSI-SQL标准下的事务隔离级别及其扩展回顾" class="headerlink" title="ANSI SQL标准下的事务隔离级别及其扩展回顾"></a>ANSI SQL标准下的事务隔离级别及其扩展回顾</h1><p>ANSI SQL标准下的事务隔离级别是基于禁止某些干扰现象而制定的，这些现象如下：</p>
+<p>脏读P1</p>
+<blockquote>
+<p>W1(X)…R2(X)…A1…R2(X)</p>
+</blockquote>
+<p>不可重复读P2</p>
+<blockquote>
+<p>R1(X)…W2(X)…C2…R1(X)</p>
+</blockquote>
+<p>幻读P3</p>
+<blockquote>
+<p>R1(P)…W2(P)…C2…R1(P)</p>
+</blockquote>
+<p>针对三种现象，ANSI SQL标准设定了四种事务隔离级别，如下：</p>
+<ol>
+<li>Read Uncommitted：有可能发生P1，P2和P3</li>
+<li>Read Committed：不可能发生P1，有可能发生P2和P3</li>
+<li>Repeatable Read：不可能发生P1，P2，有可能发生P3</li>
+<li>Serializable：不可能发生P1，P2和P3</li>
+</ol>
+<p>整个事务个隔离级别，与杜绝的现象的对应关系如下图：</p>
+<p><img src="http://oserror.com/images/ansi_sql_isolation_levels.png" alt="ANSI SQL Isolation Levels"></p>
+<p>由于ANSI SQL的标准存在以下限制：</p>
+<ul>
+<li>没有提及写操作的隔离性</li>
+<li>ANSI SQL的标准比较老，对于采用多版本并发控制实现隔离性的级别不能够很好的描述</li>
+</ul>
+<p>即新干扰现象P0和P4，其中脏写P0如下</p>
+<blockquote>
+<p>W1(X)…W2(X)…A1</p>
+</blockquote>
+<p>写丢失P4如下</p>
+<blockquote>
+<p>R1(X)…R2(X)…W2(X)…C2…W1(X)…C1</p>
+</blockquote>
+<p>因此，引入了新的隔离级别，包括</p>
+<ul>
+<li>Cursor Stability</li>
+<li>Snapshot</li>
+</ul>
+<p>具体的分析，请参照我的博文(<a target="_blank" rel="noopener" href="http://oserror.com/backend/transaction-isolation-first/">事务隔离（一）：ANSI SQL事务隔离级别，限制及扩展</a>)。</p>
+<h1 id="基于加锁方式的事务隔离原理"><a href="#基于加锁方式的事务隔离原理" class="headerlink" title="基于加锁方式的事务隔离原理"></a>基于加锁方式的事务隔离原理</h1><h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><p>锁有两种，即共享锁(Share Lock)和排他锁(Exclusive Lock)，对于不同事务加在同一个数据项上的锁，如果其中至少有一个是排他锁的话，那么事务是会冲突的，即其中一个事务必须等待。一般共享锁也称为读锁(Read Lock)，而排它锁也称为写锁(Write Lock)。</p>
+<p>读写锁根据锁住的数据项不同，分为普通锁和谓词锁。谓词锁是指锁住满足某一查询条件的所有数据项，它不仅包括当前在数据库中满足条件的记录，也包括即将要插入，更新或删除到数据库并满足查询条件的数据项。对于不同事务加在查询条件下的谓词锁，在至少一个是写锁的情况，且两个谓词条件中包含重叠的数据项时，则两个事务是冲突的。</p>
+<p>well-formed read(write)是指在read(write)一个数据项或者查询条件时，会先对数据项或者查询条件加read(write) lock。如果一个事务的所有读写都是well-formed，那称事务是well-formed。</p>
+<p>two-phase read(write)是当有一个或多个read(write) lock被释放后，不能再加新的read(write) lock。如果一个事务在释放一个或多个锁后，不再加其他的锁，那么称该事务是two-phase的。</p>
+<p>如果一把锁从加上，到事务结束(commit or abort)后才释放，则称此锁是long duration的，否则，称锁是short duration的。</p>
+<p>多个并发执行的事务是serializability，指的是并发调度执行的结果等于这些事务某个串行执行的结果。例如，有三个并发执行的事务T1，T2和T3，如果其执行结果和其某个串行执行((T1,T2,T3),(T1,T3,T2),(T2,T1,T3),(T2,T3,T1),(T3,T1,T2),(T3,T2,T1))的结果相同。</p>
+<p>如果一个事务T1持有一把锁的情况下，另一个事务T2申请一把冲突的锁，那么，事务T2只有等到事务T1释放这把锁之后，才能加上这把锁。</p>
+<p>根据数据库的基础理论，采用well-formed two-phase locking方式调度事务的话，是能够保证serializability的。</p>
+<p>在了解到锁的基本概念之后，接下来讨论，如何基于锁来实现各种不同的隔离级别。</p>
+<h2 id="隔离级别如何实现"><a href="#隔离级别如何实现" class="headerlink" title="隔离级别如何实现"></a>隔离级别如何实现</h2><p>先来看所有的干扰现象：</p>
+<p>脏写P0</p>
+<blockquote>
+<p>W1(X)…W2(X)…A1</p>
+</blockquote>
+<p>脏读P1</p>
+<blockquote>
+<p>W1(X)…R2(X)…A1…R2(X)</p>
+</blockquote>
+<p>不可重复读P2</p>
+<blockquote>
+<p>R1(X)…W2(X)…C2…R1(X)</p>
+</blockquote>
+<p>幻读P3</p>
+<blockquote>
+<p>R1(P)…W2(P)…C2…R1(P)</p>
+</blockquote>
+<p>写丢失P4</p>
+<blockquote>
+<p>R1(X)…R2(X)…W2(X)…C2…W1(X)…C1</p>
+</blockquote>
+<p>如果需要禁止P0，即禁止多个事务同时能修改一个数据项或谓词条件，则需要修改数据时，加写锁，并且是long duration的，此时，隔离级别满足Read Uncommitted。</p>
+<p>如果需要禁止P1，即禁止读取到其他事务修改的中间状态的数据，在禁止P0的条件下，则需要，对读加锁，short duration的就能够满足条件，此时，隔离级别满足Read Committed。</p>
+<p>如果需要禁止P4，即禁止事务读取并且修改某个数据项后，需要禁止其他事务再次修改，但如果只是读取的话，不影响，这里，需要一种特殊的锁，称为Cursor Lock，会对事务当前处理的行进行加锁，如果行记录被修改，那么锁会是long duration的，直到事务结束，如果，行未被修改，则锁会提前被释放，此时，隔离级别满足Curstor stability。</p>
+<p>如果需要禁止P2，即要禁止到读到某个数据项后，该数据还可能被其他事务修改，因此，需要对读加锁，且一直加锁到事务结束，即long duration，此时，隔离级别满足Repeatable Read。</p>
+<p>如果需要禁止P3，即要禁止读到某个谓词条件后，满足该谓词条件的数据还被其他事务修改，因此，需要对谓词条件加读锁，且是long duration的，此时，隔离级别满足SERIALIZABLE。</p>
+<p>不同的加锁与事务隔离级别的对应关系如下：<br><img src="http://oserror.com/images/lock_isolation_levels.png" alt="Lock Isolation Levels"></p>
+<p>表格中最后一项中，对于读写锁都是long duration的，即到事务结束才会释放锁，即事务过程中只有加锁阶段，没有解锁阶段，这种方式和普通的two-phase locking有什么区别呢？</p>
+<h2 id="Two-phase-Locking"><a href="#Two-phase-Locking" class="headerlink" title="Two-phase Locking"></a>Two-phase Locking</h2><p>普通的two-phase locking包含两个阶段：</p>
+<ul>
+<li>Expanding phase：加锁阶段，此阶段只加锁，不释放锁</li>
+<li>Shrinking phase：解锁阶段，此阶段只解锁，不加锁</li>
+</ul>
+<p>普通的two-phase locking可能会如下问题：</p>
+<p>假设有两个事务T1，T2，它们的时序如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">T1       T2</span><br><span class="line">R1(X)</span><br><span class="line">W1(X)</span><br><span class="line">         R2(X)</span><br><span class="line">         W2(X)</span><br><span class="line">A1</span><br></pre></td></tr></table></figure>
+<p>由于事务T2读到的数据是事务T1修改的X，当事务T1回滚时，事务T2读到的数据就是脏数据，因此，需要对事务T2也进行回滚，如果存在T3也读到了T2修改的数据，那么T3也需要回滚，这样，会导致一系列的事务都需要回滚，称为Cascading Aborts。</p>
+<p>而表格中的two-phase locking，只有加锁阶段，因此，不会存在上述问题。只有加锁阶段的two-phase locking，也称为strict two-phase locking。</p>
+<p>由于two-phase locking采用的是加锁的方式，因此有可能会碰到经典的死锁问题，举个例子，如下：</p>
+<p>假设有事务T1，T2，它们的加锁时序如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">T1       T2</span><br><span class="line">R1(X)   R2(Y)</span><br><span class="line">W1(Y)   W2(X)</span><br></pre></td></tr></table></figure>
+
+<p>按照如上的时序，事务T1和T2处于等待互相释放锁的状态，即死锁。死锁问题会导致事务无法继续进行有效的工作，因此，必须要解决，常见的解决方案有：</p>
+<ul>
+<li>死锁检测并消除</li>
+<li>锁等待一段时间阈值后，对事务进行回滚，并释放所有锁</li>
+</ul>
+<p>第一种方法，死锁检测并消除的方法是有一个单独的线程检测事务的锁等待图，如果图构成了一个环，那么，说明发生了死锁，此时，需要选择环中的一个事务进行回滚，并释放锁，使得其他事务能够继续运行下去。</p>
+<p>第二种方法，锁等待一段时间阈值后，对事务进行回滚，并释放其所有锁，表明，每次发生死锁时，都会先回滚最早开始执行的事务，使得其他的事务能够继续运行下去。</p>
+<p>PS:<br>本博客更新会在第一时间推送到微信公众号，欢迎大家关注。</p>
+<p><img src="http://oserror.com/images/qcode_wechat.jpg" alt="qocde_wechat"></p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr-95-51.pdf">A Critique of ANSI SQL Isolation Levels</a></li>
+<li><a target="_blank" rel="noopener" href="http://stackoverflow.com/questions/29722886/2pl-rigorous-vs-strict-model-is-there-any-benefit">2PL VS strict 2PL</a></li>
+<li><a target="_blank" rel="noopener" href="http://hssl.cs.jhu.edu/~randal/416/lectures/09.locking.pdf">Cascading Aborts jhu</a></li>
+<li><a target="_blank" rel="noopener" href="http://blog.163.com/li_hx/blog/static/183991413201610493233235?utm_source=tuicool&utm_medium=referral">Cascading Aborts blog</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag">#数据库</a>
+          
+            <a href="/tags/%E4%BA%8B%E5%8A%A1%E9%9A%94%E7%A6%BB/" rel="tag">#事务隔离</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/backend/transaction-isolation-first/" rel="next" title="事务隔离（一）：ANSI SQL事务隔离级别，限制及扩展">
+                <i class="fa fa-chevron-left"></i> 事务隔离（一）：ANSI SQL事务隔离级别，限制及扩展
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/backend/ssd-principle/" rel="prev" title="程序员需要知道的SSD基本原理">
+                程序员需要知道的SSD基本原理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">36</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">33</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Charles0429" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%95%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ANSI-SQL%E6%A0%87%E5%87%86%E4%B8%8B%E7%9A%84%E4%BA%8B%E5%8A%A1%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB%E5%8F%8A%E5%85%B6%E6%89%A9%E5%B1%95%E5%9B%9E%E9%A1%BE"><span class="nav-number">2.</span> <span class="nav-text">ANSI SQL标准下的事务隔离级别及其扩展回顾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E5%8A%A0%E9%94%81%E6%96%B9%E5%BC%8F%E7%9A%84%E4%BA%8B%E5%8A%A1%E9%9A%94%E7%A6%BB%E5%8E%9F%E7%90%86"><span class="nav-number">3.</span> <span class="nav-text">基于加锁方式的事务隔离原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-number">3.1.</span> <span class="nav-text">基本概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.2.</span> <span class="nav-text">隔离级别如何实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Two-phase-Locking"><span class="nav-number">3.3.</span> <span class="nav-text">Two-phase Locking</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">4.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Charles0429</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

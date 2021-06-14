@@ -1,0 +1,618 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.lug.ustc.edu.cn/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Charles,技术博客" />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Charles的技术博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="背景工欲善其事，必先利其器，OceanBase 社区版代码量较大，在学习 OceanBase 代码时，需要有一款较好的源码阅读工具，来帮助大家更好地理解代码的执行流程、接口的层次关系等等。根据我在 OceanBase 6 年来的开发和阅读代码体验，一款较好的源代码阅读工具需要如下的一些功能：  按照符号搜索函数名、类名等 按照文本搜索文件名 文件内符号查找 按照文本搜索项目空间的字符串 查看类的继">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OceanBase源码阅读工具-Eclipse篇">
+<meta property="og:url" content="http://yoursite.com/uncategorized/yuque/OceanBase%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E5%B7%A5%E5%85%B7-Eclipse%E7%AF%87/index.html">
+<meta property="og:site_name" content="Charles的技术博客">
+<meta property="og:description" content="背景工欲善其事，必先利其器，OceanBase 社区版代码量较大，在学习 OceanBase 代码时，需要有一款较好的源码阅读工具，来帮助大家更好地理解代码的执行流程、接口的层次关系等等。根据我在 OceanBase 6 年来的开发和阅读代码体验，一款较好的源代码阅读工具需要如下的一些功能：  按照符号搜索函数名、类名等 按照文本搜索文件名 文件内符号查找 按照文本搜索项目空间的字符串 查看类的继">
+<meta property="og:locale">
+<meta property="article:published_time" content="2021-06-14T11:05:24.000Z">
+<meta property="article:modified_time" content="2021-06-14T13:00:31.229Z">
+<meta property="article:author" content="Charles0429">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 3109763,
+      author: 'Charles0429'
+    }
+  };
+</script>
+
+  <title> OceanBase源码阅读工具-Eclipse篇 | Charles的技术博客 </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Charles的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                OceanBase源码阅读工具-Eclipse篇
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2021-06-14T19:05:24+08:00" content="2021-06-14">
+              2021-06-14
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>工欲善其事，必先利其器，OceanBase 社区版代码量较大，在学习 OceanBase 代码时，需要有一款较好的源码阅读工具，来帮助大家更好地理解代码的执行流程、接口的层次关系等等。根据我在 OceanBase 6 年来的开发和阅读代码体验，一款较好的源代码阅读工具需要如下的一些功能：</p>
+<ul>
+<li>按照符号搜索函数名、类名等</li>
+<li>按照文本搜索文件名</li>
+<li>文件内符号查找</li>
+<li>按照文本搜索项目空间的字符串</li>
+<li>查看类的继承关系</li>
+<li>查看函数调用栈</li>
+<li>查看某个变量的调用栈</li>
+<li>跳转到某个函数的实现</li>
+</ul>
+<p>上面的功能是在平时的开发和源码阅读过程中使用较多的功能，根据我目前的使用经验，有两款工具基本符合上面的条件，第一款是 Eclipse C/C++版本，第二款是 CCLS，可以在 vim 等编辑器中使用。本文将主要介绍 Eclipse 下的这些功能。</p>
+<h1 id="使用-Eclipse"><a href="#使用-Eclipse" class="headerlink" title="使用 Eclipse"></a>使用 Eclipse</h1><h2 id="下载"><a href="#下载" class="headerlink" title="下载"></a>下载</h2><p>可以从 Eclipse 官网下载到 Eclipse C/C++，下载完成后，打开里面的 Eclipse 应用即可使用</p>
+<h2 id="导入-OceanBase-代码"><a href="#导入-OceanBase-代码" class="headerlink" title="导入 OceanBase 代码"></a>导入 OceanBase 代码</h2><p>从 Eclipse 的菜单栏 New-&gt;Makefile Project with Existing Code，导入 OceanBase 的源代码。项目生成后，Eclipse 会自动为代码构建索引，在普通的个人电脑上，索引的时间大约半个小时左右。</p>
+<h2 id="使用-Eclipse-阅读-OceanBase-代码"><a href="#使用-Eclipse-阅读-OceanBase-代码" class="headerlink" title="使用 Eclipse 阅读 OceanBase 代码"></a>使用 Eclipse 阅读 OceanBase 代码</h2><h3 id="按照符号搜索函数名、类名等"><a href="#按照符号搜索函数名、类名等" class="headerlink" title="按照符号搜索函数名、类名等"></a>按照符号搜索函数名、类名等</h3><p>在开发和源码阅读中，有时候我们记得某个函数或类的名字，但忘记所在代码文件了，此时，按照符号搜索函数名、类名功能就非常方便了。在 Eclipse 中，通过 Navigate-&gt;Open Element 使用该功能。</p>
+<h3 id="按照文本搜索文件名"><a href="#按照文本搜索文件名" class="headerlink" title="按照文本搜索文件名"></a>按照文本搜索文件名</h3><p>有时候，我们知道某个功能的代码实现在某个文件内，但忘记了具体的函数名了，此时，我们可以结合按照文本搜索文件名，以及在文件内符号查找来找到对应的代码。在 Eclipse 中，通过 Navigate-&gt;Open Resource 使用该功能。</p>
+<h3 id="文件内符号查找"><a href="#文件内符号查找" class="headerlink" title="文件内符号查找"></a>文件内符号查找</h3><p>当我们定位到具体的代码文件后，如果需要在文件中查找对应的类、符号以及类内成员名等，可以使用该功能。在 Eclipse 中，打开某个代码文件后，通过右击鼠标-&gt;Quick Outline，在对应的搜索框里输入相应的符号即可查找。</p>
+<h3 id="按照文本搜索项目空间的字符串"><a href="#按照文本搜索项目空间的字符串" class="headerlink" title="按照文本搜索项目空间的字符串"></a>按照文本搜索项目空间的字符串</h3><p>有时候我们需要按照文本搜索匹配的代码，例如，在 OceanBase 中，内存分配是按照模块命名的，如果我们想查找使用某个模块名分配内存的代码，那么我们可以搜索该模块名的字符串来匹配代码。在 Eclipse 中，可以通过 Search-&gt;File 打开对应的搜索框，在里面输入想要查找的字符串。</p>
+<h3 id="查看类的继承关系"><a href="#查看类的继承关系" class="headerlink" title="查看类的继承关系"></a>查看类的继承关系</h3><p>在 C++代码中，可能会使用继承来组织代码，有时候需要查看类的继承关系来看不同场景下的实现。在 Eclipse 中，通过光标选中类名，然后调用 Navigate-&gt;Open Type Hierarchy 来查看类的继承关系。</p>
+<h3 id="查看函数调用栈"><a href="#查看函数调用栈" class="headerlink" title="查看函数调用栈"></a>查看函数调用栈</h3><p>在排查问题时，我们可能会碰到某个函数运行处理的结果不符合预期的情况，此时，我们可能需要通过函数调用栈来跟踪函数执行路径，来判断哪条路径可能出问题了。在 Eclipse 中，光标移动到函数名上，Navigate-&gt;Open Call Hierarachy。根据我在 MAC 开发环境的使用经验，Eclipse 能够快速又较为准确地对 OceanBase 这样体量代码的函数查看调用栈，其他的 IDE 暂时还不能够同时满足快速和准确。</p>
+<h3 id="查看某个变量的调用栈"><a href="#查看某个变量的调用栈" class="headerlink" title="查看某个变量的调用栈"></a>查看某个变量的调用栈</h3><p>有时候需要理解某个类内成员变量的作用，此时要查看其所有使用的地方。在 Eclipse 中，跟查看函数调用栈使用方式一样，可以查看某个变量的调用栈。</p>
+<h3 id="跳转到某个函数的实现"><a href="#跳转到某个函数的实现" class="headerlink" title="跳转到某个函数的实现"></a>跳转到某个函数的实现</h3><p>在我们学习某个功能的实现时，通常需要自上而下跟踪代码路径下的实现，因此，需要有跳转到某个函数实现的能力。在 Eclipse 中，将光标移动到调用的函数上，然后通过 Navigate-&gt;Open Declaration 跟踪到具体的实现。有时候跟踪到具体实现后，又希望回到之前的代码处继续跟踪下面的流程，此时可以通过 Navigate-&gt;Back 来回到之前代码处。<br>本文提到的代码查找功能同样适用于任何其他 C/C++项目，如果有学习其他 C/C++代码的需求，也可以作为参考。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/uncategorized/yuque/OceanBase%E4%BB%A3%E7%A0%81%E5%AF%BC%E8%A7%88/" rel="next" title="OceanBase代码导览">
+                <i class="fa fa-chevron-left"></i> OceanBase代码导览
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">36</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">33</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Charles0429" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-Eclipse"><span class="nav-number">2.</span> <span class="nav-text">使用 Eclipse</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8B%E8%BD%BD"><span class="nav-number">2.1.</span> <span class="nav-text">下载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%BC%E5%85%A5-OceanBase-%E4%BB%A3%E7%A0%81"><span class="nav-number">2.2.</span> <span class="nav-text">导入 OceanBase 代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-Eclipse-%E9%98%85%E8%AF%BB-OceanBase-%E4%BB%A3%E7%A0%81"><span class="nav-number">2.3.</span> <span class="nav-text">使用 Eclipse 阅读 OceanBase 代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%89%E7%85%A7%E7%AC%A6%E5%8F%B7%E6%90%9C%E7%B4%A2%E5%87%BD%E6%95%B0%E5%90%8D%E3%80%81%E7%B1%BB%E5%90%8D%E7%AD%89"><span class="nav-number">2.3.1.</span> <span class="nav-text">按照符号搜索函数名、类名等</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%89%E7%85%A7%E6%96%87%E6%9C%AC%E6%90%9C%E7%B4%A2%E6%96%87%E4%BB%B6%E5%90%8D"><span class="nav-number">2.3.2.</span> <span class="nav-text">按照文本搜索文件名</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E5%86%85%E7%AC%A6%E5%8F%B7%E6%9F%A5%E6%89%BE"><span class="nav-number">2.3.3.</span> <span class="nav-text">文件内符号查找</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%89%E7%85%A7%E6%96%87%E6%9C%AC%E6%90%9C%E7%B4%A2%E9%A1%B9%E7%9B%AE%E7%A9%BA%E9%97%B4%E7%9A%84%E5%AD%97%E7%AC%A6%E4%B8%B2"><span class="nav-number">2.3.4.</span> <span class="nav-text">按照文本搜索项目空间的字符串</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E7%B1%BB%E7%9A%84%E7%BB%A7%E6%89%BF%E5%85%B3%E7%B3%BB"><span class="nav-number">2.3.5.</span> <span class="nav-text">查看类的继承关系</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%A0%88"><span class="nav-number">2.3.6.</span> <span class="nav-text">查看函数调用栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E6%9F%90%E4%B8%AA%E5%8F%98%E9%87%8F%E7%9A%84%E8%B0%83%E7%94%A8%E6%A0%88"><span class="nav-number">2.3.7.</span> <span class="nav-text">查看某个变量的调用栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B7%B3%E8%BD%AC%E5%88%B0%E6%9F%90%E4%B8%AA%E5%87%BD%E6%95%B0%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.3.8.</span> <span class="nav-text">跳转到某个函数的实现</span></a></li></ol></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Charles0429</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

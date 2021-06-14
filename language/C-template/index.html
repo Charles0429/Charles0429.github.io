@@ -1,0 +1,873 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.lug.ustc.edu.cn/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="C++," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Charles的技术博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="Introduction本文总结了C++ templates相关的基础知识，包括如下  template definition template argument deduction  Template Definition分为function template和class template。 Function Templatefunction template的定义以template关键字开始，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++ template基础">
+<meta property="og:url" content="http://yoursite.com/language/C-template/index.html">
+<meta property="og:site_name" content="Charles的技术博客">
+<meta property="og:description" content="Introduction本文总结了C++ templates相关的基础知识，包括如下  template definition template argument deduction  Template Definition分为function template和class template。 Function Templatefunction template的定义以template关键字开始，">
+<meta property="og:locale">
+<meta property="og:image" content="http://oserror.com/images/qcode_wechat.jpg">
+<meta property="article:published_time" content="2016-08-07T14:27:27.000Z">
+<meta property="article:modified_time" content="2021-06-14T13:00:05.525Z">
+<meta property="article:author" content="Charles0429">
+<meta property="article:tag" content="C++">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://oserror.com/images/qcode_wechat.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 3109763,
+      author: 'Charles0429'
+    }
+  };
+</script>
+
+  <title> C++ template基础 | Charles的技术博客 </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Charles的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                C++ template基础
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-08-07T22:27:27+08:00" content="2016-08-07">
+              2016-08-07
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/language/" itemprop="url" rel="index">
+                    <span itemprop="name">语言</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>本文总结了C++ templates相关的基础知识，包括如下</p>
+<ul>
+<li>template definition</li>
+<li>template argument deduction</li>
+</ul>
+<h1 id="Template-Definition"><a href="#Template-Definition" class="headerlink" title="Template Definition"></a>Template Definition</h1><p>分为function template和class template。</p>
+<h2 id="Function-Template"><a href="#Function-Template" class="headerlink" title="Function Template"></a>Function Template</h2><p>function template的定义以template关键字开始，后面接着template参数列表，后面接着类似常规的函数定义的语法。举个例子说明</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">compare</span><span class="params">(<span class="keyword">const</span> T &amp;v1, <span class="keyword">const</span> T &amp;v2)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (v1 &lt; v2) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">if</span> (v2 &lt; v1) <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Instantiating-a-Function-Template"><a href="#Instantiating-a-Function-Template" class="headerlink" title="Instantiating a Function Template"></a>Instantiating a Function Template</h3><p>一般情况下，当我们调用function template时，编译器根据我们提供的参数来自动推导template参数列表，例如</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cout &lt;&lt; <span class="built_in">compare</span>(<span class="number">1</span>, <span class="number">0</span>) &lt;&lt; endl;    <span class="comment">// T is int</span></span><br></pre></td></tr></table></figure>
+
+<p>编译器自动推导template参数列表为(T, int)，当template推导出来之后，会自动地去实例化一份函数代码。举上面的int的例子，它会自动地实例化下面的代码</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">compare</span><span class="params">(<span class="keyword">const</span> <span class="keyword">int</span> &amp;v1, <span class="keyword">const</span> <span class="keyword">int</span> &amp;v2)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (v1 &lt; v2) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">if</span> (v2 &lt; v1) <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当compare调用其他推导出来的类型时，也会自动地实例化对应的函数版本，例如</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">vector&lt;<span class="keyword">int</span>&gt; vec1&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>&#125;;</span><br><span class="line">vector&lt;<span class="keyword">int</span>&gt; vec2&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>&#125;;</span><br><span class="line">cout &lt;&lt; <span class="built_in">compare</span>(vec1, vec2) &lt;&lt; endl;   <span class="comment">// T is vector&lt;int&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">compare</span><span class="params">(<span class="keyword">const</span> vector&lt;<span class="keyword">int</span>&gt; &amp;v1, <span class="keyword">const</span> vector&lt;<span class="keyword">int</span>&gt; &amp;v2)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">   <span class="comment">//....</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Template-Type-Parameters"><a href="#Template-Type-Parameters" class="headerlink" title="Template Type Parameters"></a>Template Type Parameters</h3><p>在function template中，可以使用template type parameters来作为函数参数类型，返回值类型以及函数内部定义类型，例如</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="function">T <span class="title">foo</span><span class="params">(T* p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	T tmp = *p;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    <span class="keyword">return</span> tmp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在较老的C++标准中，还没有typename关键字，之前是用class关键字来当typename用的。不过在支持typename关键字的版本中，还是推荐使用typename。</p>
+<h3 id="Nontype-Template-Parameters"><a href="#Nontype-Template-Parameters" class="headerlink" title="Nontype Template Parameters"></a>Nontype Template Parameters</h3><p>在function template，我们也可以用Nontype Template Parameters，表示我们对某个type parameters使用固定类型的参数。</p>
+<p>在函数实例化时，nontype template parameters应该使用常量表达式作为参数，从而让编译器在编译期间推导出它的值。</p>
+<p>举个例子，我们想要比较字符串常量，这些字符串常量以const char开头。因为我们不能拷贝数组，所以，我们的函数参数定义为数组的引用，同时，需要能处理各种不同长度的类型，因此，定义两个nontype template parameters，第一个代表第一个数组的长度，第二个代表第二个数组的长度。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">unsigned</span> N, <span class="keyword">unsigned</span> M&gt;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">compare</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> (&amp;p1)[N], <span class="keyword">const</span> <span class="keyword">char</span> (&amp;p2)[M])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="built_in">strcmp</span>(p1, p2);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当我们调用<code>compare(&quot;hi&quot;, &quot;mom&quot;)</code>时，会实例化如下代码</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">compare</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> (&amp;p1)[<span class="number">3</span>], <span class="keyword">const</span> <span class="keyword">char</span> (&amp;p2)[<span class="number">4</span>])</span></span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="inline-and-constexpr-Function-Templates"><a href="#inline-and-constexpr-Function-Templates" class="headerlink" title="inline and constexpr Function Templates"></a>inline and constexpr Function Templates</h3><p>inline和constexpr关键字放在template argument之后，函数返回值之前，如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ok</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="function"><span class="keyword">inline</span> T <span class="title">in</span><span class="params">(<span class="keyword">const</span> T &amp;, <span class="keyword">const</span> T &amp;)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//error</span></span></span><br><span class="line"><span class="function"><span class="keyword">inline</span> <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; T <span class="title">min</span><span class="params">(<span class="keyword">const</span> T &amp;, <span class="keyword">const</span> T &amp;)</span></span></span><br></pre></td></tr></table></figure>
+<h3 id="Writing-Type-Independent-Code"><a href="#Writing-Type-Independent-Code" class="headerlink" title="Writing Type-Independent Code"></a>Writing Type-Independent Code</h3><p>从compare可以看出，有两个比较重要的原则可以帮助我们写出更通用的function template</p>
+<ul>
+<li>函数参数的类型为reference to const</li>
+<li>比较只用了<code>&lt;</code></li>
+</ul>
+<p>使用了reference to const，我们可以保证函数可以用于不能拷贝的类型；只使用<code>&lt;</code>，使得我们的函数只要求类型实现了<code>&lt;</code>运算符。</p>
+<p>为了更进一步地提高通用性，我们可以用<code>less</code>函数来进行比较，使得我们的函数对指针也适用</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="function"><span class="keyword">int</span> <span class="title">compare</span><span class="params">(<span class="keyword">const</span> T &amp;v1, <span class="keyword">const</span> T &amp;v2)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (less&lt;T&gt;()(v1, v2)) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">if</span> (less&lt;T&gt;()(v2, v1)) <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Template-Compilation"><a href="#Template-Compilation" class="headerlink" title="Template Compilation"></a>Template Compilation</h3><p>模板实例化只在编译器看到了我们使用模板的时候才做，并且实例化的时候，编译器还需要看到模板的代码，因此，一般模板源码放到头文件中。</p>
+<h3 id="Compilation-Errors-Are-Mostly-Reported-during-Instantiation"><a href="#Compilation-Errors-Are-Mostly-Reported-during-Instantiation" class="headerlink" title="Compilation Errors Are Mostly Reported during Instantiation"></a>Compilation Errors Are Mostly Reported during Instantiation</h3><p>编译器编译模板代码的三个步骤</p>
+<ol>
+<li>编译模板本身，这时候编译器一般可以检查一些语法错误</li>
+<li>当编译器看到使用模板时，这个时候会检查一些函数参数个数是否匹配，类型是否一致等信息</li>
+<li>当编译器真正实例化时，剩下的编译错误才会被报出来</li>
+</ol>
+<p>举个例子</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Sales_data data1, data2;</span><br><span class="line">cout &lt;&lt; <span class="built_in">compare</span>(data1, data2) &lt;&lt; endl;</span><br></pre></td></tr></table></figure>
+
+<p>这个调用用<code>Sales_data</code>来替换T，这里面需要使用<code>&lt;</code>，但是<code>Sales_data</code>并不支持，因此会报错，但这个错误只有到编译器实例化模板的时候才会报出来。</p>
+<h2 id="Class-Template"><a href="#Class-Template" class="headerlink" title="Class Template"></a>Class Template</h2><p>class template和function template不同的是，class template必须显式地提供模板参数类型。</p>
+<h3 id="Defining-a-Class-Template"><a href="#Defining-a-Class-Template" class="headerlink" title="Defining a Class Template"></a>Defining a Class Template</h3><p>先是模板参数列表，然后是class本身，例如</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="class"><span class="keyword">class</span> <span class="title">Blob</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="keyword">typedef</span> T value_type</span><br><span class="line">    <span class="keyword">typedef</span> <span class="keyword">typename</span> std::vector&lt;T&gt;::size_type size_type;</span><br><span class="line">    <span class="built_in">Blob</span>();</span><br><span class="line">    <span class="built_in">Blob</span>(std::initializer_list&lt;T&gt; i1);</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">push_back</span><span class="params">(<span class="keyword">const</span> T &amp;t)</span> </span>&#123;data-&gt;<span class="built_in">push_back</span>(t);&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Instantiating-a-Class-Template"><a href="#Instantiating-a-Class-Template" class="headerlink" title="Instantiating a Class Template"></a>Instantiating a Class Template</h3><p>为了实例化一个class template，我们需要显式地提供类型信息，例如</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Blob&lt;<span class="keyword">int</span>&gt; ia; <span class="comment">// Blob&lt;int&gt;</span></span><br><span class="line">Blob&lt;<span class="keyword">int</span>&gt; ia2 = &#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译器会实例化以下代码</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;&gt; <span class="class"><span class="keyword">class</span> <span class="title">Blob</span>&lt;</span><span class="keyword">int</span>&gt; &#123;</span><br><span class="line">	<span class="keyword">typedef</span> <span class="keyword">typename</span> std::vector&lt;<span class="keyword">int</span>&gt;::size_type size_type;</span><br><span class="line">    <span class="built_in">Blob</span>();</span><br><span class="line">    <span class="built_in">Blob</span>(std::initializer_list&lt;<span class="keyword">int</span>&gt; i1);</span><br><span class="line">    <span class="keyword">int</span>&amp; <span class="keyword">operator</span>[](size_type i);</span><br><span class="line">    </span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	std::shared_ptr&lt;std::vector&lt;<span class="keyword">int</span>&gt;&gt; data;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">check</span><span class="params">(size_type i, <span class="keyword">const</span> std::string &amp;msg)</span> <span class="keyword">const</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>每个实例化会产生一个独立的class，例如<code>Blob&lt;string&gt;</code>跟其他的Blob类型没有任何的关系。</p>
+<h3 id="Member-Functions-of-Class-Templates"><a href="#Member-Functions-of-Class-Templates" class="headerlink" title="Member Functions of Class Templates"></a>Member Functions of Class Templates</h3><p>定义的语法为</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line">ret-type Blob&lt;T&gt;::member-<span class="built_in">name</span>(param-list)</span><br></pre></td></tr></table></figure>
+
+<p>一个具体的例子</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">void</span> Blob&lt;T&gt;::<span class="built_in">check</span>(size_type i, <span class="keyword">const</span> std::string &amp;msg)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">if</span> (i &gt;= data-&gt;<span class="built_in">size</span>()) &#123;</span><br><span class="line">    	<span class="keyword">throw</span> std::<span class="built_in">out_of_range</span>(msg);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Instantition-of-Class-Template-Member-Functions"><a href="#Instantition-of-Class-Template-Member-Functions" class="headerlink" title="Instantition of Class-Template Member Functions"></a>Instantition of Class-Template Member Functions</h3><p>一般地，只有程序使用了Class Template的成员函数，该成员函数才会被实例化。</p>
+<h3 id="Simplifying-Use-of-a-Template-Class-Name-inside-Class-Code"><a href="#Simplifying-Use-of-a-Template-Class-Name-inside-Class-Code" class="headerlink" title="Simplifying Use of a Template Class Name inside Class Code"></a>Simplifying Use of a Template Class Name inside Class Code</h3><p>在一个class template内部，我们可以省略掉模板参数，例如</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="class"><span class="keyword">class</span> <span class="title">BlobPtr</span></span></span><br><span class="line"><span class="class"><span class="title">public</span>:</span></span><br><span class="line">	<span class="built_in">BlobPtr</span>(): <span class="built_in">curr</span>(<span class="number">0</span>) &#123;&#125;</span><br><span class="line">    BlobPtr&amp; <span class="keyword">operator</span>++()</span><br><span class="line">    BlobPtr&amp; <span class="keyword">operator</span>--()</span><br></pre></td></tr></table></figure>
+
+<h3 id="Using-a-Class-Template-outside-the-Class-Template-Body"><a href="#Using-a-Class-Template-outside-the-Class-Template-Body" class="headerlink" title="Using a Class Template outside the Class Template Body"></a>Using a Class Template outside the Class Template Body</h3><p>在class template外部使用时，必须要带上模板参数，例如</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line">BlobPtr&lt;T&gt; BlobPtr&lt;T&gt;::<span class="keyword">operator</span>++(<span class="keyword">int</span>)</span><br><span class="line">&#123;</span><br><span class="line">	BlobPtr ret = *<span class="keyword">this</span></span><br><span class="line">    ++*<span class="keyword">this</span></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>BlobPtr ret</code>就相当于<code>BlobPtr&lt;T&gt; ret</code></p>
+<h3 id="Class-Templates-and-Friends"><a href="#Class-Templates-and-Friends" class="headerlink" title="Class Templates and Friends"></a>Class Templates and Friends</h3><ul>
+<li>一个class template如果有一个非template类型的友元，那么该友元对于class template的所有实例都生效</li>
+<li>如果一个class template有template类型的友元，则可以通过控制来决定友元的作用范围</li>
+</ul>
+<h3 id="One-to-One-FriendShip"><a href="#One-to-One-FriendShip" class="headerlink" title="One-to-One FriendShip"></a>One-to-One FriendShip</h3><p>最常见的是友元关系是一个class template和另一个class template以同样模板参数实例化的类互为友元类，例如</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="class"><span class="keyword">class</span> <span class="title">BlobPtr</span>;</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="class"><span class="keyword">class</span> <span class="title">Blob</span>;</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line">	<span class="keyword">bool</span> <span class="keyword">operator</span>==(<span class="keyword">const</span> Blob&lt;T&gt;&amp;, <span class="keyword">const</span> Blob&lt;T&gt; &amp;);</span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="class"><span class="keyword">class</span> <span class="title">Blob</span> &#123;</span></span><br><span class="line">	<span class="keyword">friend</span> <span class="class"><span class="keyword">class</span> <span class="title">BlobPtr</span>&lt;</span>T&gt;</span><br><span class="line">    <span class="keyword">friend</span> <span class="keyword">bool</span> <span class="keyword">operator</span>==&lt;T&gt;</span><br><span class="line">    	(<span class="keyword">const</span> Blob&lt;T&gt; &amp;, <span class="keyword">const</span> Blob&lt;T&gt; &amp;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以相同模板类型初始化的Blob和BlobPtr互为友元类，例如</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Blob&lt;<span class="keyword">int</span>&gt; ca; <span class="comment">// BlobPtr&lt;char&gt; and operator==&lt;char&gt; are friends</span></span><br><span class="line">BlobPtr&lt;<span class="keyword">int</span>&gt; ia; <span class="comment">// BlobPtr&lt;int&gt; and operator==&lt;int&gt; are friends</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="General-and-Specific-Template-FriendShip"><a href="#General-and-Specific-Template-FriendShip" class="headerlink" title="General and Specific Template FriendShip"></a>General and Specific Template FriendShip</h3><p>通过控制，还能配置更一般地友元关系，如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="class"><span class="keyword">class</span> <span class="title">Pal</span>;</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span> &#123;</span></span><br><span class="line">	<span class="keyword">friend</span> <span class="class"><span class="keyword">class</span> <span class="title">Pal</span>&lt;</span>C&gt;; <span class="comment">// Pal&lt;C&gt; is a friend to C</span></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">friend</span> <span class="class"><span class="keyword">class</span> <span class="title">Pal2</span>;</span> <span class="comment">// all instance of Pal2 are friend to C</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;tyname T&gt; <span class="class"><span class="keyword">class</span> <span class="title">C2</span> &#123;</span></span><br><span class="line">	<span class="keyword">friend</span> <span class="class"><span class="keyword">class</span> <span class="title">Pal</span>&lt;</span>T&gt;;</span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> X&gt; <span class="keyword">friend</span> <span class="class"><span class="keyword">class</span> <span class="title">Pal2</span>;</span> <span class="comment">//all instances of Pal2 are friends of each instance of C2</span></span><br><span class="line">    <span class="keyword">friend</span> <span class="class"><span class="keyword">class</span> <span class="title">Pal3</span>;</span> <span class="comment">// Pal3 is friend of every instance of C2</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>为了使得所有的实例都是友元，友元的声明必须以不同的模板参数声明。</p>
+<h3 id="Befriending-the-Template’s-Own-Type-Parameter"><a href="#Befriending-the-Template’s-Own-Type-Parameter" class="headerlink" title="Befriending the Template’s Own Type Parameter"></a>Befriending the Template’s Own Type Parameter</h3><p>在C++11标准下，支持以下语法</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> Type&gt; <span class="class"><span class="keyword">class</span> <span class="title">Bar</span> &#123;</span></span><br><span class="line"><span class="keyword">friend</span> Type;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中Type可以是内置的类型。</p>
+<h3 id="Template-Type-Aliases"><a href="#Template-Type-Aliases" class="headerlink" title="Template Type Aliases"></a>Template Type Aliases</h3><p>我们可以使用using语法来创建template别名。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">using</span> twin = pair&lt;T, T&gt;</span><br><span class="line">twin&lt;string&gt; authors;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">using</span> partNo = pair&lt;T, <span class="keyword">unsigned</span>&gt;;</span><br><span class="line">partNo&lt;string&gt; books;</span><br><span class="line">partNo&lt;string&gt; cars;</span><br><span class="line">partNo&lt;Student&gt; kids;</span><br></pre></td></tr></table></figure>
+
+<h3 id="static-Members-of-Class-Templates"><a href="#static-Members-of-Class-Templates" class="headerlink" title="static Members of Class Templates"></a>static Members of Class Templates</h3><p>class template可以定义静态类型，每个实例化的类拥有自身的static成员函数，例如</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="class"><span class="keyword">class</span> <span class="title">Foo</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="function"><span class="keyword">static</span> std::<span class="keyword">size_t</span> <span class="title">count</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> ctr; &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	<span class="keyword">static</span> std::<span class="keyword">size_t</span> ctr;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Template-Parameters"><a href="#Template-Parameters" class="headerlink" title="Template Parameters"></a>Template Parameters</h2><h3 id="Template-Parameters-and-Scope"><a href="#Template-Parameters-and-Scope" class="headerlink" title="Template Parameters and Scope"></a>Template Parameters and Scope</h3><p>模板参数使用的名称，在template内部不能再使用。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="keyword">double</span> A;</span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> A, <span class="keyword">typename</span> B&gt; <span class="function"><span class="keyword">void</span> <span class="title">f</span><span class="params">(A a, B b)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	A tmp = a; <span class="comment">// has the same type with template arugment A</span></span><br><span class="line">    <span class="keyword">double</span> = B; <span class="comment">// error</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Template-Declarations"><a href="#Template-Declarations" class="headerlink" title="Template Declarations"></a>Template Declarations</h3><p>template declaration一定要包含template parameters，例如</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="function"><span class="keyword">int</span> <span class="title">compare</span><span class="params">(<span class="keyword">const</span> T&amp;, <span class="keyword">const</span> T &amp;)</span></span></span><br><span class="line"><span class="function"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; class Blob</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Using-Class-Members-That-are-Types"><a href="#Using-Class-Members-That-are-Types" class="headerlink" title="Using Class Members That are Types"></a>Using Class Members That are Types</h3><p>假如T是模板参数，那么当编译器看到以下语句时</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">T::size_type *p;</span><br></pre></td></tr></table></figure>
+
+<p>它需要知道这是定义一个新的指针，还是把size_type和p相乘。默认地，编译器会认为这个不是类型定义，因此，如果是类型定义的话，必须要显式地指明。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typename</span> T::size_type *p;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Default-Template-Arguments"><a href="#Default-Template-Arguments" class="headerlink" title="Default Template Arguments"></a>Default Template Arguments</h3><p>可以为模板参数指定默认值，例如</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> F = less&lt;T&gt;&gt;</span><br><span class="line"><span class="keyword">int</span> <span class="built_in">compare</span>(<span class="keyword">const</span> T &amp;v1, <span class="keyword">const</span> T &amp;v2, F f = <span class="built_in">F</span>())</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">if</span> (<span class="built_in">f</span>(v1, v2)) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">f</span>(v2, v1)) <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Template-Default-Arguments-and-Class-Templates"><a href="#Template-Default-Arguments-and-Class-Templates" class="headerlink" title="Template Default Arguments and Class Templates"></a>Template Default Arguments and Class Templates</h3><p>当一个class template的所有模板参数都带默认值时，我们定义类时，需要带一个<code>&lt;&gt;</code>，例如</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span> =</span> <span class="keyword">int</span>&gt; <span class="class"><span class="keyword">class</span> <span class="title">Numbers</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="built_in">Numbers</span>(T v = <span class="number">0</span>) : <span class="built_in">val</span>(v) &#123;&#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	T val;</span><br><span class="line">&#125;</span><br><span class="line">Numbers&lt;<span class="keyword">long</span> <span class="keyword">double</span>&gt; lots_precision;</span><br><span class="line">Numbers&lt;&gt; average_precision; <span class="comment">// empty, T = int</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Member-Templates"><a href="#Member-Templates" class="headerlink" title="Member Templates"></a>Member Templates</h2><p>成员函数本身也可能是模板，分为class template和non class template两种情况讨论。</p>
+<h3 id="Member-Templates-of-Ordinary-Nontemplate-Classes"><a href="#Member-Templates-of-Ordinary-Nontemplate-Classes" class="headerlink" title="Member Templates of Ordinary(Nontemplate) Classes"></a>Member Templates of Ordinary(Nontemplate) Classes</h3><p>举个例子，和unique_ptr的默认删除器的实现有关，如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DebugDelete</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="built_in">DebugDelete</span>(std::ostream &amp;s = std::cerr) : <span class="built_in">os</span>(s) &#123;&#125;</span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="function"><span class="keyword">void</span> <span class="title">operator</span><span class="params">()</span><span class="params">(T *p)</span> <span class="keyword">const</span> </span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">    	os &lt;&lt; <span class="string">&quot;deleting unique_str&quot;</span> &lt;&lt; std::endl;</span><br><span class="line">        <span class="keyword">delete</span> p;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	std::ostream &amp;os;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用方法如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">double</span> *p = <span class="keyword">new</span> <span class="keyword">double</span>;</span><br><span class="line">DebugDelete d;</span><br><span class="line"><span class="built_in">d</span>(p);     <span class="comment">// calls DebugDelete::operator()(double *)</span></span><br><span class="line"><span class="keyword">int</span> *ip = <span class="keyword">new</span> <span class="keyword">int</span>;</span><br><span class="line"><span class="built_in">DebugDelete</span>()(ip); <span class="comment">//operator()(int *)</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Member-Templates-of-Class-Templates"><a href="#Member-Templates-of-Class-Templates" class="headerlink" title="Member Templates of Class Templates"></a>Member Templates of Class Templates</h3><p>和class template的普通函数不同，member template是function template，在定义时，还得带上函数本身的模板参数，如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="class"><span class="keyword">class</span> <span class="title">Blob</span> &#123;</span></span><br><span class="line">	<span class="keyword">template</span> &lt;<span class="keyword">typename</span> It&gt; <span class="built_in">Blob</span>(It b, It e);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> It&gt;</span><br><span class="line">Blob&lt;T&gt;::<span class="built_in">Blob</span>(It b, It e):</span><br><span class="line">	<span class="built_in">data</span>(std::make_shared&lt;std::vector&lt;T&gt;(b, e)&gt;) &#123;</span><br><span class="line">        </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Instantiation-and-Member-Templates"><a href="#Instantiation-and-Member-Templates" class="headerlink" title="Instantiation and Member Templates"></a>Instantiation and Member Templates</h3><p>对于member template，对于类的模板参数是要指定的，而其本身的模板参数一般是通过函数参数推断出来的。</p>
+<h2 id="Controlling-Instantiations"><a href="#Controlling-Instantiations" class="headerlink" title="Controlling Instantiations"></a>Controlling Instantiations</h2><p>当两个或多个独立的源代码文件使用了相同参数的模板，每个源代码文件中都会有该模板的一份实例化的代码。</p>
+<p>在大型项目中，这会造成代码体积变大，编译变慢。在C++11中，可以通过如下方法来避免该问题</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="keyword">template</span> declaration;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> declaration;</span><br></pre></td></tr></table></figure>
+<p>一般地，可以把模板实例化的代码放到一个单独的文件中，如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span> <span class="keyword">int</span> <span class="title">compare</span><span class="params">(<span class="keyword">const</span> <span class="keyword">int</span>&amp;, <span class="keyword">const</span> <span class="keyword">int</span>&amp;)</span></span>;</span><br><span class="line"><span class="keyword">template</span> <span class="class"><span class="keyword">class</span> <span class="title">Blob</span>&lt;</span>string&gt;;</span><br></pre></td></tr></table></figure>
+
+<p>需要注意的是，这种声明会把整个类中的所有函数都实例化。</p>
+<h1 id="Template-Argument-Deduction"><a href="#Template-Argument-Deduction" class="headerlink" title="Template Argument Deduction"></a>Template Argument Deduction</h1><p>主要描述function template的参数推导规则。</p>
+<h2 id="Conversions-and-Template-Type-Parameters"><a href="#Conversions-and-Template-Type-Parameters" class="headerlink" title="Conversions and Template Type Parameters"></a>Conversions and Template Type Parameters</h2><p>编译器实例化模板时，会考虑以下转换规则：</p>
+<ul>
+<li>const转换：当函数参数是const引用时，一个非const对象是可以作为参数传入的</li>
+<li>数组或函数到指针的转换：一个数组会被转换成一个元素的指针，函数则会转成函数指针</li>
+</ul>
+<p>例如</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="function">T <span class="title">fobj</span><span class="params">(T, T)</span></span>;</span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="function">T <span class="title">fref</span><span class="params">(<span class="keyword">const</span> T&amp;, <span class="keyword">const</span> T&amp;)</span></span>;</span><br><span class="line"><span class="function">string <span class="title">s1</span><span class="params">(<span class="string">&quot;a value&quot;</span>)</span></span></span><br><span class="line"><span class="function"><span class="keyword">const</span> string <span class="title">s2</span><span class="params">(<span class="string">&quot;another value&quot;</span>)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">fobj</span><span class="params">(s1, s2)</span></span>;  <span class="comment">// fobj(string, string)，const被忽略</span></span><br><span class="line"><span class="built_in">fref</span>(s1, s2); <span class="comment">// fref(const string &amp;, const string &amp;)</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> a[<span class="number">10</span>], b[<span class="number">42</span>];</span><br><span class="line"><span class="built_in">fobj</span>(a, b); <span class="comment">// f(int *, int *)</span></span><br><span class="line"><span class="built_in">fref</span>(a, b); <span class="comment">// error：数组无法转换成引用</span></span><br></pre></td></tr></table></figure>
+
+<p>第一个fobj(s1,s2)，const能忽略的原因是，因为s1和s2都会拷贝到函数参数中，所以，原来是否是const不影响。</p>
+<h3 id="Function-Parameters-That-Use-the-Same-Template-Parameter-Type"><a href="#Function-Parameters-That-Use-the-Same-Template-Parameter-Type" class="headerlink" title="Function Parameters That Use the Same Template Parameter Type"></a>Function Parameters That Use the Same Template Parameter Type</h3><p>以前面的compare函数为例</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">long</span> lng;</span><br><span class="line"><span class="built_in">compare</span>(lng, <span class="number">1024</span>); <span class="comment">//错误：无法实例化compare(long, int)</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Normal-Conversions-Apply-for-Ordinary-Arguments"><a href="#Normal-Conversions-Apply-for-Ordinary-Arguments" class="headerlink" title="Normal Conversions Apply for Ordinary Arguments"></a>Normal Conversions Apply for Ordinary Arguments</h3><p>普通的参数没有特殊的转换，跟之前的函数转换规则一样。</p>
+<h2 id="Function-Template-Explicit-Arguments"><a href="#Function-Template-Explicit-Arguments" class="headerlink" title="Function Template Explicit Arguments"></a>Function Template Explicit Arguments</h2><p>function template也可以显式地指定模板参数。</p>
+<h3 id="Specifying-an-Explicit-Template-Argument"><a href="#Specifying-an-Explicit-Template-Argument" class="headerlink" title="Specifying an Explicit Template Argument"></a>Specifying an Explicit Template Argument</h3><p>例如，一个加法运算，用户可以指定返回值类型，来控制运算的精度。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T1, <span class="keyword">typename</span> T2, <span class="keyword">typename</span> T3&gt; <span class="function">T1 <span class="title">sum</span><span class="params">(T2, T3)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>在这种情况下，T1是无法被推导出来的，只能是调用者显式地指定。</p>
+<h3 id="Normal-Conversions-Apply-for-Explicitly-Sepecified-Arguments"><a href="#Normal-Conversions-Apply-for-Explicitly-Sepecified-Arguments" class="headerlink" title="Normal Conversions Apply for Explicitly Sepecified Arguments"></a>Normal Conversions Apply for Explicitly Sepecified Arguments</h3><p>对于指定了类型的模板函数，是可以采用通用的类型转换规则的</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">long</span> lng;</span><br><span class="line"><span class="built_in">compare</span>(lng, <span class="number">1024</span>);  <span class="comment">// error</span></span><br><span class="line">compare&lt;<span class="keyword">long</span>&gt;(lng, <span class="number">1024</span>); <span class="comment">// ok</span></span><br><span class="line">compare&lt;<span class="keyword">int</span>&gt;(lng, <span class="number">1024</span>); <span class="comment">//ok</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Trailing-Return-Type-and-Type-Transformation"><a href="#Trailing-Return-Type-and-Type-Transformation" class="headerlink" title="Trailing Return Type and Type Transformation"></a>Trailing Return Type and Type Transformation</h2><p>可以使用尾置返回类型，从函数参数中推导出返回类型，从而避免用户需要显式地指定返回类型，例如</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> It&gt;</span><br><span class="line"><span class="function"><span class="keyword">auto</span> <span class="title">fcn</span><span class="params">(It beg, It end)</span> -&gt; <span class="title">decltype</span><span class="params">(*beg)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">//process</span></span><br><span class="line">    <span class="keyword">return</span> *beg;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上述函数中，返回类型为beg指向的类型的引用。</p>
+<h3 id="The-Type-Transformation-Library-Template-Classes"><a href="#The-Type-Transformation-Library-Template-Classes" class="headerlink" title="The Type Transformation Library Template Classes"></a>The Type Transformation Library Template Classes</h3><p>可以通过<code>remove_reference</code>来实现函数返回一个值，而非引用，如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> It&gt;</span><br><span class="line"><span class="function"><span class="keyword">auto</span> <span class="title">fcn2</span><span class="params">(It beg, It end)</span> -&gt;</span></span><br><span class="line"><span class="function">	<span class="keyword">typename</span> remove_reference&lt;<span class="title">decltype</span><span class="params">(*beg)</span>&gt;::type</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">//process the range</span></span><br><span class="line">    <span class="keyword">return</span> *beg;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>除了<code>remove_reference</code>，我们还可以有<code>remove_pointer</code>等实现各种功能的type transformation函数。</p>
+<h2 id="Function-pointers-and-Argument-Deduction"><a href="#Function-pointers-and-Argument-Deduction" class="headerlink" title="Function pointers and Argument Deduction"></a>Function pointers and Argument Deduction</h2><p>通过函数指针赋值，可以直接实例化一个模板函数，如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="function"><span class="keyword">int</span> <span class="title">compare</span><span class="params">(<span class="keyword">const</span> T&amp;, <span class="keyword">const</span> T&amp;)</span></span>;</span><br><span class="line"><span class="built_in"><span class="keyword">int</span></span> (*pf1)(<span class="keyword">const</span> <span class="keyword">int</span>&amp;, <span class="keyword">const</span> <span class="keyword">int</span>&amp;) = compare</span><br></pre></td></tr></table></figure>
+<p>上面会直接实例化参数T为int的compare函数</p>
+<h2 id="Template-Argument-Deduction-and-References"><a href="#Template-Argument-Deduction-and-References" class="headerlink" title="Template Argument Deduction and References"></a>Template Argument Deduction and References</h2><p>分函数参数为左值和右值两种情况讨论。</p>
+<h3 id="Type-Deduction-from-Lvalue-Reference-Function-Parameters"><a href="#Type-Deduction-from-Lvalue-Reference-Function-Parameters" class="headerlink" title="Type Deduction from Lvalue Reference Function Parameters"></a>Type Deduction from Lvalue Reference Function Parameters</h3><p>当函数参数为左值引用时，可以传入的参数为左值，可以为const类型，如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="function"><span class="keyword">void</span> <span class="title">f1</span><span class="params">(T &amp;)</span></span>;</span><br><span class="line"><span class="built_in">f1</span>(i); <span class="comment">// T is int</span></span><br><span class="line"><span class="built_in">f1</span>(ci); <span class="comment">// T is const int</span></span><br><span class="line"><span class="built_in">f1</span>(<span class="number">5</span>); <span class="comment">// error must be lvalue</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Type-Deduction-from-Rvalue-Reference-Function-Parameters"><a href="#Type-Deduction-from-Rvalue-Reference-Function-Parameters" class="headerlink" title="Type Deduction from Rvalue Reference Function Parameters"></a>Type Deduction from Rvalue Reference Function Parameters</h3><p>当函数参数为右值引用时，如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="function"><span class="keyword">void</span> <span class="title">f3</span><span class="params">(T&amp;&amp;)</span></span>;</span><br><span class="line"><span class="built_in">f3</span>(<span class="number">42</span>); <span class="comment">// T is int</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Reference-Collapsing-and-Rvalue-Reference-Parameters"><a href="#Reference-Collapsing-and-Rvalue-Reference-Parameters" class="headerlink" title="Reference Collapsing and Rvalue Reference Parameters"></a>Reference Collapsing and Rvalue Reference Parameters</h3><p>当传入一个int左值到f3函数时，正常情况下来看，由于i是左值，应该不能绑定到右值参数上。但是，有两个特殊的绑定规则，可以支持传入左值：</p>
+<ul>
+<li>当我们传入左值到右值引用时，模板参数类型会被推导成左值引用</li>
+<li>由于传入的参数被推导成引用，而函数参数也是引用，会产生引用堆叠，这个有特殊的规则</li>
+</ul>
+<p>引用堆叠的规则</p>
+<ul>
+<li>X&amp; &amp;，X&amp; &amp;&amp;和X&amp;&amp; &amp;会被看成X&amp;</li>
+<li>X&amp;&amp; &amp;&amp;会被看成 X&amp;&amp;</li>
+</ul>
+<h3 id="Writing-Template-Functions-with-Rvalue-Reference-Parameters"><a href="#Writing-Template-Functions-with-Rvalue-Reference-Parameters" class="headerlink" title="Writing Template Functions with Rvalue Reference Parameters"></a>Writing Template Functions with Rvalue Reference Parameters</h3><p>上述规则会造成以下代码产生奇怪的现象</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="function"><span class="keyword">void</span> <span class="title">f3</span><span class="params">(T&amp;&amp; val)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	T t = val;</span><br><span class="line">    t = <span class="built_in">fcnt</span>(t);</span><br><span class="line">    <span class="keyword">if</span> (val == t) &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>当传入的参数是右值时，T是int</li>
+<li>当传入的参数是左值时，T是int&amp;</li>
+</ul>
+<p>一般右值引用参数用于两种场景，参数转发和模板重载。</p>
+<h2 id="Understanding-std-move"><a href="#Understanding-std-move" class="headerlink" title="Understanding std::move"></a>Understanding <code>std::move</code></h2><p>std::move的定义如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">typename</span> remove_reference&lt;T&gt;::<span class="function">type&amp;&amp; <span class="title">move</span><span class="params">(T&amp;&amp; t)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">static_cast</span>&lt;<span class="keyword">typename</span> remove_feference&lt;T&gt;::type&amp;&amp;&gt;(t);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>std::move的工作原理：</p>
+<p>当传入右值时，例如string(“test”)，其工作流程如下</p>
+<ul>
+<li>推导出来的类型T为string</li>
+<li>因此，remove_reference实例化为string</li>
+<li>remove_reference<string>为string</li>
+<li>move的返回类型为string &amp;&amp;</li>
+<li>而move的函数参数t，为string &amp;&amp;</li>
+</ul>
+<p>这时候实例化的move函数为</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">string &amp;&amp; <span class="title">move</span><span class="params">(string &amp;&amp;t)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>函数返回<code>return static_cast&lt;string &amp;&amp;&gt;(t)</code>，由于t本身就是<code>string &amp;&amp;</code>，因此，函数会返回传入的右值引用。</p>
+<p>当传入左值时，其工作流程如下</p>
+<ul>
+<li>推导出来的类型T为string &amp;</li>
+<li>remove_reference实例化为string &amp;</li>
+<li>remove_reference&lt;string &amp;&gt;为string</li>
+<li>move的返回类型还是string &amp;&amp;</li>
+<li>move的函数参数，实例化为string &amp; &amp;&amp;，堆叠成string &amp;</li>
+</ul>
+<p>这次调用会实例化move函数为</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">string&amp;&amp; <span class="title">move</span><span class="params">(string &amp;t)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>函数返回值为<code>static_cast&lt;string &amp;&amp;&gt;(t)</code>，因为t的类型为<code>string &amp;</code>，因此，会转换成<code>string &amp;&amp;</code>。</p>
+<h2 id="Forwarding"><a href="#Forwarding" class="headerlink" title="Forwarding"></a>Forwarding</h2><p>有些函数需要转发一些参数，且要保留它们的类型信息，包括左值右值，const类型信息等。</p>
+<p>以一个例子来说明，如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> F, <span class="keyword">typename</span> T1, <span class="keyword">typename</span> T2&gt;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">flip1</span><span class="params">(F f, T1 t1, T2 t2)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="built_in">f</span>(t2, t1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当f中有引用类型时，会有奇怪的现象</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">f</span><span class="params">(<span class="keyword">int</span> v1, <span class="keyword">int</span> &amp;v2)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	cout &lt;&lt; v1 &lt;&lt; <span class="string">&quot; &quot;</span> &lt;&lt; ++v2 &lt;&lt; endl;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">f</span>(<span class="number">42</span>, i); <span class="comment">//f改变参数i</span></span><br><span class="line"><span class="built_in">flip1</span>(f, j, <span class="number">42</span>); <span class="comment">//flip1并没有改变j</span></span><br></pre></td></tr></table></figure>
+<p>flip1推导出T1是int，然后，传递给f的是函数左值参数，因此，并不会改变外面传进入的j。</p>
+<p>即，如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">flip1</span><span class="params">(<span class="keyword">void</span> (*fcn)(<span class="keyword">int</span>, <span class="keyword">int</span> &amp;), <span class="keyword">int</span> t1, <span class="keyword">int</span> t2)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Defining-Function-Parameters-That-Retain-Type-Information"><a href="#Defining-Function-Parameters-That-Retain-Type-Information" class="headerlink" title="Defining Function Parameters That Retain Type Information"></a>Defining Function Parameters That Retain Type Information</h3><p>可以使用右值引用来解决上述问题，如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> F, <span class="keyword">typename</span> T1, <span class="keyword">typename</span> T2&gt;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">flip2</span><span class="params">(F f, T1 &amp;&amp;t1, T2 &amp;&amp;t2)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="built_in">f</span>(t2, t1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当再次考虑调用如下是</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">flip1</span>(f, j, <span class="number">42</span>);</span><br></pre></td></tr></table></figure>
+
+<p>其中T1会被推导成<code>int &amp;</code>，然后根据堆叠规则，t1的类型为<code>int &amp;</code>，因此，在f中是能增加j的值的。</p>
+<p>上述函数在左值时能正常工作，但是，在右值引用时，<strong>无法正常工作</strong>，如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">g</span><span class="params">(<span class="keyword">int</span> &amp;&amp;i, <span class="keyword">int</span> &amp;j)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	cout &lt;&lt; i &lt;&lt; <span class="string">&quot; &quot;</span> &lt;&lt; j &lt;&lt; endl;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">flip2</span>(g, i, <span class="number">42</span>); <span class="comment">//error</span></span><br></pre></td></tr></table></figure>
+<p>其中，42推导出T2为int，然后t2是 <code>int &amp;&amp;</code>，注意，只是类型是<code>int &amp;&amp;</code>，但它本身是一个lvalue，所以，不能绑定到g的第一个参数。</p>
+<h3 id="Using-std-forward-to-Preserve-Type-Information-in-a-Call"><a href="#Using-std-forward-to-Preserve-Type-Information-in-a-Call" class="headerlink" title="Using std::forward to Preserve Type Information in a Call"></a>Using <code>std::forward</code> to Preserve Type Information in a Call</h3><p>可以使用std::forward解决上述问题，<code>std::forward&lt;T&gt;</code>的返回值为<code>T &amp;&amp;</code>，如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> Type&gt; <span class="built_in">intermediary</span>(Type &amp;&amp;arg)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="built_in">finalFcn</span>(std::forward&lt;Type&gt;(arg));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>当传入的参数是是rvalue，Type的类型是rvalue的类型，那么，<code>forward&lt;Type&gt;</code>将返回<code>Type &amp;&amp;</code></li>
+<li>当出软的参数是lvalue时，那么Type是lvalue reference，即Type &amp;，则<code>forward&lt;Type&gt;</code>则是<code>&amp;&amp;&amp;</code>堆叠，最后，返回的还是lvalue reference</li>
+</ul>
+<p>PS:<br>本博客更新会在第一时间推送到微信公众号，欢迎大家关注。</p>
+<p><img src="http://oserror.com/images/qcode_wechat.jpg" alt="qocde_wechat"></p>
+<h1 id="References"><a href="#References" class="headerlink" title="References"></a>References</h1><ul>
+<li>C++ primer 5th edition</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/C/" rel="tag">#C++</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/backend/libeasy-all/" rel="next" title="libeasy实现原理">
+                <i class="fa fa-chevron-left"></i> libeasy实现原理
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/distributed/mapreduce-implementation-in-golang/" rel="prev" title="golang实现单机版MapReduce">
+                golang实现单机版MapReduce <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">36</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">33</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Charles0429" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Introduction"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Template-Definition"><span class="nav-number">2.</span> <span class="nav-text">Template Definition</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Function-Template"><span class="nav-number">2.1.</span> <span class="nav-text">Function Template</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Instantiating-a-Function-Template"><span class="nav-number">2.1.1.</span> <span class="nav-text">Instantiating a Function Template</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Template-Type-Parameters"><span class="nav-number">2.1.2.</span> <span class="nav-text">Template Type Parameters</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Nontype-Template-Parameters"><span class="nav-number">2.1.3.</span> <span class="nav-text">Nontype Template Parameters</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#inline-and-constexpr-Function-Templates"><span class="nav-number">2.1.4.</span> <span class="nav-text">inline and constexpr Function Templates</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Writing-Type-Independent-Code"><span class="nav-number">2.1.5.</span> <span class="nav-text">Writing Type-Independent Code</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Template-Compilation"><span class="nav-number">2.1.6.</span> <span class="nav-text">Template Compilation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Compilation-Errors-Are-Mostly-Reported-during-Instantiation"><span class="nav-number">2.1.7.</span> <span class="nav-text">Compilation Errors Are Mostly Reported during Instantiation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Class-Template"><span class="nav-number">2.2.</span> <span class="nav-text">Class Template</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Defining-a-Class-Template"><span class="nav-number">2.2.1.</span> <span class="nav-text">Defining a Class Template</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Instantiating-a-Class-Template"><span class="nav-number">2.2.2.</span> <span class="nav-text">Instantiating a Class Template</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Member-Functions-of-Class-Templates"><span class="nav-number">2.2.3.</span> <span class="nav-text">Member Functions of Class Templates</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Instantition-of-Class-Template-Member-Functions"><span class="nav-number">2.2.4.</span> <span class="nav-text">Instantition of Class-Template Member Functions</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Simplifying-Use-of-a-Template-Class-Name-inside-Class-Code"><span class="nav-number">2.2.5.</span> <span class="nav-text">Simplifying Use of a Template Class Name inside Class Code</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Using-a-Class-Template-outside-the-Class-Template-Body"><span class="nav-number">2.2.6.</span> <span class="nav-text">Using a Class Template outside the Class Template Body</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Class-Templates-and-Friends"><span class="nav-number">2.2.7.</span> <span class="nav-text">Class Templates and Friends</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#One-to-One-FriendShip"><span class="nav-number">2.2.8.</span> <span class="nav-text">One-to-One FriendShip</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#General-and-Specific-Template-FriendShip"><span class="nav-number">2.2.9.</span> <span class="nav-text">General and Specific Template FriendShip</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Befriending-the-Template%E2%80%99s-Own-Type-Parameter"><span class="nav-number">2.2.10.</span> <span class="nav-text">Befriending the Template’s Own Type Parameter</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Template-Type-Aliases"><span class="nav-number">2.2.11.</span> <span class="nav-text">Template Type Aliases</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#static-Members-of-Class-Templates"><span class="nav-number">2.2.12.</span> <span class="nav-text">static Members of Class Templates</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Template-Parameters"><span class="nav-number">2.3.</span> <span class="nav-text">Template Parameters</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Template-Parameters-and-Scope"><span class="nav-number">2.3.1.</span> <span class="nav-text">Template Parameters and Scope</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Template-Declarations"><span class="nav-number">2.3.2.</span> <span class="nav-text">Template Declarations</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Using-Class-Members-That-are-Types"><span class="nav-number">2.3.3.</span> <span class="nav-text">Using Class Members That are Types</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Default-Template-Arguments"><span class="nav-number">2.3.4.</span> <span class="nav-text">Default Template Arguments</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Template-Default-Arguments-and-Class-Templates"><span class="nav-number">2.3.5.</span> <span class="nav-text">Template Default Arguments and Class Templates</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Member-Templates"><span class="nav-number">2.4.</span> <span class="nav-text">Member Templates</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Member-Templates-of-Ordinary-Nontemplate-Classes"><span class="nav-number">2.4.1.</span> <span class="nav-text">Member Templates of Ordinary(Nontemplate) Classes</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Member-Templates-of-Class-Templates"><span class="nav-number">2.4.2.</span> <span class="nav-text">Member Templates of Class Templates</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Instantiation-and-Member-Templates"><span class="nav-number">2.4.3.</span> <span class="nav-text">Instantiation and Member Templates</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Controlling-Instantiations"><span class="nav-number">2.5.</span> <span class="nav-text">Controlling Instantiations</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Template-Argument-Deduction"><span class="nav-number">3.</span> <span class="nav-text">Template Argument Deduction</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Conversions-and-Template-Type-Parameters"><span class="nav-number">3.1.</span> <span class="nav-text">Conversions and Template Type Parameters</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Function-Parameters-That-Use-the-Same-Template-Parameter-Type"><span class="nav-number">3.1.1.</span> <span class="nav-text">Function Parameters That Use the Same Template Parameter Type</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Normal-Conversions-Apply-for-Ordinary-Arguments"><span class="nav-number">3.1.2.</span> <span class="nav-text">Normal Conversions Apply for Ordinary Arguments</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Function-Template-Explicit-Arguments"><span class="nav-number">3.2.</span> <span class="nav-text">Function Template Explicit Arguments</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Specifying-an-Explicit-Template-Argument"><span class="nav-number">3.2.1.</span> <span class="nav-text">Specifying an Explicit Template Argument</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Normal-Conversions-Apply-for-Explicitly-Sepecified-Arguments"><span class="nav-number">3.2.2.</span> <span class="nav-text">Normal Conversions Apply for Explicitly Sepecified Arguments</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Trailing-Return-Type-and-Type-Transformation"><span class="nav-number">3.3.</span> <span class="nav-text">Trailing Return Type and Type Transformation</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#The-Type-Transformation-Library-Template-Classes"><span class="nav-number">3.3.1.</span> <span class="nav-text">The Type Transformation Library Template Classes</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Function-pointers-and-Argument-Deduction"><span class="nav-number">3.4.</span> <span class="nav-text">Function pointers and Argument Deduction</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Template-Argument-Deduction-and-References"><span class="nav-number">3.5.</span> <span class="nav-text">Template Argument Deduction and References</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Type-Deduction-from-Lvalue-Reference-Function-Parameters"><span class="nav-number">3.5.1.</span> <span class="nav-text">Type Deduction from Lvalue Reference Function Parameters</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Type-Deduction-from-Rvalue-Reference-Function-Parameters"><span class="nav-number">3.5.2.</span> <span class="nav-text">Type Deduction from Rvalue Reference Function Parameters</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference-Collapsing-and-Rvalue-Reference-Parameters"><span class="nav-number">3.5.3.</span> <span class="nav-text">Reference Collapsing and Rvalue Reference Parameters</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Writing-Template-Functions-with-Rvalue-Reference-Parameters"><span class="nav-number">3.5.4.</span> <span class="nav-text">Writing Template Functions with Rvalue Reference Parameters</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Understanding-std-move"><span class="nav-number">3.6.</span> <span class="nav-text">Understanding std::move</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Forwarding"><span class="nav-number">3.7.</span> <span class="nav-text">Forwarding</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Defining-Function-Parameters-That-Retain-Type-Information"><span class="nav-number">3.7.1.</span> <span class="nav-text">Defining Function Parameters That Retain Type Information</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Using-std-forward-to-Preserve-Type-Information-in-a-Call"><span class="nav-number">3.7.2.</span> <span class="nav-text">Using std::forward to Preserve Type Information in a Call</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#References"><span class="nav-number">4.</span> <span class="nav-text">References</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Charles0429</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

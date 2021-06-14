@@ -1,0 +1,806 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.lug.ustc.edu.cn/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="golang,RPC," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Charles的技术博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="引言分布式系统学习中，需要理解如何对各种故障进行正确地处理，包括网络故障，机器故障等等。如何能方便的模拟故障，来验证自己的原型系统是否能够正确的应对这些故障就非常重要。本文将分析一个基于golang实现，具有故障模拟的RPC实现原理，源码来自MIT 6.824课程的labrpc。 RPC基本原理在了解RPC实现之前，我们先来了解下RPC的基本原理。 在分布式系统中，RPC(remote proce">
+<meta property="og:type" content="article">
+<meta property="og:title" content="具有故障模拟功能的RPC实现分析">
+<meta property="og:url" content="http://yoursite.com/distributed/golang-rpc-with-failure-simulation/index.html">
+<meta property="og:site_name" content="Charles的技术博客">
+<meta property="og:description" content="引言分布式系统学习中，需要理解如何对各种故障进行正确地处理，包括网络故障，机器故障等等。如何能方便的模拟故障，来验证自己的原型系统是否能够正确的应对这些故障就非常重要。本文将分析一个基于golang实现，具有故障模拟的RPC实现原理，源码来自MIT 6.824课程的labrpc。 RPC基本原理在了解RPC实现之前，我们先来了解下RPC的基本原理。 在分布式系统中，RPC(remote proce">
+<meta property="og:locale">
+<meta property="og:image" content="http://oserror.com/images/qcode_wechat.jpg">
+<meta property="article:published_time" content="2016-09-07T15:27:20.000Z">
+<meta property="article:modified_time" content="2021-06-14T13:00:05.525Z">
+<meta property="article:author" content="Charles0429">
+<meta property="article:tag" content="golang">
+<meta property="article:tag" content="RPC">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://oserror.com/images/qcode_wechat.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 3109763,
+      author: 'Charles0429'
+    }
+  };
+</script>
+
+  <title> 具有故障模拟功能的RPC实现分析 | Charles的技术博客 </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Charles的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                具有故障模拟功能的RPC实现分析
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-09-07T23:27:20+08:00" content="2016-09-07">
+              2016-09-07
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/distributed/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>分布式系统学习中，需要理解如何对各种故障进行正确地处理，包括网络故障，机器故障等等。如何能方便的模拟故障，来验证自己的原型系统是否能够正确的应对这些故障就非常重要。本文将分析一个基于golang实现，具有故障模拟的RPC实现原理，源码来自MIT 6.824课程的labrpc。</p>
+<h1 id="RPC基本原理"><a href="#RPC基本原理" class="headerlink" title="RPC基本原理"></a>RPC基本原理</h1><p>在了解RPC实现之前，我们先来了解下RPC的基本原理。</p>
+<p>在分布式系统中，RPC(remote procedure call)是当一个计算机程序触发在其他地址空间(通常是通过网络相连的其他计算机)执行一个计算过程，用户无需了解其实现细节，就像调用本机的函数一样，通常，一个RPC的调用类似如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Client:</span><br><span class="line">  z = fn(x, y)</span><br><span class="line">Server:</span><br><span class="line">  fn(x, y) &#123;</span><br><span class="line">    compute</span><br><span class="line">    <span class="keyword">return</span> z</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<p>如上所示，Client执行函数<code>fn(x,y)</code>，通过RPC，最终在Server端执行此函数，并获取结果。如上所示的调用，其消息流如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Client             Server</span><br><span class="line">  request---&gt;</span><br><span class="line">     &lt;---response</span><br></pre></td></tr></table></figure>
+<p>Client调用函数后，RPC库会给相应的Server发送请求，Server端执行完得到结果后，会通过RPC库发送响应给Client。</p>
+<p>整个RPC的结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">client app         handlers</span><br><span class="line">  stubs           dispatcher</span><br><span class="line"> RPC lib           RPC lib</span><br><span class="line">   net  ------------ net</span><br></pre></td></tr></table></figure>
+<p>Client调用远程过程的时候，会传入一些参数，Client stub(往往也在RPC库中实现)会对这些参数序列化，通过RPC库发送到网络；Server端网络收到包之后，RPC库处理后，通过dispatcher反序列化参数后，然后调用对应的handler。</p>
+<p>根据以上结构，一次RPC中，有可能出现各种各样的故障，例如：</p>
+<ul>
+<li>丢包</li>
+<li>网络中断</li>
+<li>机器故障</li>
+<li>机器变慢</li>
+</ul>
+<p>当发生故障时，对于Client来讲，一般会有如下反应：</p>
+<ul>
+<li>Client没有收到Server的响应</li>
+<li>Client不知道Server端是否收到了请求</li>
+</ul>
+<p>RPC Client对故障的处理根据实现的不同而不同，一般有如下处理方式。</p>
+<p><strong>at least once</strong></p>
+<ul>
+<li>RPC库等待库一段时间</li>
+<li>如果没收到响应，重发请求</li>
+<li>在收到请求前，会重试多次</li>
+<li>如果最终还是无响应，则报错</li>
+</ul>
+<p>at least once的处理方式实现比较简单，但是，对于不是幂等的操作会有问题。</p>
+<p>相对而言，比at least once更好的处理方式为at most once。</p>
+<p><strong>at most once</strong></p>
+<ul>
+<li>Server端检测重复请求，如果之前处理过，则返回之前处理的结果，否则，生成结果并返回</li>
+</ul>
+<p>当采用at most once时，并且是把重复请求信息记录在内存中的，如果Server端宕机了，则记录的重复请求信息就不存在了，重启后，就无法正常工作了。</p>
+<p>解决方案可能是把重复记录信息持久化，为了更安全，可能需要把这些信息复制到多个Server。</p>
+<p><strong>exactly once</strong></p>
+<ul>
+<li>at most once + 具有多副本容灾，并且Client一直重试到成功</li>
+</ul>
+<h1 id="带有故障模拟的RPC实现分析"><a href="#带有故障模拟的RPC实现分析" class="headerlink" title="带有故障模拟的RPC实现分析"></a>带有故障模拟的RPC实现分析</h1><p>了解RPC基本原理后，我们来看一个基于golang channel的单机具有故障模拟的RPC库实现。</p>
+<p>先通过一个简单的例子，了解此RPC的API使用方法</p>
+<h2 id="使用例子"><a href="#使用例子" class="headerlink" title="使用例子"></a>使用例子</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> JunkArgs <span class="keyword">struct</span> &#123;</span><br><span class="line">  X <span class="keyword">int</span></span><br><span class="line">&#125; </span><br><span class="line"><span class="keyword">type</span> JunkReply <span class="keyword">struct</span> &#123;</span><br><span class="line">  X <span class="keyword">string</span></span><br><span class="line">&#125; </span><br><span class="line">  </span><br><span class="line"><span class="keyword">type</span> JunkServer <span class="keyword">struct</span> &#123;</span><br><span class="line">  mu   sync.Mutex</span><br><span class="line">  log1 []<span class="keyword">string</span></span><br><span class="line">  log2 []<span class="keyword">int</span></span><br><span class="line">&#125; </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(js *JunkServer)</span> <span class="title">Handler1</span><span class="params">(args <span class="keyword">string</span>, reply *<span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">  js.mu.Lock()</span><br><span class="line">  <span class="keyword">defer</span> js.mu.Unlock()</span><br><span class="line">  js.log1 = <span class="built_in">append</span>(js.log1, args)</span><br><span class="line">  *reply, _ = strconv.Atoi(args)</span><br><span class="line">&#125; </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(js *JunkServer)</span> <span class="title">Handler2</span><span class="params">(args <span class="keyword">int</span>, reply *<span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">  js.mu.Lock()</span><br><span class="line">  <span class="keyword">defer</span> js.mu.Unlock()</span><br><span class="line">  js.log2 = <span class="built_in">append</span>(js.log2, args)</span><br><span class="line">  *reply = <span class="string">&quot;handler2-&quot;</span> + strconv.Itoa(args)</span><br><span class="line">&#125; </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(js *JunkServer)</span> <span class="title">Handler3</span><span class="params">(args <span class="keyword">int</span>, reply *<span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">  js.mu.Lock()</span><br><span class="line">  <span class="keyword">defer</span> js.mu.Unlock()</span><br><span class="line">  time.Sleep(<span class="number">20</span> * time.Second)</span><br><span class="line">  *reply = -args</span><br><span class="line">&#125; </span><br><span class="line">  </span><br><span class="line"><span class="comment">// args is a pointer</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(js *JunkServer)</span> <span class="title">Handler4</span><span class="params">(args *JunkArgs, reply *JunkReply)</span></span> &#123;</span><br><span class="line">  reply.X = <span class="string">&quot;pointer&quot;</span></span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TestBasic</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">  runtime.GOMAXPROCS(<span class="number">4</span>)</span><br><span class="line">  </span><br><span class="line">  rn := MakeNetwork()</span><br><span class="line">  </span><br><span class="line">  e := rn.MakeEnd(<span class="string">&quot;end1-99&quot;</span>)</span><br><span class="line">  </span><br><span class="line">  js := &amp;JunkServer&#123;&#125;</span><br><span class="line">  svc := MakeService(js)</span><br><span class="line">  </span><br><span class="line">  rs := MakeServer()</span><br><span class="line">  rs.AddService(svc)</span><br><span class="line">  rn.AddServer(<span class="string">&quot;server99&quot;</span>, rs)</span><br><span class="line">  </span><br><span class="line">  rn.Connect(<span class="string">&quot;end1-99&quot;</span>, <span class="string">&quot;server99&quot;</span>)</span><br><span class="line">  rn.Enable(<span class="string">&quot;end1-99&quot;</span>, <span class="literal">true</span>)</span><br><span class="line">  </span><br><span class="line">  &#123;</span><br><span class="line">    reply := <span class="string">&quot;&quot;</span></span><br><span class="line">    e.Call(<span class="string">&quot;JunkServer.Handler2&quot;</span>, <span class="number">111</span>, &amp;reply)</span><br><span class="line">    <span class="keyword">if</span> reply != <span class="string">&quot;handler2-111&quot;</span> &#123;</span><br><span class="line">      t.Fatalf(<span class="string">&quot;wrong reply from Handler2&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  &#123;</span><br><span class="line">    reply := <span class="number">0</span></span><br><span class="line">    e.Call(<span class="string">&quot;JunkServer.Handler1&quot;</span>, <span class="string">&quot;9099&quot;</span>, &amp;reply)</span><br><span class="line">    <span class="keyword">if</span> reply != <span class="number">9099</span> &#123;</span><br><span class="line">      t.Fatalf(<span class="string">&quot;wrong reply from Handler1&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>一次通用的RPC用到API如下：</p>
+<ul>
+<li>MakeNetwork，创建网络，其中网络里面有Client和Server组成</li>
+<li>MakeServer，创建Server，Server里面有不同的Service</li>
+<li>MakeService，创建Service，Service里面定义了不同的handle</li>
+<li>MakeEnd，创建Client</li>
+<li>Connect，Client调用Server前先要执行Connect</li>
+<li>Call，Client调用Server端的过程，通过参数执行要调用的handle，handle需要的参数</li>
+</ul>
+<h2 id="RPC的基本结构"><a href="#RPC的基本结构" class="headerlink" title="RPC的基本结构"></a>RPC的基本结构</h2><p>从上面使用例子看出，整个RPC过程中包含以下基本结构：</p>
+<ul>
+<li>NetWork</li>
+<li>Server</li>
+<li>Client</li>
+</ul>
+<h3 id="Network"><a href="#Network" class="headerlink" title="Network"></a>Network</h3><p>Network中包含一个或多个的Server和Client，其定义如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Network <span class="keyword">struct</span> &#123;</span><br><span class="line">  mu             sync.Mutex</span><br><span class="line">  reliable       <span class="keyword">bool</span></span><br><span class="line">  longDelays     <span class="keyword">bool</span>                        <span class="comment">// pause a long time on send on disabled connection</span></span><br><span class="line">  longReordering <span class="keyword">bool</span>                        <span class="comment">// sometimes delay replies a long time</span></span><br><span class="line">  ends           <span class="keyword">map</span>[<span class="keyword">interface</span>&#123;&#125;]*ClientEnd  <span class="comment">// ends, by name</span></span><br><span class="line">  enabled        <span class="keyword">map</span>[<span class="keyword">interface</span>&#123;&#125;]<span class="keyword">bool</span>        <span class="comment">// by end name</span></span><br><span class="line">  servers        <span class="keyword">map</span>[<span class="keyword">interface</span>&#123;&#125;]*Server     <span class="comment">// servers, by name</span></span><br><span class="line">  connections    <span class="keyword">map</span>[<span class="keyword">interface</span>&#123;&#125;]<span class="keyword">interface</span>&#123;&#125; <span class="comment">// endname -&gt; servername</span></span><br><span class="line">  endCh          <span class="keyword">chan</span> reqMsg</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<p>主要包括以下内容：</p>
+<ul>
+<li>servers：该网络中的所有Server</li>
+<li>ends：该网络中的所有Client</li>
+<li>connections：Client到Server的所有链接</li>
+<li>endCh：golang的channel，用来模拟传送数据的网络</li>
+<li>enabled：模拟Server是否宕机</li>
+<li>reliable：用来模拟网络是否可靠</li>
+<li>longDelays：用来模拟慢Server</li>
+<li>longReording：用来模拟网络的乱序</li>
+</ul>
+<h3 id="Server"><a href="#Server" class="headerlink" title="Server"></a>Server</h3><p>Server中包含一系列的Service，其定义如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Server <span class="keyword">struct</span> &#123;</span><br><span class="line">  mu       sync.Mutex</span><br><span class="line">  services <span class="keyword">map</span>[<span class="keyword">string</span>]*Service</span><br><span class="line">  count    <span class="keyword">int</span> <span class="comment">// incoming RPCs</span></span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>Service：Server所包含的Service</li>
+<li>count：达到Server的总的RPC总数</li>
+</ul>
+<h3 id="Client"><a href="#Client" class="headerlink" title="Client"></a>Client</h3><p>Client为客户端，其定义如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ClientEnd <span class="keyword">struct</span> &#123;</span><br><span class="line">  endname <span class="keyword">interface</span>&#123;&#125; <span class="comment">// this end-point&#x27;s name                                              </span></span><br><span class="line">  ch      <span class="keyword">chan</span> reqMsg <span class="comment">// copy of Network.endCh                                              </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>endname：客户端名称</li>
+<li>reqMsg：发送消息的模拟网络，和Network的endCh是同一个channel</li>
+</ul>
+<h2 id="RPC实现分析"><a href="#RPC实现分析" class="headerlink" title="RPC实现分析"></a>RPC实现分析</h2><p>本部分主要分析API的实现，主要包括如下：</p>
+<ul>
+<li>MakeNetwork</li>
+<li>MakeEnd</li>
+<li>MakeServer</li>
+<li>AddServer</li>
+<li>MakeService</li>
+<li>AddService</li>
+<li>Connect</li>
+<li>Enable</li>
+<li>Call</li>
+</ul>
+<h3 id="MakeNetwork"><a href="#MakeNetwork" class="headerlink" title="MakeNetwork"></a>MakeNetwork</h3><p>其实现如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">MakeNetwork</span><span class="params">()</span> *<span class="title">Network</span></span> &#123;                                                                                                                                                           </span><br><span class="line">  rn := &amp;Network&#123;&#125;</span><br><span class="line">  rn.reliable = <span class="literal">true</span></span><br><span class="line">  rn.ends = <span class="keyword">map</span>[<span class="keyword">interface</span>&#123;&#125;]*ClientEnd&#123;&#125;</span><br><span class="line">  rn.enabled = <span class="keyword">map</span>[<span class="keyword">interface</span>&#123;&#125;]<span class="keyword">bool</span>&#123;&#125;</span><br><span class="line">  rn.servers = <span class="keyword">map</span>[<span class="keyword">interface</span>&#123;&#125;]*Server&#123;&#125;</span><br><span class="line">  rn.connections = <span class="keyword">map</span>[<span class="keyword">interface</span>&#123;&#125;](<span class="keyword">interface</span>&#123;&#125;)&#123;&#125;                                          </span><br><span class="line">  rn.endCh = <span class="built_in">make</span>(<span class="keyword">chan</span> reqMsg)</span><br><span class="line">      </span><br><span class="line">  <span class="comment">// single goroutine to handle all ClientEnd.Call()s</span></span><br><span class="line">  <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> xreq := <span class="keyword">range</span> rn.endCh &#123;                                                            </span><br><span class="line">      <span class="keyword">go</span> rn.ProcessReq(xreq)</span><br><span class="line">    &#125; </span><br><span class="line">  &#125;() </span><br><span class="line">      </span><br><span class="line">  <span class="keyword">return</span> rn</span><br><span class="line">&#125;     </span><br></pre></td></tr></table></figure>
+
+<p>主要是初始化Network数据结构，然后，启动一个goroutine来处理Client的Call调用请求。</p>
+<h3 id="MakeEnd"><a href="#MakeEnd" class="headerlink" title="MakeEnd"></a>MakeEnd</h3><p>创建Client，实现如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(rn *Network)</span> <span class="title">MakeEnd</span><span class="params">(endname <span class="keyword">interface</span>&#123;&#125;)</span> *<span class="title">ClientEnd</span></span> &#123;                                                                                                                            </span><br><span class="line">  rn.mu.Lock()      </span><br><span class="line">  <span class="keyword">defer</span> rn.mu.Unlock()</span><br><span class="line">                    </span><br><span class="line">  <span class="keyword">if</span> _, ok := rn.ends[endname]; ok &#123;</span><br><span class="line">    log.Fatalf(<span class="string">&quot;MakeEnd: %v already exists\n&quot;</span>, endname)</span><br><span class="line">  &#125;                 </span><br><span class="line">                    </span><br><span class="line">  e := &amp;ClientEnd&#123;&#125; </span><br><span class="line">  e.endname = endname</span><br><span class="line">  e.ch = rn.endCh   </span><br><span class="line">  rn.ends[endname] = e</span><br><span class="line">  rn.enabled[endname] = <span class="literal">false</span></span><br><span class="line">  rn.connections[endname] = <span class="literal">nil</span></span><br><span class="line">                    </span><br><span class="line">  <span class="keyword">return</span> e          </span><br><span class="line">&#125;      </span><br></pre></td></tr></table></figure>
+<p>主要是在Network结构中，添加客户端，并把其enabled和connections设置成空。</p>
+<h3 id="MakeServer"><a href="#MakeServer" class="headerlink" title="MakeServer"></a>MakeServer</h3><p>创建Server，其实现如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">MakeServer</span><span class="params">()</span> *<span class="title">Server</span></span> &#123;                                                                                                                                                             </span><br><span class="line">  rs := &amp;Server&#123;&#125;</span><br><span class="line">  rs.services = <span class="keyword">map</span>[<span class="keyword">string</span>]*Service&#123;&#125;</span><br><span class="line">  <span class="keyword">return</span> rs </span><br><span class="line">&#125;     </span><br></pre></td></tr></table></figure>
+<p>初始化Server结构体的service为空的hashmap。</p>
+<h3 id="AddServer"><a href="#AddServer" class="headerlink" title="AddServer"></a>AddServer</h3><p>往Network中添加Server，其实现如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(rn *Network)</span> <span class="title">AddServer</span><span class="params">(servername <span class="keyword">interface</span>&#123;&#125;, rs *Server)</span></span> &#123;                                                                                                                      </span><br><span class="line">  rn.mu.Lock()      </span><br><span class="line">  <span class="keyword">defer</span> rn.mu.Unlock()</span><br><span class="line">                    </span><br><span class="line">  rn.servers[servername] = rs</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+<p>在Network的servers中添加server。</p>
+<h3 id="MakeService"><a href="#MakeService" class="headerlink" title="MakeService"></a>MakeService</h3><p>创建一个Service，其实现如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">MakeService</span><span class="params">(rcvr <span class="keyword">interface</span>&#123;&#125;)</span> *<span class="title">Service</span></span> &#123;</span><br><span class="line">  svc := &amp;Service&#123;&#125;</span><br><span class="line">  svc.typ = reflect.TypeOf(rcvr)</span><br><span class="line">  svc.rcvr = reflect.ValueOf(rcvr)</span><br><span class="line">  svc.name = reflect.Indirect(svc.rcvr).Type().Name()</span><br><span class="line">  svc.methods = <span class="keyword">map</span>[<span class="keyword">string</span>]reflect.Method&#123;&#125;</span><br><span class="line">     </span><br><span class="line">  <span class="keyword">for</span> m := <span class="number">0</span>; m &lt; svc.typ.NumMethod(); m++ &#123;</span><br><span class="line">    method := svc.typ.Method(m)</span><br><span class="line">    mtype := method.Type</span><br><span class="line">    mname := method.Name</span><br><span class="line">     </span><br><span class="line">    <span class="comment">//fmt.Printf(&quot;%v pp %v ni %v 1k %v 2k %v no %v\n&quot;,</span></span><br><span class="line">    <span class="comment">//  mname, method.PkgPath, mtype.NumIn(), mtype.In(1).Kind(), mtype.In(2).Kind(), mtype.NumOut())</span></span><br><span class="line">     </span><br><span class="line">    <span class="keyword">if</span> method.PkgPath != <span class="string">&quot;&quot;</span> || <span class="comment">// capitalized?</span></span><br><span class="line">      mtype.NumIn() != <span class="number">3</span> ||</span><br><span class="line">      <span class="comment">//mtype.In(1).Kind() != reflect.Ptr ||</span></span><br><span class="line">      mtype.In(<span class="number">2</span>).Kind() != reflect.Ptr ||</span><br><span class="line">      mtype.NumOut() != <span class="number">0</span> &#123;</span><br><span class="line">      <span class="comment">// the method is not suitable for a handler</span></span><br><span class="line">      <span class="comment">//fmt.Printf(&quot;bad method: %v\n&quot;, mname)</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">// the method looks like a handler</span></span><br><span class="line">      svc.methods[mname] = method</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;  </span><br><span class="line">     </span><br><span class="line">  <span class="keyword">return</span> svc</span><br><span class="line">&#125;    </span><br></pre></td></tr></table></figure>
+<p>rcvr是一个golang的结构体，其上定义了一系列的方法，每个方法对应RPC的一个调用函数。整个处理方式流程如下：</p>
+<ul>
+<li>创建Service结构体</li>
+<li>通过golang的reflection方式，获取结构体的所有方法，通过reflect.TypeOf(rcvr).NumMethod()来获取</li>
+<li>检测结构体中所有的method的参数是否符合RPC的标准。</li>
+<li>把符合的方法添加到Service中，作为handle</li>
+</ul>
+<h3 id="Connect"><a href="#Connect" class="headerlink" title="Connect"></a>Connect</h3><p>Client连接Server,其实现如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(rn *Network)</span> <span class="title">Connect</span><span class="params">(endname <span class="keyword">interface</span>&#123;&#125;, servername <span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;                   </span><br><span class="line">  rn.mu.Lock()     </span><br><span class="line">  <span class="keyword">defer</span> rn.mu.Unlock()</span><br><span class="line">                   </span><br><span class="line">  rn.connections[endname] = servername                                                      </span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+<p>在Network结构体中的connections中设置endname的连接为servername。</p>
+<h3 id="Enable"><a href="#Enable" class="headerlink" title="Enable"></a>Enable</h3><p>设置此Client对应的Server是否宕机，其实现如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(rn *Network)</span> <span class="title">Enable</span><span class="params">(endname <span class="keyword">interface</span>&#123;&#125;, enabled <span class="keyword">bool</span>)</span></span> &#123;                              </span><br><span class="line">  rn.mu.Lock()     </span><br><span class="line">  <span class="keyword">defer</span> rn.mu.Unlock()                                                                      </span><br><span class="line">                   </span><br><span class="line">  rn.enabled[endname] = enabled                                                             </span><br><span class="line">&#125;     </span><br></pre></td></tr></table></figure>
+<p>在Network结构体中的enables中设置endname的为enabled。</p>
+<h3 id="Call"><a href="#Call" class="headerlink" title="Call"></a>Call</h3><p>Client调用RPC过程，其流程如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">qb := <span class="built_in">new</span>(bytes.Buffer)</span><br><span class="line">qe := gob.NewEncoder(qb)</span><br><span class="line">qe.Encode(args)   </span><br><span class="line">req.args = qb.Bytes()</span><br></pre></td></tr></table></figure>
+
+<p>首先，把Client要发送的数据进行encode，即序列化</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">e.ch &lt;- req</span><br></pre></td></tr></table></figure>
+
+<p>发送请求的数据到channel上，即模拟的网络上</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rep := &lt;-req.replyCh</span><br></pre></td></tr></table></figure>
+<p>Client等待Server端返回数据</p>
+<p>在Client端发送数据后，Server端的处理流程如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">  <span class="keyword">for</span> xreq := <span class="keyword">range</span> rn.endCh &#123;                                                            </span><br><span class="line">    <span class="keyword">go</span> rn.ProcessReq(xreq)</span><br><span class="line">  &#125; </span><br><span class="line">&#125;() </span><br></pre></td></tr></table></figure>
+<p>Server端检测到endCh中有数据，然后调用ProcessReq处理请求。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> enabled &amp;&amp; servername != <span class="literal">nil</span> &amp;&amp; server != <span class="literal">nil</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> reliable == <span class="literal">false</span> &#123;</span><br><span class="line">    <span class="comment">// short delay</span></span><br><span class="line">    ms := (rand.Int() % <span class="number">27</span>)</span><br><span class="line">    time.Sleep(time.Duration(ms) * time.Millisecond)</span><br><span class="line">  &#125;               </span><br><span class="line">                  </span><br><span class="line">  <span class="keyword">if</span> reliable == <span class="literal">false</span> &amp;&amp; (rand.Int()%<span class="number">1000</span>) &lt; <span class="number">100</span> &#123;</span><br><span class="line">    <span class="comment">// drop the request, return as if timeout</span></span><br><span class="line">    req.replyCh &lt;- replyMsg&#123;<span class="literal">false</span>, <span class="literal">nil</span>&#125;</span><br><span class="line">    <span class="keyword">return</span>        </span><br><span class="line">  &#125;       </span><br></pre></td></tr></table></figure>
+<p>如果要模拟网络不是可靠的请求下，会按照如下流程处理</p>
+<ul>
+<li>随机等待一小段时间</li>
+<li>等待完后，以一定地概率不处理结果，直接返回Client失败</li>
+</ul>
+<p>接着需要把请求分发到相应的handle处理</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ech := <span class="built_in">make</span>(<span class="keyword">chan</span> replyMsg)</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;     </span><br><span class="line">  r := server.dispatch(req)</span><br><span class="line">  ech &lt;- r      </span><br><span class="line">&#125;()</span><br></pre></td></tr></table></figure>
+
+<p>具体地dispatch实现如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(rs *Server)</span> <span class="title">dispatch</span><span class="params">(req reqMsg)</span> <span class="title">replyMsg</span></span> &#123;</span><br><span class="line">  rs.mu.Lock()    </span><br><span class="line">                  </span><br><span class="line">  rs.count += <span class="number">1</span></span><br><span class="line">                  </span><br><span class="line">  <span class="comment">// split Raft.AppendEntries into service and method</span></span><br><span class="line">  dot := strings.LastIndex(req.svcMeth, <span class="string">&quot;.&quot;</span>)</span><br><span class="line">  serviceName := req.svcMeth[:dot]</span><br><span class="line">  methodName := req.svcMeth[dot+<span class="number">1</span>:]</span><br><span class="line">                  </span><br><span class="line">  service, ok := rs.services[serviceName]</span><br><span class="line">                  </span><br><span class="line">  rs.mu.Unlock()  </span><br><span class="line">                  </span><br><span class="line">  <span class="keyword">if</span> ok &#123;         </span><br><span class="line">    <span class="keyword">return</span> service.dispatch(methodName, req)</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;        </span><br><span class="line">    choices := []<span class="keyword">string</span>&#123;&#125;</span><br><span class="line">    <span class="keyword">for</span> k, _ := <span class="keyword">range</span> rs.services &#123;</span><br><span class="line">      choices = <span class="built_in">append</span>(choices, k)</span><br><span class="line">    &#125;             </span><br><span class="line">    log.Fatalf(<span class="string">&quot;labrpc.Server.dispatch(): unknown service %v in %v.%v; expecting one of %v\n&quot;</span>,</span><br><span class="line">      serviceName, serviceName, methodName, choices)</span><br><span class="line">    <span class="keyword">return</span> replyMsg&#123;<span class="literal">false</span>, <span class="literal">nil</span>&#125;</span><br><span class="line">  &#125;               </span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<p>通过调用的结构体和函数名，定位到需要具体处理的函数，调用它，流程如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// decode the argument.</span></span><br><span class="line">ab := bytes.NewBuffer(req.args)</span><br><span class="line">ad := gob.NewDecoder(ab)</span><br><span class="line">ad.Decode(args.Interface())</span><br><span class="line">   </span><br><span class="line"><span class="comment">// allocate space for the reply.</span></span><br><span class="line">replyType := method.Type.In(<span class="number">2</span>)</span><br><span class="line">replyType = replyType.Elem()</span><br><span class="line">replyv := reflect.New(replyType)</span><br><span class="line">   </span><br><span class="line"><span class="comment">// call the method.</span></span><br><span class="line">function := method.Func</span><br><span class="line">function.Call([]reflect.Value&#123;svc.rcvr, args.Elem(), replyv&#125;)</span><br><span class="line">   </span><br><span class="line"><span class="comment">// encode the reply.</span></span><br><span class="line">rb := <span class="built_in">new</span>(bytes.Buffer)</span><br><span class="line">re := gob.NewEncoder(rb)</span><br><span class="line">re.EncodeValue(replyv)</span><br></pre></td></tr></table></figure>
+<p>首先，对RPC请求进行反序列化，调用对应的函数处理，最后把生成的结果进行序列化。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">  serverDead = rn.IsServerDead(req.endname, servername, server)</span><br><span class="line">       </span><br><span class="line">  <span class="keyword">if</span> replyOK == <span class="literal">false</span> || serverDead == <span class="literal">true</span> &#123;</span><br><span class="line">    <span class="comment">// server was killed while we were waiting; return error.</span></span><br><span class="line">    req.replyCh &lt;- replyMsg&#123;<span class="literal">false</span>, <span class="literal">nil</span>&#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> reliable == <span class="literal">false</span> &amp;&amp; (rand.Int()%<span class="number">1000</span>) &lt; <span class="number">100</span> &#123;</span><br><span class="line">    <span class="comment">// drop the reply, return as if timeout</span></span><br><span class="line">    req.replyCh &lt;- replyMsg&#123;<span class="literal">false</span>, <span class="literal">nil</span>&#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> longreordering == <span class="literal">true</span> &amp;&amp; rand.Intn(<span class="number">900</span>) &lt; <span class="number">600</span> &#123;</span><br><span class="line">    <span class="comment">// delay the response for a while</span></span><br><span class="line">    ms := <span class="number">200</span> + rand.Intn(<span class="number">1</span>+rand.Intn(<span class="number">2000</span>))</span><br><span class="line">    time.Sleep(time.Duration(ms) * time.Millisecond)</span><br><span class="line">    req.replyCh &lt;- reply</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;         </span><br><span class="line">    req.replyCh &lt;- reply</span><br><span class="line">  &#125;                                                                                                                                                                      </span><br><span class="line">&#125; <span class="keyword">else</span> &#123;               </span><br><span class="line">  <span class="comment">// simulate no reply and eventual timeout.</span></span><br><span class="line">  ms := <span class="number">0</span>              </span><br><span class="line">  <span class="keyword">if</span> rn.longDelays &#123;   </span><br><span class="line">    <span class="comment">// let Raft tests check that leader doesn&#x27;t send                                                                                                                                  </span></span><br><span class="line">    <span class="comment">// RPCs synchronously.</span></span><br><span class="line">    ms = (rand.Int() % <span class="number">7000</span>)</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;             </span><br><span class="line">    <span class="comment">// many kv tests require the client to try each</span></span><br><span class="line">    <span class="comment">// server in fairly rapid succession.</span></span><br><span class="line">    ms = (rand.Int() % <span class="number">100</span>)</span><br><span class="line">  &#125;                    </span><br><span class="line">  time.Sleep(time.Duration(ms) * time.Millisecond)</span><br><span class="line">  req.replyCh &lt;- replyMsg&#123;<span class="literal">false</span>, <span class="literal">nil</span>&#125;</span><br><span class="line">&#125;     </span><br></pre></td></tr></table></figure>
+
+<p>根据一系列的配置，决定是否返回结果以及何时返回结果，用来模拟故障情况</p>
+<ul>
+<li>如果enabled为false，则模拟Server挂掉的情况，则直接返回失败。</li>
+<li>如果reliable为false，则模拟网络不可靠情况，有概率返回失败</li>
+<li>如果longreording为true，则以一定概率等待一定时间返回结果，以模拟网络包乱序地情况</li>
+<li>如果是longDelays为true，则会等待一段事件再返回结果，模拟高时延的情况</li>
+</ul>
+<p>最后，Client收到数据后，会按照以下流程处理</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> rep.ok &#123;        </span><br><span class="line">  rb := bytes.NewBuffer(rep.reply)</span><br><span class="line">  rd := gob.NewDecoder(rb)</span><br><span class="line">  <span class="keyword">if</span> err := rd.Decode(reply); err != <span class="literal">nil</span> &#123;</span><br><span class="line">    log.Fatalf(<span class="string">&quot;ClientEnd.Call(): decode reply: %v\n&quot;</span>, err)</span><br><span class="line">  &#125;                </span><br><span class="line">  <span class="keyword">return</span> <span class="literal">true</span>      </span><br><span class="line">&#125; <span class="keyword">else</span> &#123;           </span><br><span class="line">  <span class="keyword">return</span> <span class="literal">false</span>     </span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+<p>即反序列化Server端的响应，最终返回结果给应用端。</p>
+<p>PS:<br>本博客更新会在第一时间推送到微信公众号，欢迎大家关注。</p>
+<p><img src="http://oserror.com/images/qcode_wechat.jpg" alt="qocde_wechat"></p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://pdos.csail.mit.edu/6.824/notes/l-rpc.txt">MIT 6.824 labrpc</a></li>
+<li><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Remote_procedure_call">remote procedure call</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/Charles0429/toys/blob/master/6.824/src/labrpc/labrpc.go">labrpc code</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/golang/" rel="tag">#golang</a>
+          
+            <a href="/tags/RPC/" rel="tag">#RPC</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/language/golang-reflection/" rel="next" title="golang reflection学习笔记">
+                <i class="fa fa-chevron-left"></i> golang reflection学习笔记
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/distributed/gfs/" rel="prev" title="gfs原理">
+                gfs原理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">36</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">33</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Charles0429" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%95%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#RPC%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">RPC基本原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B8%A6%E6%9C%89%E6%95%85%E9%9A%9C%E6%A8%A1%E6%8B%9F%E7%9A%84RPC%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90"><span class="nav-number">3.</span> <span class="nav-text">带有故障模拟的RPC实现分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E4%BE%8B%E5%AD%90"><span class="nav-number">3.1.</span> <span class="nav-text">使用例子</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RPC%E7%9A%84%E5%9F%BA%E6%9C%AC%E7%BB%93%E6%9E%84"><span class="nav-number">3.2.</span> <span class="nav-text">RPC的基本结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Network"><span class="nav-number">3.2.1.</span> <span class="nav-text">Network</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Server"><span class="nav-number">3.2.2.</span> <span class="nav-text">Server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Client"><span class="nav-number">3.2.3.</span> <span class="nav-text">Client</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RPC%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90"><span class="nav-number">3.3.</span> <span class="nav-text">RPC实现分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MakeNetwork"><span class="nav-number">3.3.1.</span> <span class="nav-text">MakeNetwork</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MakeEnd"><span class="nav-number">3.3.2.</span> <span class="nav-text">MakeEnd</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MakeServer"><span class="nav-number">3.3.3.</span> <span class="nav-text">MakeServer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AddServer"><span class="nav-number">3.3.4.</span> <span class="nav-text">AddServer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MakeService"><span class="nav-number">3.3.5.</span> <span class="nav-text">MakeService</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Connect"><span class="nav-number">3.3.6.</span> <span class="nav-text">Connect</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Enable"><span class="nav-number">3.3.7.</span> <span class="nav-text">Enable</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Call"><span class="nav-number">3.3.8.</span> <span class="nav-text">Call</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">4.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Charles0429</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

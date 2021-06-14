@@ -1,0 +1,791 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.lug.ustc.edu.cn/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="网络编程,libeasy,高性能," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Charles的技术博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="Introduction本文分析libeasy服务端框架实现原理，主要分析libeasy是如何处理以下事件的  libeasy服务端连接建立 libeasy服务端连接关闭 libeasy服务端可读事件 libeasy服务端可写事件  libeasy服务端框架实现原理本节先讨论libeasy的网络和线程模型，接着描述libeasy是如何组织连接、消息、请求等之间的关系，即libeasy资源管理，最后">
+<meta property="og:type" content="article">
+<meta property="og:title" content="libeasy服务端框架实现原理">
+<meta property="og:url" content="http://yoursite.com/backend/libeasy-server-side-framework/index.html">
+<meta property="og:site_name" content="Charles的技术博客">
+<meta property="og:description" content="Introduction本文分析libeasy服务端框架实现原理，主要分析libeasy是如何处理以下事件的  libeasy服务端连接建立 libeasy服务端连接关闭 libeasy服务端可读事件 libeasy服务端可写事件  libeasy服务端框架实现原理本节先讨论libeasy的网络和线程模型，接着描述libeasy是如何组织连接、消息、请求等之间的关系，即libeasy资源管理，最后">
+<meta property="og:locale">
+<meta property="og:image" content="http://oserror.com/images/libeasy_thread_model_1.png">
+<meta property="og:image" content="http://oserror.com/images/libeasy_thread_model_2.png">
+<meta property="og:image" content="http://oserror.com/images/libeasy_resource_management.png">
+<meta property="og:image" content="http://oserror.com/images/qcode_wechat.jpg">
+<meta property="article:published_time" content="2016-07-17T11:10:49.000Z">
+<meta property="article:modified_time" content="2021-06-14T13:00:05.525Z">
+<meta property="article:author" content="Charles0429">
+<meta property="article:tag" content="网络编程">
+<meta property="article:tag" content="libeasy">
+<meta property="article:tag" content="高性能">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://oserror.com/images/libeasy_thread_model_1.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 3109763,
+      author: 'Charles0429'
+    }
+  };
+</script>
+
+  <title> libeasy服务端框架实现原理 | Charles的技术博客 </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Charles的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                libeasy服务端框架实现原理
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-07-17T19:10:49+08:00" content="2016-07-17">
+              2016-07-17
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/backend/" itemprop="url" rel="index">
+                    <span itemprop="name">后台开发</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>本文分析libeasy服务端框架实现原理，主要分析libeasy是如何处理以下事件的</p>
+<ul>
+<li>libeasy服务端连接建立</li>
+<li>libeasy服务端连接关闭</li>
+<li>libeasy服务端可读事件</li>
+<li>libeasy服务端可写事件</li>
+</ul>
+<h1 id="libeasy服务端框架实现原理"><a href="#libeasy服务端框架实现原理" class="headerlink" title="libeasy服务端框架实现原理"></a>libeasy服务端框架实现原理</h1><p>本节先讨论libeasy的网络和线程模型，接着描述libeasy是如何组织连接、消息、请求等之间的关系，即libeasy资源管理，最后分析其如何处理服务端连接建立、服务端连接关闭、服务端可读事件以及服务端可写事件的。</p>
+<h2 id="libeasy网络和线程模型"><a href="#libeasy网络和线程模型" class="headerlink" title="libeasy网络和线程模型"></a>libeasy网络和线程模型</h2><p>libeasy网络模型基于libev的reactor模型，具体分析请参看文章(<a target="_blank" rel="noopener" href="http://oserror.com/backend/libev-analysis/">libev设计与实现</a>)，本节主要描述其线程模型。</p>
+<p>libeasy支持两种常见的线程模型，一是IO线程和工作线程共用相同线程，二是IO线程和工作线程分开。</p>
+<h3 id="I-O线程和工作线程共用"><a href="#I-O线程和工作线程共用" class="headerlink" title="I/O线程和工作线程共用"></a>I/O线程和工作线程共用</h3><p><img src="http://oserror.com/images/libeasy_thread_model_1.png" alt="libeasy thread model 1"></p>
+<p>如上图，I/O线程和工作线程共用的线程模型中，实际上是没有专门的工作线程的，I/O线程不仅需要负责处理I/O，还需要真正地处理请求，计算结果。一般典型的处理流程为</p>
+<ul>
+<li>Process Read I/O: 处理读I/O</li>
+<li>Process: 解析请求，计算结果</li>
+<li>Process Write I/O： 处理写I/O，把计算结果返回给客户端</li>
+</ul>
+<p>这种线程模型的特点是</p>
+<ul>
+<li>处理流程相对简单，解析好请求后就能直接在同一线程处理，省去了线程切换的开销，非常适合Process耗费时间较小的请求</li>
+<li>由于Process过程需要耗费时间，对于大任务，可能时间较长，会影响其他请求的处理</li>
+</ul>
+<h3 id="I-O线程和工作线程独立"><a href="#I-O线程和工作线程独立" class="headerlink" title="I/O线程和工作线程独立"></a>I/O线程和工作线程独立</h3><p><img src="http://oserror.com/images/libeasy_thread_model_2.png" alt="libeasy thread model 2"></p>
+<p>如上图，在I/O线程和工作线程独立的线程模型中，有专门的工作线程来处理请求，计算结果，I/O线程仅仅需要做读写数据相关的操作。在这种线程模型下，整个流程为</p>
+<ul>
+<li>Process Read I/O:处理读数据，然后解析请求，生成任务，推送到工作线程的队列中，然后以异步事件方式通知工作线程处理</li>
+<li>Process: 工作线程接收到异步事件后，从其工作队列中拿出任务，依次处理，处理完成后，生成结果，放到I/O线程的队列中，然后以异步事件方式通知I/O线程处理</li>
+<li>Process Write I/O：I/O线程收到通知后，依次处理写数据请求</li>
+</ul>
+<p>这种线程模型的特点是</p>
+<ul>
+<li>I/O和计算分开处理，会引入线程切换开销，比较适合Process耗费时间长的任务请求</li>
+<li>对于小任务请求不适合，大量时间耗费在线程切换开销</li>
+</ul>
+<h2 id="libeasy资源管理"><a href="#libeasy资源管理" class="headerlink" title="libeasy资源管理"></a>libeasy资源管理</h2><p><img src="http://oserror.com/images/libeasy_resource_management.png" alt="ibeasy resource management"></p>
+<p>libeasy的资源管理方式如上图所示，主要包括</p>
+<ul>
+<li>easy_baseth_t: libeasy中入口结构体，主要包括libev的网络框架和easy_io_t。</li>
+<li>easy_io_t: libeasy io入口结构体，包含监听相关的结构体，io thread pool 以及 request thread pool</li>
+<li>easy_thread_pool_t： libeasy线程池结构体，通过zero byte数组来作为线程池数组</li>
+<li>easy_thread_t： libeasy中不存在这个结构体，是笔者添加的，libeasy中采用的是宏定义实现这个功能</li>
+<li>easy_io_thread_t: libeasy中负责io的线程结构体，其中包含了连接队列，请求队列等等</li>
+<li>easy_request_thread_t: libeasy负责任务处理的线程结构体，其中包含了任务队列等</li>
+<li>easy_connection_t: libeasy处理网络链接的结构体，其中包括文件描述符fd，连接地址，监听事件处理程序，以及连接对应的请求队列等等。</li>
+<li>easy_message_t: libeasy中消息管理结构体，其中一个消息可能包含几个请求，一个请求是按照用户自定义格式的完整的消息包。</li>
+<li>easy_request_t: libeasy中管理请求的结构体，按照用户自定义协议，一个完整的协议包看作一个请求。</li>
+</ul>
+<p>在libeasy中，资源之间有比较多的联系，这也是libeasy组织资源之间关系的方式</p>
+<ul>
+<li>整个easy_io_t中包含IO线程池和工作线程池</li>
+<li>一个io线程中(<code>easy_io_thread_t</code>)会一般会处理多个连接(<code>easy_connection_t</code>)</li>
+<li>一个连接中(<code>easy_connection_t</code>)一般会包括一个或多个message(<code>easy_message_t</code>)</li>
+<li>一个message中(<code>easy_message_t</code>)一般会有一个或多个request(<code>easy_request_t</code>)</li>
+<li>一个工作线程中(<code>easy_request_thread_t</code>)一般会处理一个或多个request(<code>easy_request_t</code>)，其中request也称作是任务</li>
+</ul>
+<p>除了上述资源之外，libeasy还有个非常重要的结构体，如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">easy_io_handler_pt</span> &#123;</span></span><br><span class="line">    <span class="keyword">void</span>               *(*decode)(<span class="keyword">easy_message_t</span> *m);</span><br><span class="line">    <span class="keyword">int</span>                 (*encode)(<span class="keyword">easy_request_t</span> *r, <span class="keyword">void</span> *packet);</span><br><span class="line">    easy_io_process_pt  *process;</span><br><span class="line">    <span class="keyword">int</span>                 (*batch_process)(<span class="keyword">easy_message_t</span> *m);</span><br><span class="line">    easy_io_cleanup_pt  *cleanup;</span><br><span class="line">    <span class="keyword">uint64_t</span>            (*get_packet_id)(<span class="keyword">easy_connection_t</span> *c, <span class="keyword">void</span> *packet);</span><br><span class="line">    <span class="keyword">int</span>                 (*on_connect) (<span class="keyword">easy_connection_t</span> *c);</span><br><span class="line">    <span class="keyword">int</span>                 (*on_disconnect) (<span class="keyword">easy_connection_t</span> *c);</span><br><span class="line">    <span class="keyword">int</span>                 (*new_packet) (<span class="keyword">easy_connection_t</span> *c);</span><br><span class="line">    <span class="keyword">int</span>                 (*on_idle) (<span class="keyword">easy_connection_t</span> *c);</span><br><span class="line">    <span class="keyword">void</span>                *user_data, *user_data2;</span><br><span class="line">    <span class="keyword">int</span>                 is_uthread;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>这个结构体在<code>easy_listen_t</code>和<code>easy_connection_t</code>中有使用，在libeasy框架监控到网络事件发生后，其会调用<code>easy_io_handler_pt</code>中的用户自定义的方法来处理。通过用户自定义的处理函数，可以把libeasy扩展到各种各样的应用场景，例如，http服务端，mysql服务端等等。具体地，每个函数在何时被调用，会在下节详细地分析。</p>
+<h2 id="libeasy事件处理"><a href="#libeasy事件处理" class="headerlink" title="libeasy事件处理"></a>libeasy事件处理</h2><p>本节分析libeasy如何处理网络中的常见的四个事件</p>
+<ul>
+<li>libeasy服务端连接建立</li>
+<li>libeasy服务端连接关闭</li>
+<li>libeasy服务端可读事件</li>
+<li>libeasy服务端可写事件</li>
+</ul>
+<h3 id="libeasy服务端连接建立"><a href="#libeasy服务端连接建立" class="headerlink" title="libeasy服务端连接建立"></a>libeasy服务端连接建立</h3><p>在说明libeasy如何处理服务端连接建立前，先说明libeasy建立listen端口的流程。</p>
+<p>整个调用流程如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">easy_connection_listen_addr</span><br><span class="line">		|</span><br><span class="line">easy_add_listen_addr</span><br><span class="line">		|</span><br><span class="line">ev_io_init(&amp;l-&gt;read_watcher[i], easy_connection_on_accept, fd, EV_READ | EV_CLEANUP)</span><br></pre></td></tr></table></figure>
+<p><code>easy_connection_on_accept</code>负责listen端口处理链接建立的函数，具体地逻辑如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">easy_connection_on_accept</span><span class="params">(struct ev_loop *loop, ev_io *w, <span class="keyword">int</span> revents)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span>                     fd;</span><br><span class="line">    <span class="keyword">easy_listen_t</span>           *listen;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_in</span>      <span class="title">addr</span>;</span></span><br><span class="line">    <span class="keyword">socklen_t</span>               addr_len;</span><br><span class="line">    <span class="keyword">easy_connection_t</span>       *c;</span><br><span class="line">    <span class="keyword">easy_io_thread_t</span>        *ioth;</span><br><span class="line">    <span class="keyword">char</span>                    buffer[<span class="number">32</span>];</span><br><span class="line"></span><br><span class="line">    listen = (<span class="keyword">easy_listen_t</span> *) w-&gt;data;</span><br><span class="line">    addr_len = <span class="keyword">sizeof</span>(struct sockaddr_in);</span><br><span class="line">    assert(w-&gt;fd == listen-&gt;fd);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// accept</span></span><br><span class="line">    <span class="keyword">if</span> ((fd = accept(w-&gt;fd, (struct sockaddr *)&amp;addr, &amp;addr_len)) &lt; <span class="number">0</span>) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 为新连接创建一个easy_connection_t对象</span></span><br><span class="line">    <span class="keyword">if</span> ((c = easy_connection_new()) == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        easy_error_log(<span class="string">&quot;easy_connection_new\n&quot;</span>);</span><br><span class="line">        close(fd);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 设为非阻塞</span></span><br><span class="line">    easy_socket_non_blocking(fd);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 初始化</span></span><br><span class="line">    c-&gt;fd = fd;</span><br><span class="line">    c-&gt;type = EASY_TYPE_SERVER;</span><br><span class="line">    c-&gt;handler = listen-&gt;handler;</span><br><span class="line">    c-&gt;addr = *((<span class="keyword">easy_addr_t</span> *)&amp;addr);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 事件初始化</span></span><br><span class="line">    ev_io_init(&amp;c-&gt;read_watcher, easy_connection_on_readable, fd, EV_READ);</span><br><span class="line">    ev_io_init(&amp;c-&gt;write_watcher, easy_connection_on_writable, fd, EV_WRITE);</span><br><span class="line">    ev_init(&amp;c-&gt;timeout_watcher, easy_connection_on_timeout_conn);</span><br><span class="line">    c-&gt;read_watcher.data = c;</span><br><span class="line">    c-&gt;write_watcher.data = c;</span><br><span class="line">    c-&gt;timeout_watcher.data = c;</span><br><span class="line">    c-&gt;ioth = ioth = (<span class="keyword">easy_io_thread_t</span> *)easy_baseth_self;</span><br><span class="line">    c-&gt;loop = loop;</span><br><span class="line">    c-&gt;start_time = ev_now(ioth-&gt;loop);</span><br><span class="line"></span><br><span class="line">    easy_debug_log(<span class="string">&quot;accpet from &#x27;%s&#x27;, connection=%p, fd=%d\n&quot;</span>,</span><br><span class="line">                   easy_inet_addr_to_str(&amp;c-&gt;addr, buffer, <span class="number">32</span>), c, c-&gt;fd);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// on connect</span></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;handler-&gt;on_connect)</span><br><span class="line">        (c-&gt;handler-&gt;on_connect)(c);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// start idle</span></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;handler-&gt;on_idle) &#123;</span><br><span class="line">        <span class="keyword">double</span> t = easy_max(<span class="number">1.0</span>, c-&gt;idle_time / <span class="number">2000.0</span>);</span><br><span class="line">        ev_timer_set(&amp;c-&gt;timeout_watcher, <span class="number">0.0</span>, t);</span><br><span class="line">        ev_timer_again(c-&gt;loop, &amp;c-&gt;timeout_watcher);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    easy_atomic_add(&amp;ioth-&gt;eio-&gt;connect_num, <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">int</span> th_idx = (ioth-&gt;eio-&gt;connect_num) % (ioth-&gt;eio-&gt;io_thread_count);</span><br><span class="line">    th_idx = th_idx&lt;<span class="number">0</span> ? (<span class="number">0</span>-th_idx) : th_idx;</span><br><span class="line">    <span class="comment">// 让出来给其他的线程</span></span><br><span class="line">    <span class="keyword">if</span> (ioth-&gt;eio-&gt;listen_all == <span class="number">0</span> &amp;&amp; listen-&gt;old_ioth == <span class="literal">NULL</span></span><br><span class="line">            &amp;&amp; listen-&gt;curr_ioth == ioth) &#123;</span><br><span class="line">        <span class="keyword">easy_io_thread_t</span> *nextth;</span><br><span class="line">        listen-&gt;old = listen-&gt;cur;</span><br><span class="line">        listen-&gt;curr_ioth = <span class="literal">NULL</span>;</span><br><span class="line">        <span class="comment">//listen-&gt;old_ioth = ioth;</span></span><br><span class="line">        <span class="comment">//ioth-&gt;listen_watcher.repeat = 0.5;</span></span><br><span class="line">        ev_io_stop(ioth-&gt;loop, &amp;listen-&gt;read_watcher[listen-&gt;old]);</span><br><span class="line">        listen-&gt;old_ioth = <span class="literal">NULL</span>;</span><br><span class="line">        nextth = easy_thread_pool_index(ioth-&gt;eio-&gt;io_thread_pool,th_idx);</span><br><span class="line">        easy_unlock(&amp;listen-&gt;listen_lock);</span><br><span class="line"></span><br><span class="line">        ev_async_send(nextth-&gt;loop, &amp;nextth-&gt;listen_watcher);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//ev_timer_again (ioth-&gt;loop, &amp;ioth-&gt;listen_watcher);</span></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// start read</span></span><br><span class="line">    easy_list_add_tail(&amp;c-&gt;conn_list_node, &amp;c-&gt;ioth-&gt;connected_list);</span><br><span class="line">    c-&gt;event_status = EASY_EVENT_READ;</span><br><span class="line">    easy_connection_on_readable(loop, &amp;c-&gt;read_watcher, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其处理流程如下</p>
+<ul>
+<li>调用accept，建立新的网络连接，然后创建<code>easy_connection_t</code>结构体来处理此连接</li>
+<li>设置此fd是非阻塞的，这个是多路复用的标配了</li>
+<li>初始化此connection的读事件、写事件和tiemout事件的处理程序</li>
+<li>调用用户自定义的<code>on_connect</code>函数</li>
+<li>把listen的监听任务让出来给其他的线程</li>
+<li>把connection加入到io thread的connected_list中</li>
+<li>开始尝试处理一次READ事件，这个具体地到处理可读事件逻辑</li>
+</ul>
+<h3 id="libeasy服务端连接关闭"><a href="#libeasy服务端连接关闭" class="headerlink" title="libeasy服务端连接关闭"></a>libeasy服务端连接关闭</h3><p>连接关闭的处理逻辑在<code>easy_connection_destroy</code>中，如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">easy_connection_destroy</span><span class="params">(<span class="keyword">easy_connection_t</span> *c)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">easy_message_t</span>  *m, *m2;</span><br><span class="line">    <span class="keyword">easy_io_t</span>       *eio;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// release session</span></span><br><span class="line">    easy_connection_wakeup_session(c);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// disconnect</span></span><br><span class="line">    eio = c-&gt;ioth-&gt;eio;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;status != EASY_CONN_CLOSE &amp;&amp; c-&gt;handler-&gt;on_disconnect) &#123;</span><br><span class="line">        (c-&gt;handler-&gt;on_disconnect)(c);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// refcount</span></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;status != EASY_CONN_CLOSE &amp;&amp; c-&gt;pool-&gt;ref &gt; <span class="number">0</span> &amp;&amp; eio-&gt;stoped == <span class="number">0</span>) &#123;</span><br><span class="line">        ev_io_stop(c-&gt;loop, &amp;c-&gt;read_watcher);</span><br><span class="line">        ev_io_stop(c-&gt;loop, &amp;c-&gt;write_watcher);</span><br><span class="line">        c-&gt;status = EASY_CONN_CLOSE;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// wakeup other thread</span></span><br><span class="line">        <span class="keyword">if</span> (c-&gt;type == EASY_TYPE_SERVER) &#123;</span><br><span class="line">            <span class="keyword">easy_thread_pool_t</span> *tp = eio-&gt;thread_pool;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">while</span> (tp) &#123;</span><br><span class="line">                easy_baseth_pool_on_wakeup(tp);</span><br><span class="line">                tp = tp-&gt;next;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (c-&gt;pool-&gt;ref &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            ev_timer_set(&amp;c-&gt;timeout_watcher, <span class="number">0.0</span>, <span class="number">0.5</span>);</span><br><span class="line">            ev_timer_again(c-&gt;loop, &amp;c-&gt;timeout_watcher);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;type == EASY_TYPE_SERVER) &#123;</span><br><span class="line">           <span class="keyword">easy_request_t</span> *r, *n;</span><br><span class="line">           easy_list_for_each_entry_safe(r, n, &amp;c-&gt;session_list, request_list_node) &#123;</span><br><span class="line">               easy_request_server_done(r);</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;pool-&gt;ref &gt; <span class="number">0</span> &amp;&amp; eio-&gt;stoped == <span class="number">0</span>) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// release request</span></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;type == EASY_TYPE_SERVER) &#123;</span><br><span class="line">        <span class="keyword">easy_request_t</span> *r, *n;</span><br><span class="line">        easy_list_for_each_entry_safe(r, n, &amp;c-&gt;session_list, request_list_node) &#123;</span><br><span class="line">            easy_list_del(&amp;r-&gt;request_list_node);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// release message</span></span><br><span class="line">    easy_list_for_each_entry_safe(m, m2, &amp;c-&gt;message_list, message_list_node) &#123;</span><br><span class="line">        easy_message_destroy(m, <span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    easy_buf_chain_clear(&amp;c-&gt;output);</span><br><span class="line">    ev_io_stop(c-&gt;loop, &amp;c-&gt;read_watcher);</span><br><span class="line">    ev_io_stop(c-&gt;loop, &amp;c-&gt;write_watcher);</span><br><span class="line">    ev_timer_stop(c-&gt;loop, &amp;c-&gt;timeout_watcher);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// close</span></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;fd &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">        easy_debug_log(<span class="string">&quot;[%p] connection close: %d\n&quot;</span>, c, c-&gt;fd);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!c-&gt;read_eof) &#123;</span><br><span class="line">            <span class="keyword">char</span> buf[EASY_POOL_PAGE_SIZE];</span><br><span class="line"></span><br><span class="line">            <span class="keyword">while</span> (read(c-&gt;fd, buf, EASY_POOL_PAGE_SIZE) &gt; <span class="number">0</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        close(c-&gt;fd);</span><br><span class="line">        c-&gt;fd = <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// autoreconn</span></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;auto_reconn &amp;&amp; eio-&gt;stoped == <span class="number">0</span>) &#123;</span><br><span class="line">        c-&gt;status = EASY_CONN_AUTO_CONN;</span><br><span class="line">        <span class="keyword">double</span> t = c-&gt;reconn_time / <span class="number">1000.0</span> * (<span class="number">1</span> &lt;&lt; c-&gt;reconn_fail);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (t &gt; <span class="number">15</span>) t = <span class="number">15</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (c-&gt;reconn_fail &lt; <span class="number">16</span>) c-&gt;reconn_fail ++;</span><br><span class="line"></span><br><span class="line">        easy_warn_log(<span class="string">&quot;[%p] connection reconn_time: %f, reconn_fail: %d\n&quot;</span>, c, t, c-&gt;reconn_fail);</span><br><span class="line">        ev_timer_set(&amp;c-&gt;timeout_watcher, <span class="number">0.0</span>, t);</span><br><span class="line">        ev_timer_again(c-&gt;loop, &amp;c-&gt;timeout_watcher);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    easy_list_del(&amp;c-&gt;conn_list_node);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;client) c-&gt;client-&gt;c = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (eio-&gt;stoped) c-&gt;pool-&gt;ref = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    easy_pool_destroy(c-&gt;pool);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>调用用户自定义的on_disconnect函数</li>
+<li>取消注册读写等事件，清理所有的request，清理所有的message</li>
+<li>读完所有的剩余数据，关闭fd</li>
+</ul>
+<h3 id="libeasy服务端可读事件"><a href="#libeasy服务端可读事件" class="headerlink" title="libeasy服务端可读事件"></a>libeasy服务端可读事件</h3><p>其中，read事件的注册是在<code>easy_connection_on_accept</code>中完成的，在libeasy服务端连接建立中已经说明过，这里再描述以下它的调用流程。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ev_io_init(&amp;c-&gt;read_watcher, easy_connection_on_readable, fd, EV_READ);</span><br><span class="line">ev_io_init(&amp;c-&gt;write_watcher, easy_connection_on_writable, fd, EV_WRITE);</span><br><span class="line">ev_init(&amp;c-&gt;timeout_watcher, easy_connection_on_timeout_conn);</span><br><span class="line">easy_list_add_tail(&amp;c-&gt;conn_list_node, &amp;c-&gt;ioth-&gt;connected_list);</span><br><span class="line">c-&gt;event_status = EASY_EVENT_READ;</span><br></pre></td></tr></table></figure>
+<p>其中，初始化了读、写和超时事件的处理函数，但只注册了读事件。</p>
+<p>读事件的具体逻辑是在<code>easy_connection_on_readable</code>中处理的，其代码如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">easy_connection_on_readable</span><span class="params">(struct ev_loop *loop, ev_io *w, <span class="keyword">int</span> revents)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">easy_connection_t</span>   *c;</span><br><span class="line">    <span class="keyword">easy_message_t</span>      *m;</span><br><span class="line">    <span class="keyword">int</span>                 n;</span><br><span class="line"></span><br><span class="line">    c = (<span class="keyword">easy_connection_t</span> *)w-&gt;data;</span><br><span class="line">    assert(c-&gt;fd == w-&gt;fd);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 防止请求过多</span></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;type == EASY_TYPE_SERVER &amp;&amp; (c-&gt;doing_request_count &gt; EASY_CONN_DOING_REQ_CNT ||</span><br><span class="line">                                        c-&gt;ioth-&gt;doing_request_count &gt; EASY_IOTH_DOING_REQ_CNT)) &#123;</span><br><span class="line">        easy_warn_log(<span class="string">&quot;c-&gt;doing_request_count: %d, c-&gt;ioth-&gt;doing_request_count: %d\n&quot;</span>,</span><br><span class="line">                      c-&gt;doing_request_count, c-&gt;ioth-&gt;doing_request_count);</span><br><span class="line">        <span class="keyword">goto</span> error_exit;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 最后的请求, 如果数据没完, 需要继续读</span></span><br><span class="line">    m = easy_list_get_last(&amp;c-&gt;message_list, <span class="keyword">easy_message_t</span>, message_list_node);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 第一次读或者上次读完整了, 重新建一个easy_message_t</span></span><br><span class="line">    <span class="keyword">if</span> (m == <span class="literal">NULL</span> || m-&gt;status != EASY_MESG_READ_AGAIN) &#123;</span><br><span class="line">        <span class="keyword">if</span> ((m = easy_message_create(c)) == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            easy_error_log(<span class="string">&quot;easy_message_create failure, c=%p\n&quot;</span>, c);</span><br><span class="line">            <span class="keyword">goto</span> error_exit;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 检查buffer大小</span></span><br><span class="line">    <span class="keyword">if</span> (easy_buf_check_read_space(m-&gt;pool, m-&gt;input, m-&gt;next_read_len) != EASY_OK) &#123;</span><br><span class="line">        easy_error_log(<span class="string">&quot;easy_buf_check_read_space failure, m=%p, len=%d\n&quot;</span>, m, m-&gt;next_read_len);</span><br><span class="line">        <span class="keyword">goto</span> error_exit;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 从conn里读入数据</span></span><br><span class="line">    <span class="keyword">if</span> ((n = read(c-&gt;fd, m-&gt;input-&gt;last, m-&gt;next_read_len)) &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        easy_debug_log(<span class="string">&quot;n: %d, errno: %s(%d)\n&quot;</span>, n, strerror(errno), errno);</span><br><span class="line">        <span class="keyword">goto</span> error_exit;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    c-&gt;read_eof = (n &lt; m-&gt;next_read_len);</span><br><span class="line">    c-&gt;last_time = ev_now(loop);</span><br><span class="line">    c-&gt;reconn_fail = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    easy_debug_log(<span class="string">&quot;read: %d, fd: %d\n&quot;</span>, n, c-&gt;fd);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (easy_log_level &gt;= EASY_LOG_TRACE) &#123;</span><br><span class="line">        <span class="keyword">char</span> btmp[<span class="number">128</span>];</span><br><span class="line">        easy_trace_log(<span class="string">&quot;read: %d =&gt; %s&quot;</span>, n, easy_string_tohex(m-&gt;input-&gt;last, n, btmp, <span class="number">128</span>));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    easy_atomic_add(&amp;EASY_IOTH_SELF-&gt;eio-&gt;recv_byte, n);</span><br><span class="line">    m-&gt;input-&gt;last += n;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;default_message_len &lt; EASY_IO_BUFFER_SIZE &amp;&amp; m-&gt;next_read_len == n)</span><br><span class="line">        c-&gt;default_message_len = EASY_IO_BUFFER_SIZE;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// client</span></span><br><span class="line">    <span class="keyword">if</span> (EASY_ERROR == ((c-&gt;type == EASY_TYPE_CLIENT) ?</span><br><span class="line">                       easy_connection_do_response(m) : easy_connection_do_request(m))) &#123;</span><br><span class="line">        easy_debug_log(<span class="string">&quot;c-&gt;type=%d, fd=%d\n&quot;</span>, c-&gt;type, c-&gt;fd);</span><br><span class="line">        <span class="keyword">goto</span> error_exit;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">error_exit:</span><br><span class="line">    easy_connection_destroy(c);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>处理逻辑主要包括两块</p>
+<ul>
+<li>如果第一次读数据，需要创建<code>easy_message_t</code>，作为载体</li>
+<li>读数据</li>
+<li>调用<code>easy_connection_do_request</code>处理读到的数据</li>
+</ul>
+<p><code>easy_connection_do_request</code>的处理逻辑如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">easy_connection_do_request</span><span class="params">(<span class="keyword">easy_message_t</span> *m)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">easy_connection_t</span>       *c;</span><br><span class="line">    <span class="keyword">void</span>                    *packet;</span><br><span class="line">    <span class="keyword">easy_request_t</span>          *r, *rn;</span><br><span class="line">    <span class="keyword">int</span>                     cnt, ret;</span><br><span class="line"></span><br><span class="line">    cnt = <span class="number">0</span>;</span><br><span class="line">    c = m-&gt;c;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 处理buf, decode</span></span><br><span class="line">    <span class="keyword">while</span> (m-&gt;input-&gt;pos &lt; m-&gt;input-&gt;last) &#123;</span><br><span class="line">        <span class="keyword">if</span> ((packet = (c-&gt;handler-&gt;decode)(m)) == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (m-&gt;status != EASY_ERROR)</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">            easy_warn_log(<span class="string">&quot;decode error, m=%p, fd=%d\n&quot;</span>, m, c-&gt;fd);</span><br><span class="line">            <span class="keyword">return</span> EASY_ERROR;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// new request</span></span><br><span class="line">        r = (<span class="keyword">easy_request_t</span> *)easy_pool_calloc(m-&gt;pool, <span class="keyword">sizeof</span>(<span class="keyword">easy_request_t</span>));</span><br><span class="line">        r-&gt;ms = (<span class="keyword">easy_message_session_t</span> *)m;</span><br><span class="line">        r-&gt;ipacket = packet;    <span class="comment">//进来的数据包</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// add m-&gt;request_list</span></span><br><span class="line">        easy_list_add_tail(&amp;r-&gt;request_list_node, &amp;m-&gt;request_list);</span><br><span class="line">        cnt ++;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// cnt</span></span><br><span class="line">    <span class="keyword">if</span> (cnt) &#123;</span><br><span class="line">        m-&gt;request_list_count += cnt;</span><br><span class="line">        c-&gt;doing_request_count += cnt;</span><br><span class="line">        easy_atomic32_add(&amp;c-&gt;ioth-&gt;doing_request_count, cnt);</span><br><span class="line">        m-&gt;recycle_cnt ++;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((m = easy_connection_recycle_message(m)) == <span class="literal">NULL</span>)</span><br><span class="line">        <span class="keyword">return</span> EASY_ERROR;</span><br><span class="line"></span><br><span class="line">    m-&gt;status = ((m-&gt;input-&gt;pos &lt; m-&gt;input-&gt;last) ? EASY_MESG_READ_AGAIN : <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// batch process</span></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;handler-&gt;batch_process)</span><br><span class="line">        (c-&gt;handler-&gt;batch_process)(m);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// process</span></span><br><span class="line">    cnt = <span class="number">0</span>;</span><br><span class="line">    easy_list_for_each_entry_safe(r, rn, &amp;m-&gt;request_list, request_list_node) &#123;</span><br><span class="line">        easy_list_del(&amp;r-&gt;request_list_node);</span><br><span class="line">        EASY_IOTH_SELF-&gt;done_request_count ++;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// process</span></span><br><span class="line">        <span class="keyword">if</span> ((ret = (c-&gt;handler-&gt;process)(r)) == EASY_ERROR)</span><br><span class="line">            <span class="keyword">return</span> EASY_ERROR;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (ret == EASY_OK &amp;&amp; easy_connection_request_done(r) == EASY_OK) &#123;</span><br><span class="line">            cnt ++;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// write to socket</span></span><br><span class="line">        <span class="keyword">if</span> (cnt &gt;= <span class="number">128</span>) &#123;</span><br><span class="line">            cnt = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (easy_connection_write_socket(c) == EASY_ABORT)</span><br><span class="line">                <span class="keyword">return</span> EASY_ERROR;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 所有的request都有reply了,一起才响应</span></span><br><span class="line">    <span class="keyword">if</span> (easy_connection_write_socket(c) == EASY_ABORT) &#123;</span><br><span class="line">        <span class="keyword">return</span> EASY_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (m-&gt;request_list_count == <span class="number">0</span> &amp;&amp; m-&gt;status != EASY_MESG_READ_AGAIN) &#123;</span><br><span class="line">        easy_message_destroy(m, <span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 加入监听</span></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;event_status == EASY_EVENT_READ &amp;&amp; !c-&gt;wait_close)</span><br><span class="line">        easy_connection_evio_start(c);</span><br><span class="line"></span><br><span class="line">    easy_connection_redispatch_thread(c);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> EASY_OK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>主要的逻辑如下</p>
+<ul>
+<li>解析读入数据，decode成一个个的请求</li>
+<li>调用用户自定义地batch_process函数</li>
+<li>遍历每个请求，调用用户自定义的process函数</li>
+<li>当处理了一批请求后，调用<code>easy_connection_write_socket</code>写结果</li>
+<li>继续加入读监控事件</li>
+</ul>
+<p>decode函数的一个简单的例子如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">static inline void *easy_simple_decode(easy_message_t *m)</span><br><span class="line">&#123;</span><br><span class="line">    easy_simple_packet_t    *packet;</span><br><span class="line">    uint32_t                len, datalen;</span><br><span class="line"></span><br><span class="line">    // length</span><br><span class="line">    if ((len = m-&gt;input-&gt;last - m-&gt;input-&gt;pos) &lt; EASY_SIMPLE_PACKET_HEADER_SIZE)</span><br><span class="line">        return NULL;</span><br><span class="line"></span><br><span class="line">    // data len</span><br><span class="line">    datalen = *((uint32_t *)m-&gt;input-&gt;pos);</span><br><span class="line"></span><br><span class="line">    if (datalen &gt; 0x4000000) &#123; // 64M</span><br><span class="line">        easy_error_log(&quot;data_len is invalid: %d\n&quot;, datalen);</span><br><span class="line">        m-&gt;status = EASY_ERROR;</span><br><span class="line">        return NULL;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 长度不够</span><br><span class="line">    len -= EASY_SIMPLE_PACKET_HEADER_SIZE;</span><br><span class="line"></span><br><span class="line">    if (len &lt; datalen) &#123;</span><br><span class="line">        m-&gt;next_read_len = datalen - len;</span><br><span class="line">        return NULL;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // alloc packet</span><br><span class="line">    if ((packet = (easy_simple_packet_t *)easy_pool_calloc(m-&gt;pool,</span><br><span class="line">                  sizeof(easy_simple_packet_t))) == NULL) &#123;</span><br><span class="line">        m-&gt;status = EASY_ERROR;</span><br><span class="line">        return NULL;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    packet-&gt;chid = *((uint32_t *)(m-&gt;input-&gt;pos + sizeof(int)));</span><br><span class="line">    m-&gt;input-&gt;pos += EASY_SIMPLE_PACKET_HEADER_SIZE;</span><br><span class="line">    packet-&gt;len = datalen;</span><br><span class="line">    packet-&gt;data = (char *)m-&gt;input-&gt;pos;</span><br><span class="line">    m-&gt;input-&gt;pos += datalen;</span><br><span class="line"></span><br><span class="line">    return packet;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>主要的逻辑就是按照既定地协议来解析数据。</p>
+<p>batch_process和process一般是作为两种不同的方式，用户一般只使用其中的一种。不管采用那种处理方式，都分为以下两种处理方式</p>
+<ol>
+<li>I/O线程和工作线程独立的方式</li>
+<li>I/O线程和工作线程共用的方式</li>
+</ol>
+<h4 id="I-O线程和工作线程独立的方式"><a href="#I-O线程和工作线程独立的方式" class="headerlink" title="I/O线程和工作线程独立的方式"></a>I/O线程和工作线程独立的方式</h4><p>这种处理方式，process函数一般会调用<code>easy_thread_pool_push_message</code>，如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">easy_thread_pool_push_message</span><span class="params">(<span class="keyword">easy_thread_pool_t</span> *tp, <span class="keyword">easy_message_t</span> *m, <span class="keyword">uint64_t</span> hv)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">easy_request_thread_t</span>   *rth;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// dispatch</span></span><br><span class="line">    <span class="keyword">if</span> (hv == <span class="number">0</span>) hv = easy_hash_key((<span class="keyword">long</span>)m-&gt;c);</span><br><span class="line"></span><br><span class="line">    rth = (<span class="keyword">easy_request_thread_t</span> *)easy_thread_pool_hash(tp, hv);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 引用次数</span></span><br><span class="line">    m-&gt;c-&gt;pool-&gt;ref += m-&gt;request_list_count;</span><br><span class="line">    easy_atomic_add(&amp;m-&gt;pool-&gt;ref, m-&gt;request_list_count);</span><br><span class="line">    easy_pool_set_lock(m-&gt;pool);</span><br><span class="line"></span><br><span class="line">    easy_spin_lock(&amp;rth-&gt;thread_lock);</span><br><span class="line">    easy_list_join(&amp;m-&gt;request_list, &amp;rth-&gt;task_list);</span><br><span class="line">    rth-&gt;task_list_count += m-&gt;request_list_count;</span><br><span class="line">    ev_async_send(rth-&gt;loop, &amp;rth-&gt;thread_watcher);</span><br><span class="line">    easy_spin_unlock(&amp;rth-&gt;thread_lock);</span><br><span class="line"></span><br><span class="line">    easy_list_init(&amp;m-&gt;request_list);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> EASY_OK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看出，该函数的最主要的功能是把message推送到request thread，由它继续处理，接着看其处理的流程，先分析<code>easy_async_send(rth-&gt;loop, &amp;rth-&gt;thread_watcher)</code>是如何唤醒request thread的，以及唤醒的是request thread的哪个处理函数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">easy_thread_pool_create(cnt, callback, <span class="literal">NULL</span>)</span><br><span class="line">		|</span><br><span class="line">easy_thread_pool_create_ex</span><br><span class="line">        |</span><br><span class="line">easy_baseth_init(rth, tp, start, easy_request_on_wakeup)</span><br><span class="line">        |</span><br><span class="line">ev_async_init(&amp;th-&gt;thread_watcher, wakeup)</span><br></pre></td></tr></table></figure>
+<p>可以看出，最终唤醒的是request thread的<code>easy_request_on_wakeup</code>来处理。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">easy_request_on_wakeup</span><span class="params">(struct ev_loop *loop, ev_async *w, <span class="keyword">int</span> revents)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">easy_request_thread_t</span>       *th;</span><br><span class="line">    <span class="keyword">easy_list_t</span>                 request_list;</span><br><span class="line">    <span class="keyword">easy_list_t</span>                 session_list;</span><br><span class="line"></span><br><span class="line">    th = (<span class="keyword">easy_request_thread_t</span> *) w-&gt;data;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 取回list</span></span><br><span class="line">    easy_spin_lock(&amp;th-&gt;thread_lock);</span><br><span class="line">    th-&gt;task_list_count = <span class="number">0</span>;</span><br><span class="line">    easy_list_movelist(&amp;th-&gt;task_list, &amp;request_list);</span><br><span class="line">    easy_list_movelist(&amp;th-&gt;session_list, &amp;session_list);</span><br><span class="line">    easy_spin_unlock(&amp;th-&gt;thread_lock);</span><br><span class="line"></span><br><span class="line">    easy_request_doreq(th, &amp;request_list);</span><br><span class="line">    easy_request_dosess(th, &amp;session_list);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">easy_request_doreq</span><span class="params">(<span class="keyword">easy_request_thread_t</span> *th, <span class="keyword">easy_list_t</span> *request_list)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">easy_request_t</span>              *r, *r2;</span><br><span class="line">    <span class="keyword">easy_connection_t</span>           *c;</span><br><span class="line">    <span class="keyword">int</span>                         cnt;</span><br><span class="line"></span><br><span class="line">    cnt = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">char</span> ioth_flag[th-&gt;eio-&gt;io_thread_count];</span><br><span class="line">    <span class="keyword">easy_list_t</span> ioth_list[th-&gt;eio-&gt;io_thread_count];</span><br><span class="line">    <span class="built_in">memset</span>(ioth_flag, <span class="number">0</span>, <span class="keyword">sizeof</span>(ioth_flag));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// process</span></span><br><span class="line">    easy_list_for_each_entry_safe(r, r2, request_list, request_list_node) &#123;</span><br><span class="line">        c = r-&gt;ms-&gt;c;</span><br><span class="line">        easy_list_del(&amp;r-&gt;request_list_node);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 处理</span></span><br><span class="line">        <span class="keyword">if</span> (c-&gt;status != EASY_CONN_CLOSE) &#123;</span><br><span class="line">            r-&gt;retcode = (th-&gt;process)(r, th-&gt;args);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            r-&gt;retcode = EASY_ERROR;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!ioth_flag[c-&gt;ioth-&gt;idx])</span><br><span class="line">            easy_list_init(&amp;ioth_list[c-&gt;ioth-&gt;idx]);</span><br><span class="line"></span><br><span class="line">        easy_list_add_tail(&amp;r-&gt;request_list_node, &amp;ioth_list[c-&gt;ioth-&gt;idx]);</span><br><span class="line">        ioth_flag[c-&gt;ioth-&gt;idx] = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (++ cnt &gt;= <span class="number">32</span>) &#123;</span><br><span class="line">            easy_request_wakeup_ioth(th-&gt;eio, ioth_flag, ioth_list);</span><br><span class="line">            cnt = <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (cnt &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        easy_request_wakeup_ioth(th-&gt;eio, ioth_flag, ioth_list);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>easy_request_wakeup</code>会调用<code>easy_request_doreq</code>来最终处理请求，它的工作逻辑是</p>
+<ul>
+<li>遍历所有请求，调用创建线程池时，用户提供的自定义的函数</li>
+<li>处理完成后，调用<code>easy_request_wakeup_ioth</code>唤醒I/O线程来处理结果数据的发送</li>
+</ul>
+<p>其中，用户自定义的函数一般也是处理输入数据，计算结果，然后产生输出的结果数据，但这个和<code>easy_io_handler_pt</code>中的process不是一个函数，但处理流程是类似的，主要是对请求的分析和计算过程。</p>
+<p><code>easy_request_wakeup_ioth</code>的处理逻辑为</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">easy_request_wakeup_ioth</span><span class="params">(<span class="keyword">easy_io_t</span> *eio, <span class="keyword">char</span> *ioth_flag, <span class="keyword">easy_list_t</span> *ioth_list)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span>                 i;</span><br><span class="line">    <span class="keyword">easy_io_thread_t</span>    *ioth;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; eio-&gt;io_thread_count; i++) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!ioth_flag[i])</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">        ioth_flag[i] = <span class="number">0</span>;</span><br><span class="line">        ioth = (<span class="keyword">easy_io_thread_t</span> *)easy_thread_pool_index(eio-&gt;io_thread_pool, i);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// dispatch to ioth</span></span><br><span class="line">        easy_spin_lock(&amp;ioth-&gt;thread_lock);</span><br><span class="line">        easy_list_join(&amp;ioth_list[ioth-&gt;idx], &amp;ioth-&gt;request_list);</span><br><span class="line">        ev_async_send(ioth-&gt;loop, &amp;ioth-&gt;thread_watcher);</span><br><span class="line">        easy_spin_unlock(&amp;ioth-&gt;thread_lock);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接着看I/O thread的thread_watcher唤醒的是I/O线程的哪个处理函数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">在easy_eio_create函数中</span><br><span class="line">easy_baseth_init(ioth, tp, easy_io_on_thread_start, easy_connection_on_wakeup);</span><br></pre></td></tr></table></figure>
+<p>I/O thread的唤醒是由<code>easy_connection_on_wakeup</code>来处理，如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">easy_connection_send_response(&amp;request_list);</span><br></pre></td></tr></table></figure>
+
+<p>而<code>easy_connection_send_response</code>的处理逻辑为</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// foreach write socket</span></span><br><span class="line"><span class="keyword">if</span> (wlist.tail) &#123;</span><br><span class="line">    wlist.tail-&gt;next = <span class="literal">NULL</span>;</span><br><span class="line">    nc = wlist.head;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>((c = nc)) &#123;</span><br><span class="line">        nc = c-&gt;next;</span><br><span class="line">        c-&gt;next = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (easy_connection_write_socket(c) == EASY_ABORT) &#123;</span><br><span class="line">            easy_connection_destroy(c);</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (c-&gt;type == EASY_TYPE_SERVER) &#123;</span><br><span class="line">            easy_connection_redispatch_thread(c);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>调用<code>easy_connection_write_socket</code>来处理一个个的<code>easy_connection_t</code>的输出数据，具体的逻辑为</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">easy_connection_write_socket</span><span class="params">(<span class="keyword">easy_connection_t</span> *c)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> ret;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 空的直接返回</span></span><br><span class="line">    <span class="keyword">if</span> (easy_list_empty(&amp;c-&gt;output))</span><br><span class="line">        <span class="keyword">return</span> EASY_OK;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 加塞</span></span><br><span class="line">    <span class="keyword">if</span> (EASY_IOTH_SELF-&gt;eio-&gt;tcp_cork &amp;&amp; c-&gt;tcp_cork_flag == <span class="number">0</span>) &#123;</span><br><span class="line">        easy_socket_set_tcpopt(c-&gt;fd, TCP_CORK, <span class="number">1</span>);</span><br><span class="line">        c-&gt;tcp_cork_flag = <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ret = easy_socket_write(c-&gt;fd, &amp;c-&gt;output);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret == EASY_ERROR) &#123;</span><br><span class="line">        <span class="keyword">char</span> buffer[<span class="number">32</span>];</span><br><span class="line">        easy_warn_log(<span class="string">&quot;ret=%d, addr: %s, error: %s (%d)\n&quot;</span>, ret,</span><br><span class="line">                      easy_inet_addr_to_str(&amp;c-&gt;addr, buffer, <span class="number">32</span>), strerror(errno), errno);</span><br><span class="line">        c-&gt;conn_has_error = <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">return</span> EASY_ABORT;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    c-&gt;last_time = ev_now(c-&gt;loop);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> easy_connection_write_again(c);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>调用<code>easy_socket_write</code>来写数据，如果一次性没写完，则会在<code>easy_connection_write_again</code>中继续处理，如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (easy_list_empty(&amp;c-&gt;output) == <span class="number">0</span>) &#123;</span><br><span class="line">    ev_io_start(c-&gt;loop, &amp;c-&gt;write_watcher);</span><br><span class="line">    <span class="keyword">return</span> EASY_AGAIN;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>主要的逻辑就是继续监听写事件，等待下次唤醒。</p>
+<h4 id="I-O线程和工作线程共用-1"><a href="#I-O线程和工作线程共用-1" class="headerlink" title="I/O线程和工作线程共用"></a>I/O线程和工作线程共用</h4><p>调用用户自定义的process处理(process，一般包含对请求的计算，生成输出的数据。)，然后调用<code>easy_connection_write_socket</code>写数据。注意，这种处理方式是I/O线程和工作线程共用的方式，process是在I/O线程中处理的，这种线程模型逻辑简单，比较容易理解，编码也相对容易很多。</p>
+<h3 id="libeasy服务端可写事件"><a href="#libeasy服务端可写事件" class="headerlink" title="libeasy服务端可写事件"></a>libeasy服务端可写事件</h3><p>当fd可写时，libeasy会调用<code>easy_connection_on_writable</code>来处理，而它又会调用<code>easy_connection_write_socket</code>来处理。在上面一节已经分析过其处理逻辑了，这里不再讨论了。</p>
+<p>PS:<br>本博客更新会在第一时间推送到微信公众号，欢迎大家关注。</p>
+<p><img src="http://oserror.com/images/qcode_wechat.jpg" alt="qocde_wechat"></p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><ul>
+<li><a target="_blank" rel="noopener" href="http://www.cnblogs.com/foxmailed/archive/2013/02/17/2908180.html">OceanBase使用libeasy原理源码分析：服务器端</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" rel="tag">#网络编程</a>
+          
+            <a href="/tags/libeasy/" rel="tag">#libeasy</a>
+          
+            <a href="/tags/%E9%AB%98%E6%80%A7%E8%83%BD/" rel="tag">#高性能</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/distributed/mapreduce/" rel="next" title="MapReduce原理">
+                <i class="fa fa-chevron-left"></i> MapReduce原理
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/backend/libeasy-all/" rel="prev" title="libeasy实现原理">
+                libeasy实现原理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">36</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">33</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Charles0429" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Introduction"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#libeasy%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%A1%86%E6%9E%B6%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">libeasy服务端框架实现原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#libeasy%E7%BD%91%E7%BB%9C%E5%92%8C%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.1.</span> <span class="nav-text">libeasy网络和线程模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#I-O%E7%BA%BF%E7%A8%8B%E5%92%8C%E5%B7%A5%E4%BD%9C%E7%BA%BF%E7%A8%8B%E5%85%B1%E7%94%A8"><span class="nav-number">2.1.1.</span> <span class="nav-text">I&#x2F;O线程和工作线程共用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#I-O%E7%BA%BF%E7%A8%8B%E5%92%8C%E5%B7%A5%E4%BD%9C%E7%BA%BF%E7%A8%8B%E7%8B%AC%E7%AB%8B"><span class="nav-number">2.1.2.</span> <span class="nav-text">I&#x2F;O线程和工作线程独立</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#libeasy%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86"><span class="nav-number">2.2.</span> <span class="nav-text">libeasy资源管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#libeasy%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86"><span class="nav-number">2.3.</span> <span class="nav-text">libeasy事件处理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#libeasy%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%BF%9E%E6%8E%A5%E5%BB%BA%E7%AB%8B"><span class="nav-number">2.3.1.</span> <span class="nav-text">libeasy服务端连接建立</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#libeasy%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%BF%9E%E6%8E%A5%E5%85%B3%E9%97%AD"><span class="nav-number">2.3.2.</span> <span class="nav-text">libeasy服务端连接关闭</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#libeasy%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%8F%AF%E8%AF%BB%E4%BA%8B%E4%BB%B6"><span class="nav-number">2.3.3.</span> <span class="nav-text">libeasy服务端可读事件</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#I-O%E7%BA%BF%E7%A8%8B%E5%92%8C%E5%B7%A5%E4%BD%9C%E7%BA%BF%E7%A8%8B%E7%8B%AC%E7%AB%8B%E7%9A%84%E6%96%B9%E5%BC%8F"><span class="nav-number">2.3.3.1.</span> <span class="nav-text">I&#x2F;O线程和工作线程独立的方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#I-O%E7%BA%BF%E7%A8%8B%E5%92%8C%E5%B7%A5%E4%BD%9C%E7%BA%BF%E7%A8%8B%E5%85%B1%E7%94%A8-1"><span class="nav-number">2.3.3.2.</span> <span class="nav-text">I&#x2F;O线程和工作线程共用</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#libeasy%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%8F%AF%E5%86%99%E4%BA%8B%E4%BB%B6"><span class="nav-number">2.3.4.</span> <span class="nav-text">libeasy服务端可写事件</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">3.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Charles0429</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

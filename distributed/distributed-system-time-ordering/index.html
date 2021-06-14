@@ -1,0 +1,725 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.lug.ustc.edu.cn/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="分布式,时序," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Charles的技术博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="Introduction本文是学习Time, Clocks, and the Ordering of Events in a Distributed System论文的总结，本文总结了提出了通过total ordering events来解决分布式系统的同步问题。 What is a distributed system 空间分离的进程合集，进程之间只能通过消息交换来通信 进程之间的消息通信耗费的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式系统时序基础">
+<meta property="og:url" content="http://yoursite.com/distributed/distributed-system-time-ordering/index.html">
+<meta property="og:site_name" content="Charles的技术博客">
+<meta property="og:description" content="Introduction本文是学习Time, Clocks, and the Ordering of Events in a Distributed System论文的总结，本文总结了提出了通过total ordering events来解决分布式系统的同步问题。 What is a distributed system 空间分离的进程合集，进程之间只能通过消息交换来通信 进程之间的消息通信耗费的">
+<meta property="og:locale">
+<meta property="og:image" content="http://oserror.com/images/happens_before.png">
+<meta property="og:image" content="http://oserror.com/images/logical_time.png">
+<meta property="og:image" content="http://oserror.com/images/qcode_wechat.jpg">
+<meta property="article:published_time" content="2016-07-02T02:38:25.000Z">
+<meta property="article:modified_time" content="2021-06-14T13:00:05.525Z">
+<meta property="article:author" content="Charles0429">
+<meta property="article:tag" content="分布式">
+<meta property="article:tag" content="时序">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://oserror.com/images/happens_before.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 3109763,
+      author: 'Charles0429'
+    }
+  };
+</script>
+
+  <title> 分布式系统时序基础 | Charles的技术博客 </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Charles的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                分布式系统时序基础
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-07-02T10:38:25+08:00" content="2016-07-02">
+              2016-07-02
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/distributed/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>本文是学习Time, Clocks, and the Ordering of Events in a Distributed System论文的总结，本文总结了提出了通过total ordering events来解决分布式系统的同步问题。</p>
+<h2 id="What-is-a-distributed-system"><a href="#What-is-a-distributed-system" class="headerlink" title="What is a distributed system"></a>What is a distributed system</h2><ul>
+<li>空间分离的进程合集，进程之间只能通过消息交换来通信</li>
+<li>进程之间的消息通信耗费的时间要远远高于单个进程间的通信时间</li>
+</ul>
+<h1 id="The-Partial-Ordering"><a href="#The-Partial-Ordering" class="headerlink" title="The Partial Ordering"></a>The Partial Ordering</h1><p>在讨论Partial Ordering之前，先复习下离散数学中关系的特性，其中二元关系&lt;&gt;是针对集合A的。</p>
+<ul>
+<li>如果对于任意的a属于A，满足a&lt;&gt;a，则二元关系是自反的</li>
+<li>如果对于任意的a，b属于A，如果满足a&lt;&gt;b，且同时也满足b&lt;&gt;a，则二元关系是对称的</li>
+<li>如果对于任意的a，b，c属于A，如果满足a&lt;&gt;b且b&lt;&gt;c，也同时满足a&lt;&gt;c，则二元关系是可传递的</li>
+<li>如果对于任意的a,b属于A，如果满足a&lt;&gt;b且b&lt;&gt;a，则a=b,则二元关系是反对称的</li>
+</ul>
+<p>一个partitial ordering关系满足的条件是自反的，对称的和可传递的，因此在partitial ordering中，可能有两个元素之间是不相关的。</p>
+<p>一个total ordering关系满足的条件是自反的，对称的，可传递的和反对称的，因此在total ordering中，两个元素一定是有关系的，要么是a&lt;&gt;b或b&lt;&gt;a。</p>
+<p>在分布式系统中，一个进程包含一系列的事件，对于同一进程内的事件，如果a happens before b，那么a发生在b之前。并且，假定收或发消息都是一个事件。</p>
+<p>happens before的定义如下(用-&gt;表示)</p>
+<ol>
+<li>如果a和b在同一进程中，并且a发生在b之前，那么a-&gt;b</li>
+<li>如果a是一个进程发消息的事件，b是另一个进程接收这条消息的事件，则a-&gt;b</li>
+<li>如果a-&gt;b且b-&gt;c，那么a-&gt;c。</li>
+<li>如果同时不满足a-&gt;b，且b-&gt;a，那么说a和b是concurrent</li>
+</ol>
+<p>且假定对于任意的a，都不满足a-&gt;a，因为一个事件不可能发生在本身之前。因此可以看出happens before是不满足自反性的partial ordering。</p>
+<p><img src="http://oserror.com/images/happens_before.png"></p>
+<p>以一个例子来说明happens before关系，如上图，垂直线上代表一个进程，从下往上，时间依次增加，水平的距离代表空间的隔离。原点代表一个事件，而曲线代表一条消息。</p>
+<p>从图中很容易地看出，如果一个事件a，能通过进程的线(从下往上)和消息线(从左往右)，到达b，那么a-&gt;b，例如，p1-&gt;r4。直观地角度看，如果事件a能最终导致事件b发生，则可以说明a-&gt;b。</p>
+<p>在图中，p3和q4是并行的事件，因为，只有到了p4才能确定q4的发生，而q3也只能确定p1发生。</p>
+<h1 id="Logical-Clocks"><a href="#Logical-Clocks" class="headerlink" title="Logical Clocks"></a>Logical Clocks</h1><p>对于逻辑时钟，对于每个事件会分配一个数字，认为这个数字就是事件发生的时间。</p>
+<p>时钟的定义如下</p>
+<ul>
+<li>对于一个进程i，Ci(a)表示进程i中事件a的发生时间</li>
+<li>对于整个系统来讲，对于任意的事件b，其发生时间为C(b)，当b为进程j的事件时，则C(b) = Cj(b)</li>
+</ul>
+<p>为了使得事件按照正确的排序，需要使得如果事件a发生在事件b之前，那么a发生的时间要小于b，如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">for any events a, b</span><br><span class="line">if a-&gt;b then C(a) &lt; C(b)</span><br></pre></td></tr></table></figure>
+<p>根据关系-&gt;的定义，我们可以得出</p>
+<ul>
+<li>如果a和b都是进程i中的事件，且a发生在b之前，那么Ci(a) &lt; Ci(b)</li>
+<li>如果事件a发送消息给事件b，a属于进程i，b属于进程j，那么Ci(a) &lt; Cj(b)</li>
+</ul>
+<p><img src="http://oserror.com/images/logical_time.png"></p>
+<p>在上图中，水平虚线代表一次时钟的tick。为了满足上述第一个条件，那么同一个进程中的事件之间必须要有tick线隔开；为了满足第二个条件，那么消息线必须跨过tick线。</p>
+<p>为了让系统满足上述条件，在实现中，需要满足以下原则</p>
+<ul>
+<li>对于每个进程，相邻的事件的时钟要增加1</li>
+<li>(a) 如果事件a是进程i发送消息m的事件，发送时带时间戳Tm = Ci(a)，(b)事件b是进程j接受消息m的事件，那么事件b的取值为max(进程b的当前时钟，Tm+1)</li>
+</ul>
+<h1 id="Ordering-the-Events-Totally"><a href="#Ordering-the-Events-Totally" class="headerlink" title="Ordering the Events Totally"></a>Ordering the Events Totally</h1><p>total order的事件关系=&gt;定义如下：</p>
+<p>如果事件a发生在进程Pi，事件b发生在进程Pj，那么当满足下列两者条件之一时，a=&gt;b</p>
+<ul>
+<li>Ci(a) &lt; Cj(b)</li>
+<li>Ci(a) = Cj(b) 且 Pi &lt; Pj</li>
+</ul>
+<p>根据以上条件，对于任意的两个事件，都能判断出它们之间的关系，因此是total ordering的。</p>
+<p>通过一个例子来说明total ordering events的用法。问题为mutual exclusion problem，即一个由一组进程组成的系统，共享一个资源，该资源每次只能让一个进程使用，因此，需要进程间需要作同步防止冲突。需要找一个算法，满足以下条件：</p>
+<ul>
+<li>某进程被分配了资源后，必须要等该进程释放该资源后，才能再把资源分配给其他进程</li>
+<li>不同的资源请求会按照它们申请的顺序进行分配</li>
+<li>如果每个被分配资源的进程最终都会释放，那么每个请求最终都会被分配资源</li>
+</ul>
+<p>在设计算法前，假定系统满足如下条件：</p>
+<ul>
+<li>对于任意两个进程Pi和Pj，从Pi和Pj发送的消息，接受的顺序与发送的顺序一致</li>
+<li>每个消息最终都会被接收</li>
+<li>每个进程可以直接发送消息给其他进程</li>
+</ul>
+<p>每个进程都维护自己的队列，并且其他进程无法访问。我们假定一开始队列里面包含请求T0:P0，其中P0是最初被分配资源的进程，T0比任意的时钟的初始值都要小。</p>
+<p>该算法的5个原则如下</p>
+<ol>
+<li>为了请求资源，进程Pi发送消息Tm:Pi给所有的其他进程，并且把这个消息放到进程队列中，Tm是消息的时间戳</li>
+<li>当进程Pj接收到了进程Pi的Tm：Pi请求后，会把它放到自己的请求队列，然后发送一个带时间戳的确认消息给Pi</li>
+<li>为了释放资源，进程Pi移除所有Tm:Pi的请求消息，然后发送带时间戳的Pi释放资源请求消息给其他所有的进程</li>
+<li>当进程Pj接收到进程Pi释放资源的请求，它会移除队列中任意的Tm:Pi的资源请求</li>
+<li>当满足以下两个条件时，进程Pi会被分配该资源：a)有一个Tm:Pi的请求，按照=&gt;关系排在队列第一位；b)Pi接收到了一个时间戳大于Tm的来自所有其他进程的消息</li>
+</ol>
+<h1 id="Anomalous-behavior"><a href="#Anomalous-behavior" class="headerlink" title="Anomalous behavior"></a>Anomalous behavior</h1><p>上面章节描述的=&gt;关系可能导致Anomalous behavior，以一个例子来说明。</p>
+<p>假如一个由互联的电脑组成的系统，其中有共享的资源。一个用户在电脑A上发送请求共享资源，然后他打电话给朋友然他在电脑B上发送请求B也来请求那个资源。</p>
+<p>在电脑B上，如果请求a还未到达之前，已经产生了请求b，那么，在电脑B上，b排在a前面</p>
+<p>在电脑A上，则是请求a排在请求b前面，这样就会造成冲突。</p>
+<p>有两种方案解决上述冲突：</p>
+<ul>
+<li>让用户来保证不发生该冲突。例如，当请求a生成后，用户需要分配时间戳给请求a，当用户让他朋友发送请求b的时候，需要保证分配一个大于a的时间戳</li>
+<li>假设S是系统中所有事件的组成，而S‘是包含S且外部事件的组合。定义==&gt;在集合S’上的happen before，则满足以下条件</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">for any events a,b in S : if a==&gt;b then C(a) &lt; C(b)</span><br></pre></td></tr></table></figure>
+
+<p>PS:<br>本博客更新会在第一时间推送到微信公众号，欢迎大家关注。</p>
+<p><img src="http://oserror.com/images/qcode_wechat.jpg" alt="qocde_wechat"></p>
+<h1 id="References"><a href="#References" class="headerlink" title="References"></a>References</h1><ul>
+<li>Time, Clocks, and the Ordering of Events in a Distributed System</li>
+<li><a target="_blank" rel="noopener" href="http://www.ics.uci.edu/~cs230/reading/time.pdf">Summary</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" rel="tag">#分布式</a>
+          
+            <a href="/tags/%E6%97%B6%E5%BA%8F/" rel="tag">#时序</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/language/the-go-programming-language-note-two/" rel="next" title="The go programming language 学习笔记二">
+                <i class="fa fa-chevron-left"></i> The go programming language 学习笔记二
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/distributed/mapreduce/" rel="prev" title="MapReduce原理">
+                MapReduce原理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">36</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">33</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Charles0429" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Introduction"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#What-is-a-distributed-system"><span class="nav-number">1.1.</span> <span class="nav-text">What is a distributed system</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#The-Partial-Ordering"><span class="nav-number">2.</span> <span class="nav-text">The Partial Ordering</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Logical-Clocks"><span class="nav-number">3.</span> <span class="nav-text">Logical Clocks</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Ordering-the-Events-Totally"><span class="nav-number">4.</span> <span class="nav-text">Ordering the Events Totally</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Anomalous-behavior"><span class="nav-number">5.</span> <span class="nav-text">Anomalous behavior</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#References"><span class="nav-number">6.</span> <span class="nav-text">References</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Charles0429</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

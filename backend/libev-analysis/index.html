@@ -1,0 +1,800 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.lug.ustc.edu.cn/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="网络编程,libeasy,libev,设计模式," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Charles的技术博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="Introductionlibev是一个高性能的事件处理框架，基于reactor模式实现。本文先讨论reactor模式，然后具体地分析libev的设计和实现。 本文组织结构如下：  reactor模式 libev设计和实现 参考文献  Reactor由于libev是基于reactor模式实现的事件处理框架，所以，先简单介绍下reactor模型的整体思路，方便讨论libev设计和实现时对照分析。 r">
+<meta property="og:type" content="article">
+<meta property="og:title" content="libev设计与实现">
+<meta property="og:url" content="http://yoursite.com/backend/libev-analysis/index.html">
+<meta property="og:site_name" content="Charles的技术博客">
+<meta property="og:description" content="Introductionlibev是一个高性能的事件处理框架，基于reactor模式实现。本文先讨论reactor模式，然后具体地分析libev的设计和实现。 本文组织结构如下：  reactor模式 libev设计和实现 参考文献  Reactor由于libev是基于reactor模式实现的事件处理框架，所以，先简单介绍下reactor模型的整体思路，方便讨论libev设计和实现时对照分析。 r">
+<meta property="og:locale">
+<meta property="og:image" content="http://oserror.com/images/io_model_blocking.png">
+<meta property="og:image" content="http://oserror.com/images/io_model_nonblocking.png">
+<meta property="og:image" content="http://oserror.com/images/io_model_multiplexing.png">
+<meta property="og:image" content="http://oserror.com/images/io_model_signal.png">
+<meta property="og:image" content="http://oserror.com/images/io_model_async.png">
+<meta property="og:image" content="http://oserror.com/images/reactor_model.png">
+<meta property="og:image" content="http://oserror.com/images/libev_event_handle.png">
+<meta property="og:image" content="http://oserror.com/images/libev_io_multiplexing.png">
+<meta property="og:image" content="http://oserror.com/images/libev_ev_io_start.png">
+<meta property="og:image" content="http://oserror.com/images/libev_ev_event_loop.png">
+<meta property="og:image" content="http://oserror.com/images/qcode_wechat.jpg">
+<meta property="article:published_time" content="2016-06-18T02:25:38.000Z">
+<meta property="article:modified_time" content="2021-06-14T13:00:05.525Z">
+<meta property="article:author" content="Charles0429">
+<meta property="article:tag" content="网络编程">
+<meta property="article:tag" content="libeasy">
+<meta property="article:tag" content="libev">
+<meta property="article:tag" content="设计模式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://oserror.com/images/io_model_blocking.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 3109763,
+      author: 'Charles0429'
+    }
+  };
+</script>
+
+  <title> libev设计与实现 | Charles的技术博客 </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Charles的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                libev设计与实现
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-06-18T10:25:38+08:00" content="2016-06-18">
+              2016-06-18
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/backend/" itemprop="url" rel="index">
+                    <span itemprop="name">后台开发</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>libev是一个高性能的事件处理框架，基于reactor模式实现。本文先讨论reactor模式，然后具体地分析libev的设计和实现。</p>
+<p>本文组织结构如下：</p>
+<ul>
+<li>reactor模式</li>
+<li>libev设计和实现</li>
+<li>参考文献</li>
+</ul>
+<h1 id="Reactor"><a href="#Reactor" class="headerlink" title="Reactor"></a>Reactor</h1><p>由于libev是基于reactor模式实现的事件处理框架，所以，先简单介绍下reactor模型的整体思路，方便讨论libev设计和实现时对照分析。</p>
+<p>reactor模式底层使用了I/O多路复用模型，是单个线程中管理多个I/O流的技术。I/O多路复用模型是unix环境中的一种I/O模型，除了它之外，还有阻塞I/O，非阻塞I/O，I/O多路复用，信号驱动I/O和异步I/O。</p>
+<h2 id="Unix-5种I-O模型"><a href="#Unix-5种I-O模型" class="headerlink" title="Unix 5种I/O模型"></a>Unix 5种I/O模型</h2><p><strong>阻塞I/O</strong></p>
+<p>对于阻塞I/O，应用调用I/O操作后，会一直等待阻塞，等待数据准备好。此时进程无法做其他的任何事情，只能傻傻等着recvfrom返回。</p>
+<p><img src="http://oserror.com/images/io_model_blocking.png" alt="blocking io"></p>
+<p><strong>非阻塞I/O</strong></p>
+<p>非阻塞I/O与阻塞I/O的区别是，非阻塞I/O在等待数据的时候，进程不是阻塞的，它可以先做其他的事情，然后定期的来询问数据是否准备好。</p>
+<p><img src="http://oserror.com/images/io_model_nonblocking.png" alt="non-blocking io"></p>
+<p><strong>I/O多路复用</strong></p>
+<p>I/O多路复用的流程是先使用select/epoll之类的接口等待I/O事件就绪，待select/epoll返回后，数据已经准备好了，这时候，一般再调用recvfrom来读取数据。相对于阻塞式I/O，这里涉及到了select/epoll以及recvfrom两次系统调用，看起来效率应该比阻塞式I/O还要低。对于只有单个fd活跃的进程来讲确实是效率会更低，但是select/epoll可以同时等待多个fd，对于活跃fd比较多的进程，使用I/O多路复用是较好的选择。</p>
+<p><img src="http://oserror.com/images/io_model_multiplexing.png" alt="io multiplexing"></p>
+<p><strong>信号驱动I/O</strong></p>
+<p>信号驱动I/O的流程是建立一个SIGIO信号处理程序，当数据准备好后，再调用recvfrom函数来处理，期间，进程可以完全来处理自己的事情，不必像阻塞式I/O那样阻塞，也不必像非阻塞I/O那样轮询。</p>
+<p><img src="http://oserror.com/images/io_model_signal.png" alt="signal io"></p>
+<p><strong>异步I/O</strong></p>
+<p>异步I/O的流程是在调用aio_read之后直到数据拷贝完成都不需要进程等待。对于前面四种I/O模型，拷贝数据的过程进程是必须要自己处理的，而对于异步I/O来讲，这个步骤也不需要自己处理。</p>
+<p><img src="http://oserror.com/images/io_model_async.png" alt="async io"></p>
+<p>对于目前主流的reactor网络模型中，采用的是I/O多路复用模型，其优点是能同时处理等待多个fd的数据准备过程，非常适合互联网领域服务端需要处理大规模网络链接的情况。</p>
+<h2 id="Reactor模式"><a href="#Reactor模式" class="headerlink" title="Reactor模式"></a>Reactor模式</h2><p>一个reactor模式如下图：</p>
+<p><img src="http://oserror.com/images/reactor_model.png" alt="reactor"></p>
+<p>reactor中组件包括reactor，EventHandler，I/O multiplexing和Timer</p>
+<ul>
+<li>EventHandler是事件的接口，一般分为I/O事件、定时器事件等等</li>
+<li>I/O multiplexing即I/O多路复用，linux中一般采用epoll接口</li>
+<li>Timer是管理定时器的类，主要负责注册事件、获取超时事件列表等等，一般由网络框架开发者实现</li>
+<li>reactor中使用了I/O multiplexing和Timer，有EventHandler注册时，会调用相应的接口。reactor的HandleEvents中需要先调用I/O multiplexing和Timer的接口，获取已就绪好的事件，最终调用每个EventHandler的HandleEvent接口</li>
+</ul>
+<h1 id="libev设计与实现"><a href="#libev设计与实现" class="headerlink" title="libev设计与实现"></a>libev设计与实现</h1><p>根据reactor模型的组件构成，本节从libev的EventHandler，I/O multiplexing，Timer以及reactor四个方面来分析其设计和实现。</p>
+<h2 id="EventHandler"><a href="#EventHandler" class="headerlink" title="EventHandler"></a>EventHandler</h2><p>libev支持多种事件的处理，包括io，timer，signal等等。其全部支持的事件如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">ev_io</span><br><span class="line">ev_timer</span><br><span class="line">ev_periodic</span><br><span class="line">ev_signal</span><br><span class="line">ev_child</span><br><span class="line">ev_stat</span><br><span class="line">ev_idle</span><br><span class="line">ev_prepare <span class="keyword">and</span> ev_check</span><br><span class="line">ev_embed</span><br><span class="line">ev_fork</span><br><span class="line">ev_cleanup</span><br><span class="line">ev_async</span><br></pre></td></tr></table></figure>
+<p>libev使用宏定义实现了类似C++继承的组织结构，具体如下图：</p>
+<p><img src="http://oserror.com/images/libev_event_handle.png" alt="libev event handle"></p>
+<p>如上图，只列举了libev比较常见的ev_io,ev_timer和ev_signal。EV_WATCHER相当于Reactor模式中的EventHandler基类，而ev_io，ev_timer和ev_signal属于EventHandler的子类，实现各自的事件。</p>
+<ul>
+<li>所有事件中都会有一个cb函数指针，相当于EventHandler中的HandleEvent函数，用于事件发生后调用</li>
+<li>ev_io和ev_signal都有EV_WAITCHER的链表，其上可以注册一个或者多个Handle函数。</li>
+<li>ev_timer拥有repeat字段，可以用来设置重复调用的定时任务。</li>
+</ul>
+<p>这些事件还提供了一些操作函数，以ev_io为例，如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ev_io_set(ev,fd_,events_)            \</span></span><br><span class="line"><span class="meta">do &#123; (ev)-&gt;fd = (fd_); (ev)-&gt;events = (events_) | EV__IOFDSET; &#125; while (0)</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">ev_io_start</span>       <span class="params">(struct ev_loop *loop,  ev_io *w)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">ev_io_stop</span>        <span class="params">(struct ev_loop *loop,  ev_io *w)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>ev_io还提供了初始化等功能，例如，<code>ev_io_init</code>函数初始化fd，cb等，其他的像<code>ev_io_start</code>和<code>ev_io_stop</code>函数是由libev的reactor组件提供的接口，将在reactor章节分析。</p>
+<h2 id="I-O-multiplexing"><a href="#I-O-multiplexing" class="headerlink" title="I/O multiplexing"></a>I/O multiplexing</h2><p>libev支持多种I/O multiplexing的接口，例如select，epoll，kequeue。为了方便统一管理，libev提供一套标准接口，对应的I/O multiplexing需要实现这套标准接口，以供上层调用，虽然libev不是以OO方式实现的，这里还是以UML图的方式描述，方便讨论。</p>
+<p><img src="http://oserror.com/images/libev_io_multiplexing.png" alt="libev IO multiplexing"></p>
+<p>libev本身是通过函数指针方式实现的，即在reactor模块，使用了backend_modify和backend_poll来个函数指针，具体指向的I/O multiplexing接口跟实现有关，在linux下可能是select实现的接口，也可能是epoll实现的接口。</p>
+<p>在OO设计中，理念是libev的reactor中，使用了I/O multiplexing的基类的引用或指针，I/O multiplexing Select和I/O multiplexing Epoll分别利用select、epoll实现基类的两个接口。最终使用时，根据操作系统提供接口的情况，把两个子类的其中一个赋值给reactor中的基类的引用或指针。</p>
+<p>具体地，以linux场景下使用最多的epoll为例，来看看libev是如何实现backend_modify和backend_poll的。</p>
+<p><strong>backend_modify</strong></p>
+<p>backend_modify中，最重要的一行代码为</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">expect_true</span> (!<span class="built_in">epoll_ctl</span> (backend_fd, oev &amp;&amp; oldmask != nev ? EPOLL_CTL_MOD : EPOLL_CTL_ADD, fd, &amp;ev)))</span><br><span class="line">    <span class="keyword">return</span>;</span><br></pre></td></tr></table></figure>
+
+<p>即如果要监听的事件发生了改变，则用<code>EPOLL_CTL_MOD</code>来修改，否则调用<code>EPOLL_CTL_ADD</code>来添加到epoll监听列表中。</p>
+<p><strong>backend_poll</strong></p>
+<p>backend_poll的代码如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">epoll_poll</span> <span class="params">(EV_P_ ev_tstamp timeout)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">int</span> eventcnt;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* epoll wait times cannot be larger than (LONG_MAX - 999UL) / HZ msecs, which is below */</span></span><br><span class="line">    <span class="comment">/* the default libev max wait time, however. */</span></span><br><span class="line">    EV_RELEASE_CB;</span><br><span class="line">    eventcnt = <span class="built_in">epoll_wait</span> (backend_fd, epoll_events, epoll_eventmax, (<span class="keyword">int</span>)<span class="built_in">ceil</span> (timeout * <span class="number">1000.</span>));</span><br><span class="line">    EV_ACQUIRE_CB;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">expect_false</span> (eventcnt &lt; <span class="number">0</span>)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (errno != EINTR)</span><br><span class="line">            <span class="built_in">ev_syserr</span> (<span class="string">&quot;(libev) epoll_wait&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; eventcnt; ++i) &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">epoll_event</span> *<span class="title">ev</span> =</span> epoll_events + i;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span> fd = (<span class="keyword">uint32_t</span>)ev-&gt;data.u64; <span class="comment">/* mask out the lower 32 bits */</span></span><br><span class="line">        <span class="keyword">int</span> want = anfds [fd].events;</span><br><span class="line">        <span class="keyword">int</span> got  = (ev-&gt;events &amp; (EPOLLOUT | EPOLLERR | EPOLLHUP) ? EV_WRITE : <span class="number">0</span>)</span><br><span class="line">                   | (ev-&gt;events &amp; (EPOLLIN  | EPOLLERR | EPOLLHUP) ? EV_READ  : <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* check for spurious notification */</span></span><br><span class="line">        <span class="comment">/* we assume that fd is always in range, as we never shrink the anfds array */</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">expect_false</span> ((<span class="keyword">uint32_t</span>)anfds [fd].egen != (<span class="keyword">uint32_t</span>)(ev-&gt;data.u64 &gt;&gt; <span class="number">32</span>))) &#123;</span><br><span class="line">            <span class="comment">/* recreate kernel state */</span></span><br><span class="line">            postfork = <span class="number">1</span>;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">expect_false</span> (got &amp; ~want)) &#123;</span><br><span class="line">            anfds [fd].emask = want;</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* we received an event but are not interested in it, try mod or del */</span></span><br><span class="line">            <span class="comment">/* I don&#x27;t think we ever need MOD, but let&#x27;s handle it anyways */</span></span><br><span class="line">            ev-&gt;events = (want &amp; EV_READ  ? EPOLLIN  : <span class="number">0</span>)</span><br><span class="line">                         | (want &amp; EV_WRITE ? EPOLLOUT : <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* pre-2.6.9 kernels require a non-null pointer with EPOLL_CTL_DEL, */</span></span><br><span class="line">            <span class="comment">/* which is fortunately easy to do for us. */</span></span><br><span class="line">            <span class="keyword">if</span> (<span class="built_in">epoll_ctl</span> (backend_fd, want ? EPOLL_CTL_MOD : EPOLL_CTL_DEL, fd, ev)) &#123;</span><br><span class="line">                postfork = <span class="number">1</span>; <span class="comment">/* an error occurred, recreate kernel state */</span></span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">fd_event</span> (EV_A_ fd, got);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* if the receive array was full, increase its size */</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">expect_false</span> (eventcnt == epoll_eventmax)) &#123;</span><br><span class="line">        <span class="built_in">ev_free</span> (epoll_events);</span><br><span class="line">        epoll_eventmax = <span class="built_in">array_nextsize</span> (<span class="built_in"><span class="keyword">sizeof</span></span> (struct epoll_event), epoll_eventmax, epoll_eventmax + <span class="number">1</span>);</span><br><span class="line">        epoll_events = (struct epoll_event *)<span class="built_in">ev_malloc</span> (<span class="built_in"><span class="keyword">sizeof</span></span> (struct epoll_event) * epoll_eventmax);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>调用epoll_wait，获取就绪事件列表</li>
+<li>对于就绪事件，放入到reactor的pending数组中存放，以方便reactor后续处理，具体地，在reactor中分析</li>
+<li>epoll_wait调用的时候，需要指定数组存放就绪的文件描述符，如果某次就绪事件的个数等于数组元素的个数，说明可能是由于数组长度不够，导致所有的就绪事件并没有一次性的返回，影响程序性能。libev采用的方法是把对应的epoll_events数组扩容到原来的两倍，以应对网络链接数增大的场景。</li>
+</ol>
+<h2 id="Timer"><a href="#Timer" class="headerlink" title="Timer"></a>Timer</h2><p>libev在timer管理采用了堆结构，采用了二叉堆和四叉堆。二叉堆对缓存不够友好，经常操作的元素是N和N/2，中间间隔元素太多，局部性不好，四叉堆在一定程度上会缓解这个问题。本节将会以四叉堆来分析libev的timer实现原理。</p>
+<p>对于四叉堆，下标为k的元素，其儿子节点的下标范围为[4<em>k+1, 4</em>k+4]，反过来，对于下标为x的儿子节点，其父节点的下标为(x - 1) / 4。</p>
+<p>分析堆实现之前，先来看看libev关于堆相关的宏定义</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DHEAP 4</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> HEAP0 (DHEAP - 1) <span class="comment">/* index of first element in heap */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> HPARENT(k) ((((k) - HEAP0 - 1) / DHEAP) + HEAP0)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> UPHEAP_DONE(p,k) ((p) == (k))</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看出libev中，四叉堆第一个元素的下表是3，所以，由儿子节点计算父节点的公式变成了<code>(x - 3 - 1) / 4 + 3</code>。</p>
+<h3 id="堆元素的定义"><a href="#堆元素的定义" class="headerlink" title="堆元素的定义"></a>堆元素的定义</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    ev_tstamp at;</span><br><span class="line">    <span class="keyword">int</span> active; <span class="comment">/* private */</span>         \</span><br><span class="line">	<span class="keyword">int</span> pending; <span class="comment">/* private */</span>            \</span><br><span class="line">	<span class="keyword">int</span> priority; <span class="comment">/* private */</span>        \</span><br><span class="line">	<span class="keyword">void</span> *data; <span class="comment">/* rw */</span>                \</span><br><span class="line">	<span class="built_in"><span class="keyword">void</span></span> (*cb)(struct ev_loop *loop, struct ev_watcher *w, <span class="keyword">int</span> revents);</span><br><span class="line">&#125; ANHE;</span><br></pre></td></tr></table></figure>
+
+<p>其中at为定时器到期事件，堆排序则按照at的值由小到大排序。</p>
+<h3 id="堆操作"><a href="#堆操作" class="headerlink" title="堆操作"></a>堆操作</h3><p>分为downheap、upheap、adjustheap和reheap。</p>
+<p><strong>downheap</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* away from the root */</span></span><br><span class="line"> <span class="function">inline_speed <span class="keyword">void</span></span></span><br><span class="line"><span class="function"> <span class="title">downheap</span> <span class="params">(ANHE *heap, <span class="keyword">int</span> N, <span class="keyword">int</span> k)</span></span></span><br><span class="line"><span class="function"> </span>&#123;</span><br><span class="line">     ANHE he = heap [k];</span><br><span class="line">     ANHE *E = heap + N + HEAP0;</span><br><span class="line"></span><br><span class="line">     <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">         ev_tstamp minat;</span><br><span class="line">         ANHE *minpos;</span><br><span class="line">         ANHE *pos = heap + DHEAP * (k - HEAP0) + HEAP0 + <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">         <span class="comment">/* find minimum child */</span></span><br><span class="line">         <span class="keyword">if</span> (<span class="built_in">expect_true</span> (pos + DHEAP - <span class="number">1</span> &lt; E)) &#123;</span><br><span class="line">             <span class="comment">/* fast path */</span>                               (minpos = pos + <span class="number">0</span>), (minat = <span class="built_in">ANHE_at</span> (*minpos));</span><br><span class="line"></span><br><span class="line">             <span class="keyword">if</span> (               <span class="built_in">ANHE_at</span> (pos [<span class="number">1</span>]) &lt; minat) (minpos = pos + <span class="number">1</span>), (minat = <span class="built_in">ANHE_at</span> (*minpos));</span><br><span class="line"></span><br><span class="line">             <span class="keyword">if</span> (               <span class="built_in">ANHE_at</span> (pos [<span class="number">2</span>]) &lt; minat) (minpos = pos + <span class="number">2</span>), (minat = <span class="built_in">ANHE_at</span> (*minpos));</span><br><span class="line"></span><br><span class="line">             <span class="keyword">if</span> (               <span class="built_in">ANHE_at</span> (pos [<span class="number">3</span>]) &lt; minat) (minpos = pos + <span class="number">3</span>), (minat = <span class="built_in">ANHE_at</span> (*minpos));</span><br><span class="line">         &#125; <span class="keyword">else</span> <span class="keyword">if</span> (pos &lt; E) &#123;</span><br><span class="line">             <span class="comment">/* slow path */</span>                               (minpos = pos + <span class="number">0</span>), (minat = <span class="built_in">ANHE_at</span> (*minpos));</span><br><span class="line"></span><br><span class="line">             <span class="keyword">if</span> (pos + <span class="number">1</span> &lt; E &amp;&amp; <span class="built_in">ANHE_at</span> (pos [<span class="number">1</span>]) &lt; minat) (minpos = pos + <span class="number">1</span>), (minat = <span class="built_in">ANHE_at</span> (*minpos));</span><br><span class="line"></span><br><span class="line">             <span class="keyword">if</span> (pos + <span class="number">2</span> &lt; E &amp;&amp; <span class="built_in">ANHE_at</span> (pos [<span class="number">2</span>]) &lt; minat) (minpos = pos + <span class="number">2</span>), (minat = <span class="built_in">ANHE_at</span> (*minpos));</span><br><span class="line"></span><br><span class="line">             <span class="keyword">if</span> (pos + <span class="number">3</span> &lt; E &amp;&amp; <span class="built_in">ANHE_at</span> (pos [<span class="number">3</span>]) &lt; minat) (minpos = pos + <span class="number">3</span>), (minat = <span class="built_in">ANHE_at</span> (*minpos));</span><br><span class="line">         &#125; <span class="keyword">else</span></span><br><span class="line">             <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">         <span class="keyword">if</span> (<span class="built_in">ANHE_at</span> (he) &lt;= minat)</span><br><span class="line">             <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">         heap [k] = *minpos;</span><br><span class="line">         <span class="built_in">ev_active</span> (<span class="built_in">ANHE_w</span> (*minpos)) = k;</span><br><span class="line"></span><br><span class="line">         k = minpos - heap;</span><br><span class="line">     &#125;</span><br><span class="line"></span><br><span class="line">     heap [k] = he;</span><br><span class="line">     <span class="built_in">ev_active</span> (<span class="built_in">ANHE_w</span> (he)) = k;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>在上面函数中，N为堆中元素个数，k为要调整的下标。</p>
+<p>调整的思路为获取四个子节点的元素，取其中的最小值，然后和父节点比较，如果父节点小，说明已经是调整好了；如果父节点大，则把最小子节点赋值给父节点，以此为循环。最后，退出循环的时候，把开始调整的元素的值赋值给对应的元素。</p>
+<p>在堆排序中，downheap用于的场景是，堆顶元素被弹出，然后，把最后一个堆元素赋值给第一个元素，然后重新调整。</p>
+<p><strong>upheap</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* towards the root */</span></span><br><span class="line"><span class="function">inline_speed <span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">upheap</span> <span class="params">(ANHE *heap, <span class="keyword">int</span> k)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ANHE he = heap [k];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="keyword">int</span> p = <span class="built_in">HPARENT</span> (k);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">UPHEAP_DONE</span> (p, k) || <span class="built_in">ANHE_at</span> (heap [p]) &lt;= <span class="built_in">ANHE_at</span> (he))</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">        heap [k] = heap [p];</span><br><span class="line">        <span class="built_in">ev_active</span> (<span class="built_in">ANHE_w</span> (heap [k])) = k;</span><br><span class="line">        k = p;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    heap [k] = he;</span><br><span class="line">    <span class="built_in">ev_active</span> (<span class="built_in">ANHE_w</span> (he)) = k;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>k为要调整的元素，跟其父节点比较，如果比父节点小，则往上赋值，否则退出循环。</p>
+<p><strong>adjustheap</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* move an element suitably so it is in a correct place */</span></span><br><span class="line"><span class="function">inline_size <span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">adjustheap</span> <span class="params">(ANHE *heap, <span class="keyword">int</span> N, <span class="keyword">int</span> k)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (k &gt; HEAP0 &amp;&amp; <span class="built_in">ANHE_at</span> (heap [k]) &lt;= <span class="built_in">ANHE_at</span> (heap [<span class="built_in">HPARENT</span> (k)]))</span><br><span class="line">        <span class="built_in">upheap</span> (heap, k);</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="built_in">downheap</span> (heap, N, k);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于k == HEAP0的场景，都是用downheap的，因为不可能再往上调整了。</p>
+<p><strong>reheap</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* rebuild the heap: this function is used only once and executed rarely */</span></span><br><span class="line"><span class="function">inline_size <span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">reheap</span> <span class="params">(ANHE *heap, <span class="keyword">int</span> N)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* we don&#x27;t use floyds algorithm, upheap is simpler and is more cache-efficient */</span></span><br><span class="line">    <span class="comment">/* also, this is easy to implement and correct for both 2-heaps and 4-heaps */</span></span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; N; ++i)</span><br><span class="line">        <span class="built_in">upheap</span> (heap, i + HEAP0);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>初始化建堆的函数，只会在开始的时候调用一次。</p>
+<p>libev的reactor依赖于timer的heap管理提供的接口来完成定时任务的管理。</p>
+<h2 id="reactor"><a href="#reactor" class="headerlink" title="reactor"></a>reactor</h2><p>本节将分别以ev_io和ev_timer两种事件来分析libev的reactor模式的实现，先看其公共的数据结构的定义</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">    <span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">        WL head;  <span class="comment">//events watcher list</span></span><br><span class="line">        <span class="keyword">unsigned</span> <span class="keyword">char</span> events; <span class="comment">/* the events watched for */</span></span><br><span class="line">        <span class="keyword">unsigned</span> <span class="keyword">char</span> reify;  <span class="comment">/* flag set when this ANFD needs reification (EV_ANFD_REIFY, EV__IOFDSET) */</span></span><br><span class="line">        <span class="keyword">unsigned</span> <span class="keyword">char</span> emask;  <span class="comment">/* the epoll backend stores the actual kernel mask in here */</span></span><br><span class="line">        <span class="keyword">unsigned</span> <span class="keyword">char</span> cdel;</span><br><span class="line">    &#125; ANFD;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">event_watcher</span> *<span class="title">w</span>;</span></span><br><span class="line">        <span class="keyword">int</span> events; <span class="comment">/* the pending event set for the given watcher */</span></span><br><span class="line">    &#125; ANPENDING;</span><br><span class="line">    </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">ev_loop</span> &#123;</span></span><br><span class="line">  		<span class="keyword">double</span> ev_rt_now;</span><br><span class="line">		<span class="keyword">int</span> backend; <span class="comment">/*EPOLL SEECT KQUEUE等*/</span></span><br><span class="line">  		<span class="keyword">int</span> activecnt; <span class="comment">/* total number of active events (&quot;refcount&quot;) */</span></span><br><span class="line">  		<span class="keyword">int</span> loop_done; <span class="comment">/* signal by ev_break */</span></span><br><span class="line"></span><br><span class="line">  		<span class="keyword">int</span> backend_fd; <span class="comment">/* e.g. epoll fd, created by epoll_create*/</span></span><br><span class="line">  		<span class="built_in"><span class="keyword">void</span></span> (*backend_modify)(EV_P_ <span class="keyword">int</span> fd, <span class="keyword">int</span> oev, <span class="keyword">int</span> nev)); <span class="comment">/* epoll_ctl */</span></span><br><span class="line">  		<span class="built_in"><span class="keyword">void</span></span> (*backend_poll)(EV_P_ ev_tstamp timeout)); <span class="comment">/*  epoll_wait */</span></span><br><span class="line"></span><br><span class="line">  		<span class="built_in"><span class="keyword">void</span></span> (*invoke_cb)(struct ev_loop *loop);</span><br><span class="line"></span><br><span class="line">  		ANFD *anfds; <span class="comment">/* 把初始化后的 ev_io 结构体绑定在 anfds[fd].head 事件链表上，方便根据 fd 直接查找。*/</span></span><br><span class="line"></span><br><span class="line">  		<span class="keyword">int</span> *fdchanges; <span class="comment">/* 监听的事件fd列表 */</span></span><br><span class="line">  		ANPENDING *pendings [NUMPRI]; <span class="comment">/* 存放等待被调用 callback 的 watcher */</span></span><br><span class="line">        ANHE *  timers; <span class="comment">/*管理timer任务的堆结构*/</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中ev_loop是libev中的reactor的结构体，最重要的一些定义都列举在上面的代码中，具体含义在后面注释中备注。下面分别讨论libev为ev_io事件和ev_timer事件提供的一些接口，分析这些接口与ev_loop内部的数据的交互流程。</p>
+<h3 id="ev-io"><a href="#ev-io" class="headerlink" title="ev_io"></a>ev_io</h3><p>libev给ev_io事件提供的接口包括</p>
+<ul>
+<li><code>ev_io_start</code></li>
+<li><code>ev_io_stop</code></li>
+</ul>
+<p><strong>ev_io_start处理流程</strong></p>
+<p><img src="http://oserror.com/images/libev_ev_io_start.png" alt="libev ev_io_start"></p>
+<ol>
+<li>对于已经是active的watcher则直接返回，表明已经添加过</li>
+<li>如果是非active的，则首先置成active</li>
+<li>然后把watcher加入到对应fd所在的anfds数组的watcher链表中</li>
+<li>把fd加入到fdchanges数组的末尾</li>
+</ol>
+<p>备注：这里修改了anfs和fdchanges两个数组</p>
+<p><strong>ev_io_stop处理流程</strong></p>
+<p>ev_io_stop的处理流程相当于把ev_io_start所做的事情都撤销，不再赘述。</p>
+<h3 id="ev-timer"><a href="#ev-timer" class="headerlink" title="ev_timer"></a>ev_timer</h3><p>libev给ev_timer提供的接口包括</p>
+<ul>
+<li><code>ev_timer_start</code></li>
+<li><code>ev_timer_stop</code></li>
+</ul>
+<p><strong>ev_timer_start处理流程</strong></p>
+<ol>
+<li>把active置成数组的下标</li>
+<li>把新加入的ev_timer_watcher放到timers数组最末尾</li>
+<li>调用upheap调整堆</li>
+</ol>
+<p><strong>ev_timer_stop处理流程</strong></p>
+<ol>
+<li>把watcher对应下标的事件用timers数组最后一个元素覆盖</li>
+<li>从watcher调用adjustheap调整堆</li>
+</ol>
+<p>到目前为止，讨论了libev的reactor中ev_io的start和stop，ev_timer的start和stop操作，相当于reactor模式中的Register和Unregister接口，接下来讨论最后的HandleEvents接口。</p>
+<h2 id="HandleEvents"><a href="#HandleEvents" class="headerlink" title="HandleEvents"></a>HandleEvents</h2><p>libev的HandleEvents接口为ev_run函数，其流程为</p>
+<p><img src="http://oserror.com/images/libev_ev_event_loop.png" alt="libev ev_run"></p>
+<p>fd_reify的操作为遍历fdchanges数组，然后根据fd从anfds中拿具体数据，最后调用epoll_modify函数注册事件。</p>
+<p>timers_reify的操作为对于设置了repeat的timer，更新过期事件，然后调用调整堆操作；对于未设置repeat的过期事件，则直接清除，调用的是ev_timer_stop操作</p>
+<p>backend_poll和具体的实现有关，以epoll为例，之前讨论过对于就绪事件，会放到reactor的pending数组中，具体的为调用fd_event接口，最终调用ev_feed_event来更新pending数组，如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> noinline</span></span><br><span class="line"><span class="function"><span class="title">ev_feed_event</span> <span class="params">(EV_P_ <span class="keyword">void</span> *w, <span class="keyword">int</span> revents)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    W w_ = (W)w;</span><br><span class="line">    <span class="keyword">int</span> pri = <span class="built_in">ABSPRI</span> (w_);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">expect_false</span> (w_-&gt;pending))</span><br><span class="line">        pendings [pri][w_-&gt;pending - <span class="number">1</span>].events |= revents;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        w_-&gt;pending = ++pendingcnt [pri];</span><br><span class="line">        <span class="built_in">array_needsize</span> (ANPENDING, pendings [pri], pendingmax [pri], w_-&gt;pending, EMPTY2);</span><br><span class="line">        pendings [pri][w_-&gt;pending - <span class="number">1</span>].w      = w_;</span><br><span class="line">        pendings [pri][w_-&gt;pending - <span class="number">1</span>].events = revents;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>即把就绪事件，放到对应的优先级队列的最后。</p>
+<p>最后，调用ev_invoke_pending来处理就绪事件，如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> noinline</span></span><br><span class="line"><span class="function"><span class="title">ev_invoke_pending</span> <span class="params">(EV_P)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> pri;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (pri = NUMPRI; pri--; )</span><br><span class="line">        <span class="keyword">while</span> (pendingcnt [pri]) &#123;</span><br><span class="line">            ANPENDING *p = pendings [pri] + --pendingcnt [pri];</span><br><span class="line"></span><br><span class="line">            <span class="comment">/*assert ((&quot;libev: non-pending watcher on pending list&quot;, p-&gt;w-&gt;pending));*/</span></span><br><span class="line">            <span class="comment">/* ^ this is no longer true, as pending_w could be here */</span></span><br><span class="line"></span><br><span class="line">            p-&gt;w-&gt;pending = <span class="number">0</span>;</span><br><span class="line">            <span class="built_in">EV_CB_INVOKE</span> (p-&gt;w, p-&gt;events);</span><br><span class="line">            EV_FREQUENT_CHECK;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>具体地，即遍历整个pending数组，来调用事件上的处理函数即可。</p>
+<p>PS:<br>本博客更新会在第一时间推送到微信公众号，欢迎大家关注。</p>
+<p><img src="http://oserror.com/images/qcode_wechat.jpg" alt="qocde_wechat"></p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/enki/libev">https://github.com/enki/libev</a></li>
+<li><a target="_blank" rel="noopener" href="http://www.jianshu.com/p/3299e19d9bf4">http://www.jianshu.com/p/3299e19d9bf4</a></li>
+<li><a target="_blank" rel="noopener" href="http://m.blog.csdn.net/article/details?id=49203223">http://m.blog.csdn.net/article/details?id=49203223</a></li>
+<li>Unix环境高级编程</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" rel="tag">#网络编程</a>
+          
+            <a href="/tags/libeasy/" rel="tag">#libeasy</a>
+          
+            <a href="/tags/libev/" rel="tag">#libev</a>
+          
+            <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">#设计模式</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/distributed/consistent-hashing/" rel="next" title="consistent hash原理，优化及实现">
+                <i class="fa fa-chevron-left"></i> consistent hash原理，优化及实现
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/language/the-go-programming-language-note-two/" rel="prev" title="The go programming language 学习笔记二">
+                The go programming language 学习笔记二 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">36</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">33</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Charles0429" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Introduction"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Reactor"><span class="nav-number">2.</span> <span class="nav-text">Reactor</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Unix-5%E7%A7%8DI-O%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.1.</span> <span class="nav-text">Unix 5种I&#x2F;O模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reactor%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.2.</span> <span class="nav-text">Reactor模式</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#libev%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.</span> <span class="nav-text">libev设计与实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#EventHandler"><span class="nav-number">3.1.</span> <span class="nav-text">EventHandler</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#I-O-multiplexing"><span class="nav-number">3.2.</span> <span class="nav-text">I&#x2F;O multiplexing</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Timer"><span class="nav-number">3.3.</span> <span class="nav-text">Timer</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A0%86%E5%85%83%E7%B4%A0%E7%9A%84%E5%AE%9A%E4%B9%89"><span class="nav-number">3.3.1.</span> <span class="nav-text">堆元素的定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A0%86%E6%93%8D%E4%BD%9C"><span class="nav-number">3.3.2.</span> <span class="nav-text">堆操作</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#reactor"><span class="nav-number">3.4.</span> <span class="nav-text">reactor</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ev-io"><span class="nav-number">3.4.1.</span> <span class="nav-text">ev_io</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ev-timer"><span class="nav-number">3.4.2.</span> <span class="nav-text">ev_timer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HandleEvents"><span class="nav-number">3.5.</span> <span class="nav-text">HandleEvents</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">4.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Charles0429</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

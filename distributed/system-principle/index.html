@@ -1,0 +1,651 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.lug.ustc.edu.cn/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="分布式," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Charles的技术博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="引言在分布式系统中，经常会碰到的技术名词一般有Replication、Partition、Consensus、Transaction等等，这些技术在分布式系统设计中都是非常重要的，本文通过对分布式系统的Reliability、Scalability和Maintainability特性的讨论，描述这些技术解决的问题。 ReliabilityReliability，指的是在任何情况下，系统正常工作的能">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式系统中常见技术解决的问题是什么?">
+<meta property="og:url" content="http://yoursite.com/distributed/system-principle/index.html">
+<meta property="og:site_name" content="Charles的技术博客">
+<meta property="og:description" content="引言在分布式系统中，经常会碰到的技术名词一般有Replication、Partition、Consensus、Transaction等等，这些技术在分布式系统设计中都是非常重要的，本文通过对分布式系统的Reliability、Scalability和Maintainability特性的讨论，描述这些技术解决的问题。 ReliabilityReliability，指的是在任何情况下，系统正常工作的能">
+<meta property="og:locale">
+<meta property="og:image" content="http://oserror.com/images/qcode_wechat.jpg">
+<meta property="article:published_time" content="2018-03-21T00:09:08.000Z">
+<meta property="article:modified_time" content="2021-06-14T13:00:05.529Z">
+<meta property="article:author" content="Charles0429">
+<meta property="article:tag" content="分布式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://oserror.com/images/qcode_wechat.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 3109763,
+      author: 'Charles0429'
+    }
+  };
+</script>
+
+  <title> 分布式系统中常见技术解决的问题是什么? | Charles的技术博客 </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Charles的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                分布式系统中常见技术解决的问题是什么?
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2018-03-21T08:09:08+08:00" content="2018-03-21">
+              2018-03-21
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/distributed/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>在分布式系统中，经常会碰到的技术名词一般有Replication、Partition、Consensus、Transaction等等，这些技术在分布式系统设计中都是非常重要的，本文通过对分布式系统的Reliability、Scalability和Maintainability特性的讨论，描述这些技术解决的问题。</p>
+<h1 id="Reliability"><a href="#Reliability" class="headerlink" title="Reliability"></a>Reliability</h1><p>Reliability，指的是在任何情况下，系统正常工作的能力。如果一个系统在发生任何异常时，都能正常的工作，那么系统是完全可靠的。现实中，异常种类很多，有的往往难以事先避免，因此，了解可能的异常并分析如何在异常发生时快速恢复是非常重要的。一般地，异常包括硬件异常，软件异常和人为异常。</p>
+<h2 id="硬件异常"><a href="#硬件异常" class="headerlink" title="硬件异常"></a>硬件异常</h2><p>硬件异常种类很多，硬盘，电源等任意一个部件的损坏，都可能导致服务器不能正常的工作。通常这类异常难以避免，但是，我们可以通过一些技术手段来实现异常发生后的快速恢复，不管是从软件角度还是硬件角度，基本的解决思路都是冗余。从硬件角度来讲，我们可以通过单机冗余多份硬件，当其中某个硬件发生异常时，可以快速地用好的硬件替换掉故障的硬件，这种方式的硬件冗余对于数据中心级的故障是没有作用的；从软件角度来讲，我们可以通过多副本(Replication)来实现快速恢复，当某台服务器硬件异常时，可以在软件层面将流量导入到新的副本上(实际上也有硬件冗余，但这种方式更为灵活)，除了Replication之外，有时候为了减少单台服务器故障对所有用户的影响，可以对用户数据做Partition，单台服务器只存某一部分用户的数据，这样单机故障就只会影响一部分用户了。引入Replication后，如何保证多副本的数据的一致性又成了一个问题(Consensus)，Paxos和Raft算法就是为了解决这类问题。</p>
+<h2 id="软件异常"><a href="#软件异常" class="headerlink" title="软件异常"></a>软件异常</h2><p>软件异常一般指的是系统的bug，这里面不仅包括自己写的系统的bug，也包括依赖的服务系统的bug。软件异常同样也是不能完全避免的，因此，在发生软件异常时，也需要有快速恢复的手段，通常有三种方法：</p>
+<ol>
+<li>通过调整软件已有的配置参数，规避问题</li>
+<li>重启软件或者依赖的服务，消除异常状态</li>
+<li>直接修复bug，并升级版本</li>
+</ol>
+<p>在没有发生致命性问题时，一般采用方法1或2来恢复，当发生的问题比较严重，并且没有已知的方法能绕过时，一般才使用方法3，方法3本身风险也是比较大的，因为修复bug的同时可能会产生新的bug。</p>
+<h2 id="人为异常"><a href="#人为异常" class="headerlink" title="人为异常"></a>人为异常</h2><p>不管是软件本身，还是软件所运行的服务器，都是由人来管理的，但人是会犯错误的，有时候会执行错误的命令导致系统不能正常工作，其中比较致命的错误可能就是删掉某台服务器的数据了，在这种情况下为了能快速地恢复，通常也是采用Replication的思路，来避免问题。</p>
+<h1 id="Scalability"><a href="#Scalability" class="headerlink" title="Scalability"></a>Scalability</h1><p>系统的工作负载通常不是一成不变的，当工作负载增加时，往往可以通过增加机器资源来保持性能不变，而需要增加机器数量的多少是由系统的扩展性来决定的，扩展性越好的系统，需要增加的机器资源越少。最完美的扩展性是线性扩展性，即工作负载扩大为原来N倍的时候，只需要加N倍的机器，就能够保持性能不变，最差的扩展性则是没有扩展性，即工作负载扩大为原来N倍时，即使加再多的机器，也无法保持性能和原来一样。</p>
+<p>对于不同的系统，负载所代表的含义通常是不一样的，对于基础架构系统，通常每秒读和每秒写的次数，对于业务系统，通常有自己的指标，例如每秒交易创建的笔数。同样地，对于不同的系统，其使用的性能指标通常也是不相同的，对于批处理系统，通常强调的是吞吐量，即每秒完成的任务数量，而对于在线处理系统，通常强调的是响应时间。</p>
+<p>在明确一个系统的工作负载指标和性能指标之后，我们才能讨论在该系统下如何实现扩展。扩展通常是两种思路，一是垂直扩展，即使用更好的机器替换现有的机器，二是水平扩展，即使用更多的机器。</p>
+<p>对于垂直扩展，其优点是对业务是无影响的，缺点是更好的机器是很贵的，通常是一分钱一分货，而十分钱只能买到两分货，且现实中总有单机装不下的数据量，此时垂直扩展自然就无法实施了。</p>
+<p>对于水平扩展，通常需要软件层面的配合，对于无状态的系统，通常只要在新加的机器上部署上需要扩展的系统，而对于有状态的系统，一般指的是存储系统，通常会将数据分成Partition（分区），这样新加的机器才能通过迁移Partition的方式，从老的机器上迁移数据以及对应的工作负载出来。水平扩展的优点是使用的都是相对廉价的服务器，能节约成本，但在软件层面需要做大量的工作，包括Partition的管理，迁移，负载均衡等等。</p>
+<h1 id="Maintainability"><a href="#Maintainability" class="headerlink" title="Maintainability"></a>Maintainability</h1><p>可维护性的好坏决定了系统是否能够长久的发展，一个可维护性不好的系统，会给运维和开发人员带来很多不便。对于运维人员来讲，可维护性指的是系统是否支持常用的运维手段，良好的文档等等。而对于开发人员来讲，主要分为内核开发以及使用该系统的业务开发，对于业务开发，维护性指的是系统是否有良好的接口，方便业务使用，例如，Transaction就是底层系统提供给业务的一种接口，它保证了在一个事务中执行的语句具有ACID性质，从而业务只需要关注业务逻辑的开发，而不需要关心底层的具体实现；对于内核开发，维护性指的是系统的代码质量，主要包括代码的可阅读性和是否易于修改，主要和系统内核开发人员的代码设计能力相关。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>为了能达到较好的可靠性(Reliability)、可扩展性(Scalability)和可维护性(Maintainability)，分布式系统设计中通常会使用多副本(Replication)、数据分区(Partition)、一致性算法(Consensus)、事务(Transaction)等技术，理解它们要解决的问题，深入了解每种技术背后可能的实现方案，有助于评价某个系统的设计好坏，这对于多个竞品系统的选型和深入学习系统原理都是非常有必要的。</p>
+<p>本博客更新会在第一时间推送到微信公众号，欢迎大家关注。</p>
+<p><img src="http://oserror.com/images/qcode_wechat.jpg" alt="qocde_wechat"></p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><ul>
+<li>Design Data Intensive Applications</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" rel="tag">#分布式</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/backend/mysql-online-create-index/" rel="next" title="MySQL online create index实现原理">
+                <i class="fa fa-chevron-left"></i> MySQL online create index实现原理
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/distributed/f1-online-schema-evolution/" rel="prev" title="Google F1是如何做Schema变更的">
+                Google F1是如何做Schema变更的 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">36</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">33</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Charles0429" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%95%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Reliability"><span class="nav-number">2.</span> <span class="nav-text">Reliability</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A1%AC%E4%BB%B6%E5%BC%82%E5%B8%B8"><span class="nav-number">2.1.</span> <span class="nav-text">硬件异常</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BD%AF%E4%BB%B6%E5%BC%82%E5%B8%B8"><span class="nav-number">2.2.</span> <span class="nav-text">软件异常</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%BA%E4%B8%BA%E5%BC%82%E5%B8%B8"><span class="nav-number">2.3.</span> <span class="nav-text">人为异常</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Scalability"><span class="nav-number">3.</span> <span class="nav-text">Scalability</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Maintainability"><span class="nav-number">4.</span> <span class="nav-text">Maintainability</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">6.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Charles0429</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

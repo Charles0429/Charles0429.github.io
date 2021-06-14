@@ -1,0 +1,789 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.lug.ustc.edu.cn/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="分布式,数据库," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Charles的技术博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="近几年来，数据库领域出现了一种新的关系数据库类型，称为NewSQL，例如，Google的Spanner，Amazon的Aurora等等，这些数据库相对于传统数据库来讲，区别在哪里？What’s Really New with NewSQL?给了很好的总结，本篇文章主要是总结该论文的观点，最后会有一个简单的讨论部分，全文的组织结构如下：  为什么需要NewSQL？ NewSQL的分类 NewSQL的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="NewSQL究竟新在哪里？">
+<meta property="og:url" content="http://yoursite.com/distributed/newsql/index.html">
+<meta property="og:site_name" content="Charles的技术博客">
+<meta property="og:description" content="近几年来，数据库领域出现了一种新的关系数据库类型，称为NewSQL，例如，Google的Spanner，Amazon的Aurora等等，这些数据库相对于传统数据库来讲，区别在哪里？What’s Really New with NewSQL?给了很好的总结，本篇文章主要是总结该论文的观点，最后会有一个简单的讨论部分，全文的组织结构如下：  为什么需要NewSQL？ NewSQL的分类 NewSQL的">
+<meta property="og:locale">
+<meta property="og:image" content="http://oserror.com/images/qcode_wechat.jpg">
+<meta property="article:published_time" content="2016-12-10T03:38:32.000Z">
+<meta property="article:modified_time" content="2021-06-14T13:00:05.525Z">
+<meta property="article:author" content="Charles0429">
+<meta property="article:tag" content="分布式">
+<meta property="article:tag" content="数据库">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://oserror.com/images/qcode_wechat.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 3109763,
+      author: 'Charles0429'
+    }
+  };
+</script>
+
+  <title> NewSQL究竟新在哪里？ | Charles的技术博客 </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Charles的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                NewSQL究竟新在哪里？
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-12-10T11:38:32+08:00" content="2016-12-10">
+              2016-12-10
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/distributed/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>近几年来，数据库领域出现了一种新的关系数据库类型，称为NewSQL，例如，Google的Spanner，Amazon的Aurora等等，这些数据库相对于传统数据库来讲，区别在哪里？<a target="_blank" rel="noopener" href="http://db.cs.cmu.edu/papers/2016/pavlo-newsql-sigmodrec2016.pdf">What’s Really New with NewSQL?</a>给了很好的总结，本篇文章主要是总结该论文的观点，最后会有一个简单的讨论部分，全文的组织结构如下：</p>
+<ul>
+<li>为什么需要NewSQL？</li>
+<li>NewSQL的分类</li>
+<li>NewSQL的技术挑战有哪些？</li>
+<li>讨论</li>
+</ul>
+<p>本文收录在我的github中<a target="_blank" rel="noopener" href="https://github.com/Charles0429/papers">papers项目</a>，papers项目旨在学习和总结分布式系统相关的论文。</p>
+<h1 id="为什么需要NewSQL？"><a href="#为什么需要NewSQL？" class="headerlink" title="为什么需要NewSQL？"></a>为什么需要NewSQL？</h1><p>数据库的发展通常是随着业务需求的变化，在2000年左右，随着互联网的兴起，有许多同时在线的用户，这对数据库领域带来了非常大的挑战，数据库通常会成为瓶颈，所以，此时业务针对数据库的需求，主要体现在可扩展上面。</p>
+<p>这时期数据库的扩展性，往往采用如下两种方案：</p>
+<ol>
+<li>垂直扩展：使用更好的硬件，来做数据库的服务器</li>
+<li>水平扩展：采用中间件，做sharding的方式，即分库分表的方式</li>
+</ol>
+<p>垂直扩展中使用更好的硬件意味者成本高，并且更换硬件后，需要把数据从老的机器迁移到新的机器，中间可能需要停服务，因此往往采用水平扩展，例如，Google’s MySQL-based cluster。</p>
+<p>采用中间件方式也有缺点，中间件一般要求轻量级，简单数据库操作可以搞定，但是，如果需要做分布式事务或者联表操作，会非常复杂，通常这些逻辑会放到应用层来做。</p>
+<p>后续，NOSQL兴起，主要有几个原因：</p>
+<ol>
+<li>传统关系数据库更倾向于一致性，而在性能和可用性比较差</li>
+<li>全功能的关系型数据库太重</li>
+<li>关系模型对于简单的查询太重，不必要</li>
+</ol>
+<p>NOSQL以Google’s BigTable 和 Amazon’s Dynamo为代表，开源版对应为HBase和Cassandra。</p>
+<p>NOSQL往往是不保证强一致性的，而对于一些应用来讲（例如金融服务），是需要强一致性和事务的，因此，如果它们基于NOSQL系统来开发的话，应用层需要些大量的逻辑来处理一致性和事务相关的问题。此时，业务需求是拥有可扩展性的基础上，能够支持强一致性。</p>
+<p>因此，这里有几条路：</p>
+<ol>
+<li>性能更好的单个服务器来做数据库服务器</li>
+<li>中间件层支持分布式事务</li>
+</ol>
+<p>使用更好的单个服务器的话，不满足业务需求的可扩展性。</p>
+<p>使用中间件的话，会有如下问题，例如：</p>
+<ol>
+<li>中间件层往往是比较轻量级的，要实现一致性，必须在中间件层实现分布式事务，这点是非常困难的</li>
+<li>中间件层本身的高可用很难保证</li>
+</ol>
+<p>上面两条路都不能很好的满足应用的需求，因此，NewSQL出现了。</p>
+<p>首先来看NEWSQL的定义：针对OLTP的读写，提供与NOSQL相同的可扩展性和性能，同时能支持满足ACID特性的事务。即保持NOSQL的高可扩展和高性能，并且保持关系模型。</p>
+<p>NEWSQL的优点：</p>
+<ol>
+<li>轻松的获得可扩展性</li>
+<li>能够使用关系模型和事务，应用逻辑会简化很多</li>
+</ol>
+<p>注意，此篇论文中的NEWSQL偏向于OLTP型数据库，和一些OLAP类型的数据库不同，OLAP数据库更偏向于复杂的只读查询，查询时间往往很长。</p>
+<p>而NEWSQL数据库的特性如下，针对其读写事务：</p>
+<ol>
+<li>执行时间短</li>
+<li>一般只查询一小部分数据，通过使用索引来达到高效查询的目的</li>
+<li>一般执行相同的命令，使用不同的输入参数</li>
+</ol>
+<h1 id="NewSQL的分类"><a href="#NewSQL的分类" class="headerlink" title="NewSQL的分类"></a>NewSQL的分类</h1><p>分三大类：</p>
+<ol>
+<li>从头开始，使用新架构的系统</li>
+<li>中间件</li>
+<li>DAAS，数据库即服务</li>
+</ol>
+<h2 id="New-Architectures"><a href="#New-Architectures" class="headerlink" title="New Architectures"></a>New Architectures</h2><p>采用新架构的NewSQL有如下特点：</p>
+<ol>
+<li>无共享存储</li>
+<li>多节点的并发控制</li>
+<li>基于多副本做高可用和容灾</li>
+<li>流量控制</li>
+<li>分布式查询处理</li>
+</ol>
+<p>优势：</p>
+<ol>
+<li>所有的部分都可以为分布式环境做优化，例如查询优化，通信协议优化。例如，所有的NEWSQL DBMS可以直接在节点间发送查询，而不是通过中心节点，例如中间件系统</li>
+<li>本身负责数据分区，因此，可以把查询发送给有数据的分区，而不是把数据发送给查询。</li>
+<li>拥有自身的存储，可以指定更复杂的多副本的方式</li>
+</ol>
+<p>缺点：</p>
+<ol>
+<li>懂该数据库的人少，缺少专业的运维</li>
+</ol>
+<p>代表产品：Spanner，CockroachDB</p>
+<h2 id="Transparent-Sharding-Middleware"><a href="#Transparent-Sharding-Middleware" class="headerlink" title="Transparent Sharding Middleware"></a>Transparent Sharding Middleware</h2><p>中间件负责的事情如下：</p>
+<ol>
+<li>对查询请求做路由</li>
+<li>分布式事务的协调者</li>
+<li>数据分布，数据多副本控制，数据分区</li>
+</ol>
+<p>往往在各个数据库节点，需要装代理与中间件沟通，负责如下事情：</p>
+<ol>
+<li>在本地节点执行中间节点发来的情况，并且返回结果</li>
+</ol>
+<p>优点：</p>
+<ol>
+<li>应用通常不需要做变化</li>
+</ol>
+<p>缺点：</p>
+<ol>
+<li>各个节点还是运行传统数据库，即以磁盘为核心的数据库，对现有的大内存，多核服务器难以高效地利用</li>
+<li>重复的查询计划和查询优化，在中间件做一次，在各个DBMS做一次</li>
+</ol>
+<p>备注：有研究表明，以磁盘为主要存储的传统DBMS，很难有效地利用非常多的核，以及更大的内存容量。</p>
+<p>代表产品: MariaDB MaxScale, ScaleArc</p>
+<h2 id="Database-as-a-Service"><a href="#Database-as-a-Service" class="headerlink" title="Database-as-a-Service"></a>Database-as-a-Service</h2><p>特点：</p>
+<ol>
+<li>用户可以按需使用</li>
+<li>数据库本身可能使用云产品，例如云存储等，可以较容易的实现可扩展性</li>
+</ol>
+<p>代表产品：</p>
+<ol>
+<li>Amazon Aurora</li>
+<li>ClearDB</li>
+</ol>
+<h1 id="NewSQL的技术挑战有哪些？"><a href="#NewSQL的技术挑战有哪些？" class="headerlink" title="NewSQL的技术挑战有哪些？"></a>NewSQL的技术挑战有哪些？</h1><h2 id="Main-Memory-Storage"><a href="#Main-Memory-Storage" class="headerlink" title="Main Memory Storage"></a>Main Memory Storage</h2><p>传统数据库都是以磁盘为存储中心的架构，读盘操作相对较慢，一般是内存中缓存页。</p>
+<p>现在来讲，内存较便宜，容量大，能存储大量的数据。这些纯内存操作带来的好处是，读取和写入数据速度较快。</p>
+<p>现有的大内存服务器，对数据库对内存的管理提出了新的要求，不再是像传统数据库那样，只是用来做页缓存，可以采用更高效地内存管理方式。</p>
+<h2 id="Partitioning-Sharding"><a href="#Partitioning-Sharding" class="headerlink" title="Partitioning/Sharding"></a>Partitioning/Sharding</h2><p>数据分区一般以某几列做hash或者range分区。</p>
+<p>特点：</p>
+<ul>
+<li>数据库需要能在多个分区执行SQL，并且合并数据结果的功能。</li>
+<li>把同一个用户的数据可以放在一起，即使是不同数据表的数据，可以减少通信开销。</li>
+<li>可以在线的添加或者删除机器。</li>
+<li>可以在线的迁移或复制分区。</li>
+</ul>
+<h2 id="Concurrency-Control"><a href="#Concurrency-Control" class="headerlink" title="Concurrency Control"></a>Concurrency Control</h2><p>数据库通过Concurrency Control来提供ACID中的Atomicity和Isolation。</p>
+<h3 id="Atomicity"><a href="#Atomicity" class="headerlink" title="Atomicity"></a>Atomicity</h3><p>分布式场景下，一般采用类2PC的协议，根据事务是否需要中心节点，分为以下两类：</p>
+<ol>
+<li>中心节点：单点，容量限制</li>
+<li>非中心节点：需要时钟的同步</li>
+</ol>
+<p>关于时钟同步，不同数据库也有不同的做法，Spanner和CroachDB在时钟同步上的不同选择：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">But what makes Spanner differ- ent is that it uses hardware devices (e.g., GPS, atomic clocks) for high-precision clock synchronization. The DBMS uses these clocks to assign timestamps to transactions to enforce consistent views of its multi-version database over wide-area networks. CockroachDB also purports to provide the same kind of consistency for transactions across data centers as Span- ner but without the use of atomic clocks. They instead rely on a hybrid clock protocol that combines loosely synchronized hardware clocks and logical counters [41].</span><br></pre></td></tr></table></figure>
+
+<h3 id="Isolation"><a href="#Isolation" class="headerlink" title="Isolation"></a>Isolation</h3><p>现有实现Isolation的技术主要包括：</p>
+<ul>
+<li>2PL：two phase locking</li>
+<li>MVCC: Multiversion Concurrency Control</li>
+<li>OCC: Optimistic Concurrency Control</li>
+</ul>
+<p>大部分的数据库还是在选择使用MVCC，例如CockroachDB；有些数据库使用2PL+MVCC，修改数据的时候，还是采用2PL，例如，InnoDB，Spanner</p>
+<h2 id="Secondary-Indexes"><a href="#Secondary-Indexes" class="headerlink" title="Secondary Indexes"></a>Secondary Indexes</h2><p>一般有两种实现方式：局部索引VS全局索引</p>
+<p>局部索引：</p>
+<ol>
+<li>每个partition有一部分索引数据，每次修改索引，只需要修改一个节点，但查找数据需要可能涉及多个节点</li>
+</ol>
+<p>全局索引：</p>
+<ol>
+<li>每个partition都有完整的索引数据，每次修改索引，都需要使用分布式事务，修改所有包含此索引副本的节点，查找数据只需要在一个节点</li>
+</ol>
+<h2 id="Replication"><a href="#Replication" class="headerlink" title="Replication"></a>Replication</h2><p>两个需要考虑的点：</p>
+<ol>
+<li>如何保证一致性：Paxos和2PC（跨Partition）</li>
+<li>同步的方式：采用同步执行命令的方式，还是同步状态的方式</li>
+</ol>
+<h2 id="Crash-Recovery"><a href="#Crash-Recovery" class="headerlink" title="Crash Recovery"></a>Crash Recovery</h2><p>如何最小化宕机时间？</p>
+<p>采用主备切换</p>
+<p>如何优化新加机器恢复到同步的时间？</p>
+<p>一般手段为做checkpoint</p>
+<h1 id="讨论"><a href="#讨论" class="headerlink" title="讨论"></a>讨论</h1><p>可扩展性是NewSQL的一个非常重要的特点，对于中间件的方式，其上需要存路由信息，其本身的可扩展性比较难以解决，个人认为，其不应该算入NewSQL。</p>
+<p>NewSQL的技术挑战除了上述提到的之外，还有如何实现多租户架构及租户之间的隔离，负载均衡等等问题。</p>
+<p>从整篇论文中描述的内容可以看出，NewSQL中并没有开拓性的理论技术的创新，更多的是架构的创新，以及把现有的技术如何更好地适用于当今的服务器，适用于当前的分布式架构，使得这些技术有机的结合起来，形成高效率的整体，实现NewSQL高可用，可扩展，强一致性等需求。</p>
+<p>PS:<br>本博客更新会在第一时间推送到微信公众号，欢迎大家关注。</p>
+<p><img src="http://oserror.com/images/qcode_wechat.jpg" alt="qocde_wechat"></p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><ul>
+<li><a target="_blank" rel="noopener" href="http://db.cs.cmu.edu/papers/2016/pavlo-newsql-sigmodrec2016.pdf">What’s Really New with NewSQL?</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" rel="tag">#分布式</a>
+          
+            <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag">#数据库</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/backend/bloomfilter/" rel="next" title="BloomFilter原理，实现及优化">
+                <i class="fa fa-chevron-left"></i> BloomFilter原理，实现及优化
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/backend/transaction-isolation-first/" rel="prev" title="事务隔离（一）：ANSI SQL事务隔离级别，限制及扩展">
+                事务隔离（一）：ANSI SQL事务隔离级别，限制及扩展 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">36</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">33</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Charles0429" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81NewSQL%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">为什么需要NewSQL？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#NewSQL%E7%9A%84%E5%88%86%E7%B1%BB"><span class="nav-number">2.</span> <span class="nav-text">NewSQL的分类</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#New-Architectures"><span class="nav-number">2.1.</span> <span class="nav-text">New Architectures</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Transparent-Sharding-Middleware"><span class="nav-number">2.2.</span> <span class="nav-text">Transparent Sharding Middleware</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Database-as-a-Service"><span class="nav-number">2.3.</span> <span class="nav-text">Database-as-a-Service</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#NewSQL%E7%9A%84%E6%8A%80%E6%9C%AF%E6%8C%91%E6%88%98%E6%9C%89%E5%93%AA%E4%BA%9B%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">NewSQL的技术挑战有哪些？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Main-Memory-Storage"><span class="nav-number">3.1.</span> <span class="nav-text">Main Memory Storage</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Partitioning-Sharding"><span class="nav-number">3.2.</span> <span class="nav-text">Partitioning&#x2F;Sharding</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Concurrency-Control"><span class="nav-number">3.3.</span> <span class="nav-text">Concurrency Control</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Atomicity"><span class="nav-number">3.3.1.</span> <span class="nav-text">Atomicity</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Isolation"><span class="nav-number">3.3.2.</span> <span class="nav-text">Isolation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Secondary-Indexes"><span class="nav-number">3.4.</span> <span class="nav-text">Secondary Indexes</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Replication"><span class="nav-number">3.5.</span> <span class="nav-text">Replication</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Crash-Recovery"><span class="nav-number">3.6.</span> <span class="nav-text">Crash Recovery</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AE%A8%E8%AE%BA"><span class="nav-number">4.</span> <span class="nav-text">讨论</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">5.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Charles0429</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

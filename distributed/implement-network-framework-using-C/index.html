@@ -1,0 +1,828 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.lug.ustc.edu.cn/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="分布式,网络编程,C++," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Charles的技术博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="介绍之前写过一篇博文，描述了本人学习分布式系统的思路(链接)。自己动手写分布式KV存储引擎系列文章的目标是记录基于LevelDB(RockDB)构建一个分布式KV存储引擎实现过程，算是对之前学习思路的实践。初步设想，此系列文章会包含以下主题：  如何设计和实现网络框架 如何设计和实现RPC库 分析LevelDB和RockDB的设计和实现原理 如何理解和实现raft&#x2F;paxos算法 如何基于raft">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自己动手写分布式KV存储引擎（一）：　设计和实现网络框架">
+<meta property="og:url" content="http://yoursite.com/distributed/implement-network-framework-using-C/index.html">
+<meta property="og:site_name" content="Charles的技术博客">
+<meta property="og:description" content="介绍之前写过一篇博文，描述了本人学习分布式系统的思路(链接)。自己动手写分布式KV存储引擎系列文章的目标是记录基于LevelDB(RockDB)构建一个分布式KV存储引擎实现过程，算是对之前学习思路的实践。初步设想，此系列文章会包含以下主题：  如何设计和实现网络框架 如何设计和实现RPC库 分析LevelDB和RockDB的设计和实现原理 如何理解和实现raft&#x2F;paxos算法 如何基于raft">
+<meta property="og:locale">
+<meta property="og:image" content="http://oserror.com/images/libeasy_thread_model_1.png">
+<meta property="og:image" content="http://oserror.com/images/libeasy_thread_model_2.png">
+<meta property="og:image" content="http://oserror.com/images/network_packet_process.png">
+<meta property="og:image" content="http://oserror.com/images/network_connect.png">
+<meta property="og:image" content="http://oserror.com/images/network_close.png">
+<meta property="og:image" content="http://oserror.com/images/network_framework_architecture.png">
+<meta property="og:image" content="http://oserror.com/images/reactor_model.png">
+<meta property="og:image" content="http://oserror.com/images/reactor_implementation.png">
+<meta property="og:image" content="http://oserror.com/images/connection_management_implementation.png">
+<meta property="og:image" content="http://oserror.com/images/qcode_wechat.jpg">
+<meta property="article:published_time" content="2016-09-24T09:55:35.000Z">
+<meta property="article:modified_time" content="2021-06-14T13:00:05.525Z">
+<meta property="article:author" content="Charles0429">
+<meta property="article:tag" content="分布式">
+<meta property="article:tag" content="网络编程">
+<meta property="article:tag" content="C++">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://oserror.com/images/libeasy_thread_model_1.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 3109763,
+      author: 'Charles0429'
+    }
+  };
+</script>
+
+  <title> 自己动手写分布式KV存储引擎（一）：　设计和实现网络框架 | Charles的技术博客 </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Charles的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                自己动手写分布式KV存储引擎（一）：　设计和实现网络框架
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-09-24T17:55:35+08:00" content="2016-09-24">
+              2016-09-24
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/distributed/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>之前写过一篇博文，描述了本人学习分布式系统的思路(<a target="_blank" rel="noopener" href="http://oserror.com/distributed/learning-distributed/">链接</a>)。自己动手写分布式KV存储引擎系列文章的目标是记录基于LevelDB(RockDB)构建一个分布式KV存储引擎实现过程，算是对之前学习思路的实践。初步设想，此系列文章会包含以下主题：</p>
+<ul>
+<li>如何设计和实现网络框架</li>
+<li>如何设计和实现RPC库</li>
+<li>分析LevelDB和RockDB的设计和实现原理</li>
+<li>如何理解和实现raft/paxos算法</li>
+<li>如何基于raft/paxos，构建强一致的分布式KV存储引擎</li>
+<li>如何对分布式KV存储提供事务功能</li>
+<li>如何对分布式KV存储系统优化性能</li>
+<li>等等</li>
+</ul>
+<p>此系列文章对应的源码放在<a target="_blank" rel="noopener" href="https://github.com/Charles0429/dstore">DSTORE</a>下。</p>
+<p>本文为此系列第一篇文章，主要是关于如何设计和实现一个基本的网络框架，全文的组织结构如下：</p>
+<ul>
+<li>网络框架的要点</li>
+<li>DSTORE网络框架的设计与实现</li>
+</ul>
+<h1 id="网络框架的要点"><a href="#网络框架的要点" class="headerlink" title="网络框架的要点"></a>网络框架的要点</h1><h2 id="使用TCP还是UDP"><a href="#使用TCP还是UDP" class="headerlink" title="使用TCP还是UDP?"></a>使用TCP还是UDP?</h2><p>由于TCP相对于UDP来讲，可靠性高很多，保证包的按序达到，这对于高可靠的存储系统来讲是十分必要的，因此，本文的网络框架将基于TCP来实现。</p>
+<h2 id="操作系统的选择"><a href="#操作系统的选择" class="headerlink" title="操作系统的选择"></a>操作系统的选择</h2><p>由于目前Linux是服务端编程中主流的操作系统平台，因此，本文的网络框架将基于Linux平台，且为X86_64体系架构。</p>
+<h2 id="Reactor-VS-Proactor"><a href="#Reactor-VS-Proactor" class="headerlink" title="Reactor VS Proactor"></a>Reactor VS Proactor</h2><p>一般Reactor模型基于I/O多路复用来实现，Linux平台提供select,epoll等接口，而Proactor模型一般基于异步I/O来实现，目前Linux系统对这块支持不太好，因此，本文的网络框架将基于Reactor来实现。</p>
+<h2 id="线程模型"><a href="#线程模型" class="headerlink" title="线程模型"></a>线程模型</h2><p>两种常见的线程模型，一是IO线程和工作线程共用相同线程，二是IO线程和工作线程分开。</p>
+<h3 id="I-O线程和工作线程共用"><a href="#I-O线程和工作线程共用" class="headerlink" title="I/O线程和工作线程共用"></a>I/O线程和工作线程共用</h3><p><img src="http://oserror.com/images/libeasy_thread_model_1.png" alt="thread model 1"></p>
+<p>如上图，I/O线程和工作线程共用的线程模型中，实际上是没有专门的工作线程的，I/O线程不仅需要负责处理I/O，还需要真正地处理请求，计算结果。一般典型的处理流程为</p>
+<ul>
+<li>Process Read I/O: 处理读I/O</li>
+<li>Process: 解析请求，计算结果</li>
+<li>Process Write I/O： 处理写I/O，把计算结果返回给客户端</li>
+</ul>
+<p>这种线程模型的特点是</p>
+<ul>
+<li>处理流程相对简单，解析好请求后就能直接在同一线程处理，省去了线程切换的开销，非常适合Process耗费时间较小的请求</li>
+<li>由于Process过程需要耗费时间，对于大任务，可能时间较长，会影响其他请求的处理</li>
+</ul>
+<h3 id="I-O线程和工作线程独立"><a href="#I-O线程和工作线程独立" class="headerlink" title="I/O线程和工作线程独立"></a>I/O线程和工作线程独立</h3><p><img src="http://oserror.com/images/libeasy_thread_model_2.png" alt="thread model 2"></p>
+<p>如上图，在I/O线程和工作线程独立的线程模型中，有专门的工作线程来处理请求，计算结果，I/O线程仅仅需要做读写数据相关的操作。在这种线程模型下，整个流程为</p>
+<ul>
+<li>Process Read I/O:处理读数据，然后解析请求，生成任务，推送到工作线程的队列中，然后以异步事件方式通知工作线程处理</li>
+<li>Process: 工作线程接收到异步事件后，从其工作队列中拿出任务，依次处理，处理完成后，生成结果，放到I/O线程的队列中，然后以异步事件方式通知I/O线程处理</li>
+<li>Process Write I/O：I/O线程收到通知后，依次处理写数据请求</li>
+</ul>
+<p>这种线程模型的特点是</p>
+<ul>
+<li>I/O和计算分开处理，会引入线程切换开销，比较适合Process耗费时间长的任务请求</li>
+<li>对于小任务请求不适合，大量时间耗费在线程切换开销</li>
+</ul>
+<p>对于存储系统，一般计算需求较小，因此采用第一种线程模型。</p>
+<h2 id="I-O线程模型"><a href="#I-O线程模型" class="headerlink" title="I/O线程模型"></a>I/O线程模型</h2><p>选定好在I/O线程中处理任务之后，又需要确定I/O线程具体是如何分工的，一般有三种方式</p>
+<ul>
+<li>单线程做accept和I/O</li>
+<li>单读一个线程accept,其他线程I/O</li>
+<li>多线程，每个线程accept并且Ｉ/O</li>
+</ul>
+<p>主要从两个角度考虑这几个I/O模型的选择</p>
+<ul>
+<li>连接建立的频繁与否</li>
+<li>I/O的吞吐量高与否</li>
+</ul>
+<p>对于第一种模型，比较适合连接建立不频繁的场景，在CPU使用不高的情况下，单线程也可以做到打满网络带宽</p>
+<p>对于第二种模型，比较适合连接建立不频繁的场景，可以通过增加I/O线程的数量，来提升I/O的吞吐量</p>
+<p>对于第三种模型，比较适合连接建立频繁的场景，可以通过增加线程的数量，来提升连接建立的速度和I/O的吞吐量</p>
+<p>对于存储系统调用者来讲，一般会使用连接池，因此，存储系统一般不会频繁的建立连接；并且一般存储系统对I/O吞吐量需要较高，因此，选择第一种和第二种模型。本文中暂时采用第一种模型，如果在第一种模型不能提供足够的I/O带宽的情况下，考虑采用第二种模型。</p>
+<h1 id="DSTORE网络框架设计与实现"><a href="#DSTORE网络框架设计与实现" class="headerlink" title="DSTORE网络框架设计与实现"></a>DSTORE网络框架设计与实现</h1><h2 id="网络框架需要处理的事件"><a href="#网络框架需要处理的事件" class="headerlink" title="网络框架需要处理的事件"></a>网络框架需要处理的事件</h2><p>在描述DSTORE网络框架设计之前，先分析网络框架需要处理的事件</p>
+<h3 id="网络请求处理流程"><a href="#网络请求处理流程" class="headerlink" title="网络请求处理流程"></a>网络请求处理流程</h3><p><img src="http://oserror.com/images/network_packet_process.png" alt="handle request"></p>
+<p>从上面的处理流程可以看出，对于Client和Server，它们需要关注的事情包括</p>
+<ul>
+<li>消息的解码</li>
+<li>对消息的处理，生成响应</li>
+<li>把响应结果根据格式编码</li>
+</ul>
+<p>对于网络框架层，需要关注的是</p>
+<ul>
+<li>读事件及读数据</li>
+<li>写事件及写数据</li>
+</ul>
+<p>网络框架除了需要关注读写事件及读写数据外，还需要处理连接的建立和断开。</p>
+<h3 id="网络连接处理流程"><a href="#网络连接处理流程" class="headerlink" title="网络连接处理流程"></a>网络连接处理流程</h3><p><img src="http://oserror.com/images/network_connect.png" alt="network connection flow"></p>
+<p>网络连接处理流程和网络处理请求流程不太一样，在于Client和Server的处理与网络请求处理的流程不太一致，其流程如下</p>
+<ol>
+<li>Client发起网络框架提供的API connect来请求建立连接</li>
+<li>Client端的网络框架记录此事件，并加入监听</li>
+<li>Client端的操作系统把包发送给通过网卡发送到网络</li>
+<li>Server端的操作系统读取网卡数据，通知网络框架</li>
+<li>Server端网络框架调用accept建立连接，并调用Server的建立连接的接口</li>
+<li>Server端的accept调用会产生一个回包</li>
+<li>Client端的操作系统收到后，触发网络框架的事件</li>
+<li>Client端网络框架通知Client连接已建立</li>
+</ol>
+<p>其中步骤5中accept返回后，其后半步骤与步骤6是并发的，并没有严格的顺序。</p>
+<p>从上述流程可以看出，对于网络连接的建立，Server端和Client端处理调用网络框架的API之外，几乎不需要额外的处理。</p>
+<p>而对于网络框架来讲，在Client和Server端的处理流程是不同的，分别是</p>
+<ul>
+<li>在Client端，网络框架需要调用操作系统提供的connect接口，并且，监听connect完成的事件</li>
+<li>在Server端，网络框架需要调用操作系统提供的accept接口，并且，需要触发server的新建连接的接口(这个连接维护也可以在网络框架中处理)</li>
+</ul>
+<p>网络请求完成后，需要正确地关闭连接，其处理流程如下。</p>
+<h3 id="网络连接关闭流程"><a href="#网络连接关闭流程" class="headerlink" title="网络连接关闭流程"></a>网络连接关闭流程</h3><p><img src="http://oserror.com/images/network_close.png" alt="network close"></p>
+<p>如上图，对于Client端，需要处理的主要是调用网络框架的close API；对于Server端，则需要处理其上维护的连接结构体等等。</p>
+<p>对于网络框架，需要处理的是</p>
+<ul>
+<li>Client端调用close</li>
+<li>Server端需要监听close，然后触发Server端处理(也可以在网络框架中处理)</li>
+</ul>
+<h3 id="网络框架需要处理事件"><a href="#网络框架需要处理事件" class="headerlink" title="网络框架需要处理事件"></a>网络框架需要处理事件</h3><p>通过上面的分析，可以总结出网络框架应该处理以下事件</p>
+<ul>
+<li>处理连接的建立</li>
+<li>处理连接的关闭</li>
+<li>处理读事件和读数据</li>
+<li>处理写事件和写数据</li>
+</ul>
+<p>备注：此文写作时，Client端的网络框架尚未实现。</p>
+<h2 id="DSTORE网络框架设计"><a href="#DSTORE网络框架设计" class="headerlink" title="DSTORE网络框架设计"></a>DSTORE网络框架设计</h2><p>本网络框架的目标是使得Server端和Client端编程时，只需要以下事件</p>
+<p><strong>Server端需要关注的事件</strong></p>
+<ul>
+<li>请求编码</li>
+<li>请求解码</li>
+<li>处理</li>
+</ul>
+<p><strong>Client端需要关注的事件</strong></p>
+<ul>
+<li>请求编码</li>
+<li>请求解码</li>
+<li>处理</li>
+<li>主动调用close关闭连接</li>
+</ul>
+<p>其他的一律由网络框架部分来处理，网络框架的整体框架如下</p>
+<p><img src="http://oserror.com/images/network_framework_architecture.png" alt="network framework architecture"></p>
+<p>网框框架整体包含两部分：</p>
+<ul>
+<li>Reactor负责监听读写事件</li>
+<li>Connection Management负责根据读写事件，来建立连接，关闭连接，读数据和写数据</li>
+</ul>
+<h3 id="Reactor"><a href="#Reactor" class="headerlink" title="Reactor"></a>Reactor</h3><p>一个reactor模式如下图：</p>
+<p><img src="http://oserror.com/images/reactor_model.png" alt="reactor"></p>
+<p>Reactor中组件包括Reactor，EventHandler，I/O multiplexing和Timer</p>
+<ul>
+<li>EventHandler是事件的接口，一般分为I/O事件、定时器事件等等</li>
+<li>I/O multiplexing即I/O多路复用，linux中一般采用epoll接口</li>
+<li>Timer是管理定时器的类，主要负责注册事件、获取超时事件列表等等，一般由网络框架开发者实现</li>
+<li>Reactor中使用了I/O multiplexing和Timer，有EventHandler注册时，会调用相应的接口。Reactor的HandleEvents中需要先调用I/O multiplexing和Timer的接口，获取已就绪好的事件，最终调用每个EventHandler的HandleEvent接口来处理事件</li>
+</ul>
+<p>本文写作时，DSTORE的网络框架还没有实现定时器相关的功能。</p>
+<h3 id="Connection-Management"><a href="#Connection-Management" class="headerlink" title="Connection Management"></a>Connection Management</h3><p>Connection Management主要需要处理如下</p>
+<ul>
+<li>on_read：读事件触发后，读取缓冲区的数据</li>
+<li>on_write：缓冲区空闲后，写入应用所请求要写入的数据</li>
+<li>on_connect：连接建立后，维护连接所必须的结构体和资源</li>
+<li>on_close：连接关闭后，清理连接所必须的结构体和资源</li>
+</ul>
+<h2 id="DSTORE网络框架实现"><a href="#DSTORE网络框架实现" class="headerlink" title="DSTORE网络框架实现"></a>DSTORE网络框架实现</h2><p>本部分主要描述Reactor和Connection Management部分的实现。</p>
+<h3 id="Reactor实现"><a href="#Reactor实现" class="headerlink" title="Reactor实现"></a>Reactor实现</h3><p><img src="http://oserror.com/images/reactor_implementation.png" alt="Reactor"></p>
+<ul>
+<li>EventLoop：对应于Reactor，调用epoll或select的接口</li>
+<li>Event：每个文件描述符对应一个事件，read_cb处理读事件,write_cb处理写事件</li>
+<li>EventPollAPI：I/O多路复用的接口，可以有epoll，select，poll和kqueue等多种实现，本文写作时只封装了epoll的接口</li>
+</ul>
+<p><strong>源码链接</strong></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Charles0429/dstore/blob/master/dstore/network/event_loop.cpp">EventLoop and Event</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/Charles0429/dstore/blob/master/dstore/network/epoll.cpp">Epoll</a></li>
+</ul>
+<h3 id="Connection-Management实现"><a href="#Connection-Management实现" class="headerlink" title="Connection Management实现"></a>Connection Management实现</h3><p><img src="http://oserror.com/images/connection_management_implementation.png" alt="connection management"></p>
+<h4 id="TCPServer"><a href="#TCPServer" class="headerlink" title="TCPServer"></a>TCPServer</h4><p>TCPServer中维护了所有连接的hashmap，用来保存Client端和Server端所有建立的连接情况。</p>
+<p>实现了连接管理中的四种功能：</p>
+<ul>
+<li>读数据</li>
+<li>写数据</li>
+<li>连接建立</li>
+<li>连接关闭</li>
+</ul>
+<p>其中读数据和写数据依赖于EventLoop中每个Event的读事件和写事件的触发</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/Charles0429/dstore/blob/master/dstore/network/tcp_server.cpp">源码</a></p>
+<h4 id="TCPListener"><a href="#TCPListener" class="headerlink" title="TCPListener"></a>TCPListener</h4><p>TCPListener是用来处理accept相关的事件的，包括服务端socket从创建到listen的全过程，以及accept调用的支持。TCPListener调用accept之后，会触发TCPServer中的on_connect事件。</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/Charles0429/dstore/blob/master/dstore/network/tcp_listener.cpp">源码</a></p>
+<h4 id="Connection"><a href="#Connection" class="headerlink" title="Connection"></a>Connection</h4><p>Connection代表了Client与Server端的连接，每个连接上可能会收到客户端的多个请求，其使用链表来维护尚未处理的请求。</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/Charles0429/dstore/blob/master/dstore/network/connection.cpp">源码</a></p>
+<h4 id="Message"><a href="#Message" class="headerlink" title="Message"></a>Message</h4><p>Message代表来自Client的一个完整的消息，Server根据消息中的指定的操作，来进行相应的处理。</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/Charles0429/dstore/blob/master/dstore/network/message.cpp">源码</a></p>
+<h2 id="使用例子"><a href="#使用例子" class="headerlink" title="使用例子"></a>使用例子</h2><p>一个简单的使用例子请参照<a target="_blank" rel="noopener" href="https://github.com/Charles0429/dstore/blob/master/dstore/test/simple_packet_test.cpp">simple_packet_test.cpp</a></p>
+<p>PS:<br>本博客更新会在第一时间推送到微信公众号，欢迎大家关注。</p>
+<p><img src="http://oserror.com/images/qcode_wechat.jpg" alt="qocde_wechat"></p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Charles0429/dstore">DSTORE源码</a></li>
+<li><a target="_blank" rel="noopener" href="http://oserror.com/backend/libev-analysis/">libev设计与实现</a></li>
+<li><a target="_blank" rel="noopener" href="http://oserror.com/backend/libeasy-server-side-framework/">libeasy实现原理</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" rel="tag">#分布式</a>
+          
+            <a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" rel="tag">#网络编程</a>
+          
+            <a href="/tags/C/" rel="tag">#C++</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/distributed/gfs/" rel="next" title="gfs原理">
+                <i class="fa fa-chevron-left"></i> gfs原理
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/distributed/raft-principle-one/" rel="prev" title="raft原理（一）：选主与日志复制">
+                raft原理（一）：选主与日志复制 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">36</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">33</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Charles0429" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E6%A1%86%E6%9E%B6%E7%9A%84%E8%A6%81%E7%82%B9"><span class="nav-number">2.</span> <span class="nav-text">网络框架的要点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8TCP%E8%BF%98%E6%98%AFUDP"><span class="nav-number">2.1.</span> <span class="nav-text">使用TCP还是UDP?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E9%80%89%E6%8B%A9"><span class="nav-number">2.2.</span> <span class="nav-text">操作系统的选择</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reactor-VS-Proactor"><span class="nav-number">2.3.</span> <span class="nav-text">Reactor VS Proactor</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.4.</span> <span class="nav-text">线程模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#I-O%E7%BA%BF%E7%A8%8B%E5%92%8C%E5%B7%A5%E4%BD%9C%E7%BA%BF%E7%A8%8B%E5%85%B1%E7%94%A8"><span class="nav-number">2.4.1.</span> <span class="nav-text">I&#x2F;O线程和工作线程共用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#I-O%E7%BA%BF%E7%A8%8B%E5%92%8C%E5%B7%A5%E4%BD%9C%E7%BA%BF%E7%A8%8B%E7%8B%AC%E7%AB%8B"><span class="nav-number">2.4.2.</span> <span class="nav-text">I&#x2F;O线程和工作线程独立</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#I-O%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.5.</span> <span class="nav-text">I&#x2F;O线程模型</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#DSTORE%E7%BD%91%E7%BB%9C%E6%A1%86%E6%9E%B6%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.</span> <span class="nav-text">DSTORE网络框架设计与实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E6%A1%86%E6%9E%B6%E9%9C%80%E8%A6%81%E5%A4%84%E7%90%86%E7%9A%84%E4%BA%8B%E4%BB%B6"><span class="nav-number">3.1.</span> <span class="nav-text">网络框架需要处理的事件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E8%AF%B7%E6%B1%82%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B"><span class="nav-number">3.1.1.</span> <span class="nav-text">网络请求处理流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B"><span class="nav-number">3.1.2.</span> <span class="nav-text">网络连接处理流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5%E5%85%B3%E9%97%AD%E6%B5%81%E7%A8%8B"><span class="nav-number">3.1.3.</span> <span class="nav-text">网络连接关闭流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E6%A1%86%E6%9E%B6%E9%9C%80%E8%A6%81%E5%A4%84%E7%90%86%E4%BA%8B%E4%BB%B6"><span class="nav-number">3.1.4.</span> <span class="nav-text">网络框架需要处理事件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DSTORE%E7%BD%91%E7%BB%9C%E6%A1%86%E6%9E%B6%E8%AE%BE%E8%AE%A1"><span class="nav-number">3.2.</span> <span class="nav-text">DSTORE网络框架设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Reactor"><span class="nav-number">3.2.1.</span> <span class="nav-text">Reactor</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Connection-Management"><span class="nav-number">3.2.2.</span> <span class="nav-text">Connection Management</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DSTORE%E7%BD%91%E7%BB%9C%E6%A1%86%E6%9E%B6%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.3.</span> <span class="nav-text">DSTORE网络框架实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Reactor%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.3.1.</span> <span class="nav-text">Reactor实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Connection-Management%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.3.2.</span> <span class="nav-text">Connection Management实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#TCPServer"><span class="nav-number">3.3.2.1.</span> <span class="nav-text">TCPServer</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TCPListener"><span class="nav-number">3.3.2.2.</span> <span class="nav-text">TCPListener</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Connection"><span class="nav-number">3.3.2.3.</span> <span class="nav-text">Connection</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Message"><span class="nav-number">3.3.2.4.</span> <span class="nav-text">Message</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E4%BE%8B%E5%AD%90"><span class="nav-number">3.4.</span> <span class="nav-text">使用例子</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">4.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Charles0429</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

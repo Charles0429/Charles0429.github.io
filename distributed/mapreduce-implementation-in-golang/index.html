@@ -1,0 +1,749 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.lug.ustc.edu.cn/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="golang,MapReduce," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Charles的技术博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="介绍本篇文章主要描述了如何使用golang实现一个单机版的MapReduce程序，想法来自于MIT-6.824课程的一个lab。本文分为以下几个模块：  MapReduce基本原理 MapReduce简单使用 MapReduce单机版实现  MapReduce基本原理MapReduce的计算以一组Key&#x2F;Value对为输入，然后输出一组Key&#x2F;Value对，用户通过编写Map和Reduce函数来控">
+<meta property="og:type" content="article">
+<meta property="og:title" content="golang实现单机版MapReduce">
+<meta property="og:url" content="http://yoursite.com/distributed/mapreduce-implementation-in-golang/index.html">
+<meta property="og:site_name" content="Charles的技术博客">
+<meta property="og:description" content="介绍本篇文章主要描述了如何使用golang实现一个单机版的MapReduce程序，想法来自于MIT-6.824课程的一个lab。本文分为以下几个模块：  MapReduce基本原理 MapReduce简单使用 MapReduce单机版实现  MapReduce基本原理MapReduce的计算以一组Key&#x2F;Value对为输入，然后输出一组Key&#x2F;Value对，用户通过编写Map和Reduce函数来控">
+<meta property="og:locale">
+<meta property="og:image" content="http://oserror.com/images/mapreduce_overview.png">
+<meta property="og:image" content="http://oserror.com/images/qcode_wechat.jpg">
+<meta property="article:published_time" content="2016-08-27T09:09:00.000Z">
+<meta property="article:modified_time" content="2021-06-14T13:00:05.525Z">
+<meta property="article:author" content="Charles0429">
+<meta property="article:tag" content="golang">
+<meta property="article:tag" content="MapReduce">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://oserror.com/images/mapreduce_overview.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 3109763,
+      author: 'Charles0429'
+    }
+  };
+</script>
+
+  <title> golang实现单机版MapReduce | Charles的技术博客 </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Charles的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                golang实现单机版MapReduce
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-08-27T17:09:00+08:00" content="2016-08-27">
+              2016-08-27
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/distributed/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>本篇文章主要描述了如何使用golang实现一个单机版的MapReduce程序，想法来自于MIT-6.824课程的一个lab。本文分为以下几个模块：</p>
+<ul>
+<li>MapReduce基本原理</li>
+<li>MapReduce简单使用</li>
+<li>MapReduce单机版实现</li>
+</ul>
+<h1 id="MapReduce基本原理"><a href="#MapReduce基本原理" class="headerlink" title="MapReduce基本原理"></a>MapReduce基本原理</h1><p>MapReduce的计算以一组Key/Value对为输入，然后输出一组Key/Value对，用户通过编写Map和Reduce函数来控制处理逻辑。</p>
+<p>Map函数把输入转换成一组中间的Key/Value对，MapReduce library会把所有Key的中间结果传递给Reduce函数处理。</p>
+<p>Reduce函数接收Key和其对应的一组Value，它的作用就是聚合这些Value，产生最终的结果。Reduce的输入是以迭代器的方式输入，使得MapReduce可以处理数据量比内存大的情况。</p>
+<p>一次MapReduce的处理过程如下图：</p>
+<p><img src="http://oserror.com/images/mapreduce_overview.png"></p>
+<ol>
+<li>MapReduce library会把输入文件划分成多个16到64MB大小的分片（大小可以通过参数调节），然后在一组机器上启动程序。</li>
+<li>其中比较特殊的程序是master，剩下的由master分配任务的程序叫worker。总共有M个map任务和R个reduce任务需要分配，master会选取空闲的worker，然后分配一个map任务或者reduce任务。</li>
+<li>处理map任务的worker会从输入分片读入数据，解析出输入数据的K/V对，然后传递给Map函数，生成的K/V中间结果会缓存在内存中。</li>
+<li>map任务的中间结果会被周期性地写入到磁盘中，以partition函数来分成R个部分。R个部分的磁盘地址会推送到master，然后由它转发给响应的reduce worker。</li>
+<li>当reduce worker接收到master发送的地址信息时，它会通过RPC来向map worker读取对应的数据。当reduce worker读取到了所有的数据，它先按照key来排序，方便聚合操作。</li>
+<li>reduce worker遍历排序好的中间结果，对于相同的key，把其所有数据传入到Reduce函数进行处理，生成最终的结果会被追加到结果文件中。</li>
+<li>当所有的map和reduce任务都完成时，master会唤醒用户程序，然后返回到用户程序空间执行用户代码。</li>
+</ol>
+<p>成功执行后，输出结果在R个文件中，通常，用户不需要合并这R个文件，因为，可以把它们作为新的MapReduce处理逻辑的输入数据，或者其它分布式应用的输入数据。</p>
+<p>更详细的介绍可以参考我之前写的博客<a target="_blank" rel="noopener" href="http://oserror.com/distributed/mapreduce/">MapReduce原理</a></p>
+<h2 id="MapReduce核心组件"><a href="#MapReduce核心组件" class="headerlink" title="MapReduce核心组件"></a>MapReduce核心组件</h2><p>MapReduce核心组件包括Master和Worker，它们的职责分别如下。</p>
+<h3 id="Master"><a href="#Master" class="headerlink" title="Master"></a>Master</h3><p>MapReduce负责一次执行过程中Map和Reduce任务的调度，其需要维护的信息包括如下：</p>
+<ul>
+<li>worker的状态</li>
+<li>任务的状态</li>
+<li>Map生成的文件的位置</li>
+</ul>
+<h3 id="Worker"><a href="#Worker" class="headerlink" title="Worker"></a>Worker</h3><p>Worker分为两种，分别是Map和Reduce：</p>
+<p>Map Worker的职责：</p>
+<ul>
+<li>对分片数据调用用户指定的Map函数</li>
+<li>根据Reduce的个数，把数据分成R份</li>
+</ul>
+<p>Reduce Worker的职责：</p>
+<ul>
+<li>对收集到的数据进行排序</li>
+<li>对于相同的Key调用Reduce函数进行处理</li>
+</ul>
+<h1 id="MapReduce简单使用"><a href="#MapReduce简单使用" class="headerlink" title="MapReduce简单使用"></a>MapReduce简单使用</h1><p>了解MapReduce基本原理后，再来通过一个简单的word count例子，来描述MapReduce的使用方法，代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// The mapping function is called once for each piece of the input.</span></span><br><span class="line"><span class="comment">// In this framework, the key is the name of the file that is being processed,</span></span><br><span class="line"><span class="comment">// and the value is the file&#x27;s contents. The return value should be a slice of</span></span><br><span class="line"><span class="comment">// key/value pairs, each represented by a mapreduce.KeyValue.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mapF</span><span class="params">(document <span class="keyword">string</span>, value <span class="keyword">string</span>)</span> <span class="params">(res []mapreduce.KeyValue)</span></span> &#123;</span><br><span class="line">  <span class="comment">// <span class="doctag">TODO:</span> you have to write this function</span></span><br><span class="line">  f := <span class="function"><span class="keyword">func</span><span class="params">(r <span class="keyword">rune</span>)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">    <span class="keyword">return</span> !unicode.IsLetter(r)</span><br><span class="line">  &#125;</span><br><span class="line">  words := strings.FieldsFunc(value, f)</span><br><span class="line">  <span class="keyword">for</span> _, word := <span class="keyword">range</span> words &#123;</span><br><span class="line">    kv := mapreduce.KeyValue&#123;word, <span class="string">&quot; &quot;</span>&#125;</span><br><span class="line">    res = <span class="built_in">append</span>(res, kv) </span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="comment">// The reduce function is called once for each key generated by Map, with a</span></span><br><span class="line"><span class="comment">// list of that key&#x27;s string value (merged across all inputs). The return value</span></span><br><span class="line"><span class="comment">// should be a single output value for that key.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reduceF</span><span class="params">(key <span class="keyword">string</span>, values []<span class="keyword">string</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">  <span class="comment">// <span class="doctag">TODO:</span> you also have to write this function</span></span><br><span class="line">  s := strconv.Itoa(<span class="built_in">len</span>(values))</span><br><span class="line">  <span class="keyword">return</span> s</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="comment">// Can be run in 3 ways:</span></span><br><span class="line"><span class="comment">// 1) Sequential (e.g., go run wc.go master sequential x1.txt .. xN.txt)</span></span><br><span class="line"><span class="comment">// 2) Master (e.g., go run wc.go master localhost:7777 x1.txt .. xN.txt)</span></span><br><span class="line"><span class="comment">// 3) Worker (e.g., go run wc.go worker localhost:7777 localhost:7778 &amp;)</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">  <span class="keyword">if</span> <span class="built_in">len</span>(os.Args) &lt; <span class="number">4</span> &#123; </span><br><span class="line">    fmt.Printf(<span class="string">&quot;%s: see usage comments in file\n&quot;</span>, os.Args[<span class="number">0</span>])</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> os.Args[<span class="number">1</span>] == <span class="string">&quot;master&quot;</span> &#123;</span><br><span class="line">    <span class="keyword">var</span> mr *mapreduce.Master</span><br><span class="line">    <span class="keyword">if</span> os.Args[<span class="number">2</span>] == <span class="string">&quot;sequential&quot;</span> &#123;</span><br><span class="line">      mr = mapreduce.Sequential(<span class="string">&quot;wcseq&quot;</span>, os.Args[<span class="number">3</span>:], <span class="number">3</span>, mapF, reduceF)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      mr = mapreduce.Distributed(<span class="string">&quot;wcseq&quot;</span>, os.Args[<span class="number">3</span>:], <span class="number">3</span>, os.Args[<span class="number">2</span>])</span><br><span class="line">    &#125;   </span><br><span class="line">    mr.Wait()</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    mapreduce.RunWorker(os.Args[<span class="number">2</span>], os.Args[<span class="number">3</span>], mapF, reduceF, <span class="number">100</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;                   </span><br></pre></td></tr></table></figure>
+
+<p>一个MapReduce程序由三个部分组成：</p>
+<ul>
+<li>Map函数</li>
+<li>Reduce函数</li>
+<li>调用MapReduce执行的函数</li>
+</ul>
+<h2 id="Map函数"><a href="#Map函数" class="headerlink" title="Map函数"></a>Map函数</h2><p>Map函数主要的功能为吐出K/V对</p>
+<h2 id="Reduce函数"><a href="#Reduce函数" class="headerlink" title="Reduce函数"></a>Reduce函数</h2><p>Reduce函数则是对相同的Key做操作，一般是统计之类的功能，具体地看应用的需求。</p>
+<h2 id="调用MapReduce库函数"><a href="#调用MapReduce库函数" class="headerlink" title="调用MapReduce库函数"></a>调用MapReduce库函数</h2><p>分为Sequential和Distributed，其中Sequential为串行地执行Map和Reduce任务，主要用于用户程序调试的场景，Distributed则用于真正的用户程序执行的场景。</p>
+<h1 id="MapReduce单机版实现"><a href="#MapReduce单机版实现" class="headerlink" title="MapReduce单机版实现"></a>MapReduce单机版实现</h1><p>本节实现的MapReduce单机版与Google论文中的MapReduce主要的不同如下：</p>
+<ul>
+<li>输入和输出数据都采用本机的文件系统，没有使用到类似于GFS的分布式文件存储</li>
+<li>Google的MapReduce通过GFS的文件名字的原子操作来保证Reduce Worker宕机时，最终只会生成一份结果文件；在单机文件系统中，如果Worker和Master之间网络通信断掉，但是Worker本身可能还在工作，这时候如果重新启动另一个Worker可能会造成两个Worker写入同一份文件，这种场景，在单机版MapReduce的Worker容灾中不考虑。</li>
+</ul>
+<p>本节分为两个部分来讨论：</p>
+<ul>
+<li>MapReduce的Sequential实现</li>
+<li>MapReduce的Distributed实现(带Worker容灾)</li>
+</ul>
+<h2 id="MapReduce的Sequential实现"><a href="#MapReduce的Sequential实现" class="headerlink" title="MapReduce的Sequential实现"></a>MapReduce的Sequential实现</h2><p>Sequential部分的调度程序实现如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Sequential runs map and reduce tasks sequentially, waiting for each task to            // complete before scheduling the next.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Sequential</span><span class="params">(jobName <span class="keyword">string</span>, files []<span class="keyword">string</span>, nreduce <span class="keyword">int</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">  mapF <span class="keyword">func</span>(<span class="keyword">string</span>, <span class="keyword">string</span>)</span> []<span class="title">KeyValue</span>,</span></span><br><span class="line">  reduceF <span class="function"><span class="keyword">func</span><span class="params">(<span class="keyword">string</span>, []<span class="keyword">string</span>)</span> <span class="title">string</span>,</span></span><br><span class="line">) (mr *Master) &#123;</span><br><span class="line">  mr = newMaster(<span class="string">&quot;master&quot;</span>)</span><br><span class="line">  <span class="keyword">go</span> mr.run(jobName, files, nreduce, <span class="function"><span class="keyword">func</span><span class="params">(phase jobPhase)</span></span> &#123;</span><br><span class="line">    <span class="keyword">switch</span> phase &#123;</span><br><span class="line">    <span class="keyword">case</span> mapPhase:</span><br><span class="line">      <span class="keyword">for</span> i, f := <span class="keyword">range</span> mr.files &#123;</span><br><span class="line">        doMap(mr.jobName, i, f, mr.nReduce, mapF)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">case</span> reducePhase:</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; mr.nReduce; i++ &#123;</span><br><span class="line">        doReduce(mr.jobName, i, <span class="built_in">len</span>(mr.files), reduceF)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; </span><br><span class="line">  &#125;, <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">    mr.stats = []<span class="keyword">int</span>&#123;<span class="built_in">len</span>(files) + nreduce&#125;</span><br><span class="line">  &#125;)  </span><br><span class="line">  <span class="keyword">return</span></span><br><span class="line">&#125;     </span><br></pre></td></tr></table></figure>
+
+<p>其逻辑非常简单，就是按照顺序先一个个的处理Map任务，处理完成之后，再一个个的处理Reduce任务。</p>
+<p>接下来，看doMap和doReduce是如何实现的。</p>
+<p>doMap的实现如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">// doMap does the job of a map worker: it reads one of the input files</span></span><br><span class="line"><span class="comment">// (inFile), calls the user-defined map function (mapF) for that file&#x27;s</span></span><br><span class="line"><span class="comment">// contents, and partitions the output into nReduce intermediate files.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">doMap</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">	jobName <span class="keyword">string</span>, // the name of the MapReduce job</span></span></span><br><span class="line"><span class="params"><span class="function">	mapTaskNumber <span class="keyword">int</span>, // which <span class="keyword">map</span> task this is</span></span></span><br><span class="line"><span class="params"><span class="function">	inFile <span class="keyword">string</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">	nReduce <span class="keyword">int</span>, // the number of reduce task that will be run (&quot;R&quot; in the paper)</span></span></span><br><span class="line">	mapF <span class="function"><span class="keyword">func</span><span class="params">(file <span class="keyword">string</span>, contents <span class="keyword">string</span>)</span> []<span class="title">KeyValue</span>,</span></span><br><span class="line">) &#123;</span><br><span class="line">	<span class="comment">// <span class="doctag">TODO:</span></span></span><br><span class="line">	<span class="comment">// You will need to write this function.</span></span><br><span class="line">	<span class="comment">// You can find the filename for this map task&#x27;s input to reduce task number</span></span><br><span class="line">	<span class="comment">// r using reduceName(jobName, mapTaskNumber, r). The ihash function (given</span></span><br><span class="line">	<span class="comment">// below doMap) should be used to decide which file a given key belongs into.</span></span><br><span class="line">	<span class="comment">//</span></span><br><span class="line">	<span class="comment">// The intermediate output of a map task is stored in the file</span></span><br><span class="line">	<span class="comment">// system as multiple files whose name indicates which map task produced</span></span><br><span class="line">	<span class="comment">// them, as well as which reduce task they are for. Coming up with a</span></span><br><span class="line">	<span class="comment">// scheme for how to store the key/value pairs on disk can be tricky,</span></span><br><span class="line">	<span class="comment">// especially when taking into account that both keys and values could</span></span><br><span class="line">	<span class="comment">// contain newlines, quotes, and any other character you can think of.</span></span><br><span class="line">	<span class="comment">//</span></span><br><span class="line">	<span class="comment">// One format often used for serializing data to a byte stream that the</span></span><br><span class="line">	<span class="comment">// other end can correctly reconstruct is JSON. You are not required to</span></span><br><span class="line">	<span class="comment">// use JSON, but as the output of the reduce tasks *must* be JSON,</span></span><br><span class="line">	<span class="comment">// familiarizing yourself with it here may prove useful. You can write</span></span><br><span class="line">	<span class="comment">// out a data structure as a JSON string to a file using the commented</span></span><br><span class="line">	<span class="comment">// code below. The corresponding decoding functions can be found in</span></span><br><span class="line">	<span class="comment">// common_reduce.go.</span></span><br><span class="line">	<span class="comment">//</span></span><br><span class="line">	<span class="comment">//   enc := json.NewEncoder(file)</span></span><br><span class="line">	<span class="comment">//   for _, kv := ... &#123;</span></span><br><span class="line">	<span class="comment">//     err := enc.Encode(&amp;kv)</span></span><br><span class="line">	<span class="comment">//</span></span><br><span class="line">	<span class="comment">// Remember to close the file after you have written all the values!``</span></span><br><span class="line">	file, err := os.Open(inFile)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatal(err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> file.Close()</span><br><span class="line">	scanner := bufio.NewScanner(file)</span><br><span class="line">	contents := <span class="string">&quot;&quot;</span></span><br><span class="line">	<span class="keyword">for</span> scanner.Scan() &#123;</span><br><span class="line">		s := scanner.Text()</span><br><span class="line">		s += <span class="string">&quot;\n&quot;</span></span><br><span class="line">		contents = contents + s</span><br><span class="line">	&#125;</span><br><span class="line">	kvs := mapF(inFile, contents)</span><br><span class="line">	reduceFileMap := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]*os.File)</span><br><span class="line">	jsonFileMap := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]*json.Encoder)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; nReduce; i++ &#123;</span><br><span class="line">		reduceFileName := reduceName(jobName, mapTaskNumber, i)</span><br><span class="line">		file, err := os.Create(reduceFileName)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			log.Fatal(err)</span><br><span class="line">		&#125;</span><br><span class="line">		enc := json.NewEncoder(file)</span><br><span class="line">		reduceFileMap[reduceFileName] = file</span><br><span class="line">		jsonFileMap[reduceFileName] = enc</span><br><span class="line">		<span class="keyword">defer</span> reduceFileMap[reduceFileName].Close()</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> _, kv := <span class="keyword">range</span> kvs &#123;</span><br><span class="line">		hashValue := <span class="keyword">int</span>(ihash(kv.Key))</span><br><span class="line">		fileNum := hashValue % nReduce</span><br><span class="line">		reduceFileName := reduceName(jobName, mapTaskNumber, fileNum)</span><br><span class="line">		enc, ok := jsonFileMap[reduceFileName]</span><br><span class="line">		<span class="keyword">if</span> !ok &#123;</span><br><span class="line">			log.Fatal(err)</span><br><span class="line">		&#125;</span><br><span class="line">		err := enc.Encode(&amp;kv)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			log.Fatal(err)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>处理过程如下：</p>
+<ul>
+<li>读入输出文件</li>
+<li>调用用户指定的Map函数，吐出所有的K/V对</li>
+<li>创建跟Reduce Worker相同数量的文件，然后，对每个K/V对，根据Key来做hash，输出到对应的文件</li>
+</ul>
+<p>doReduce实现如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// doReduce does the job of a reduce worker: it reads the intermediate</span></span><br><span class="line"><span class="comment">// key/value pairs (produced by the map phase) for this task, sorts the</span></span><br><span class="line"><span class="comment">// intermediate key/value pairs by key, calls the user-defined reduce function</span></span><br><span class="line"><span class="comment">// (reduceF) for each key, and writes the output to disk.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">doReduce</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">	jobName <span class="keyword">string</span>, // the name of the whole MapReduce job</span></span></span><br><span class="line"><span class="params"><span class="function">	reduceTaskNumber <span class="keyword">int</span>, // which reduce task this is</span></span></span><br><span class="line"><span class="params"><span class="function">	nMap <span class="keyword">int</span>, // the number of <span class="keyword">map</span> tasks that were run (&quot;M&quot; in the paper)</span></span></span><br><span class="line">	reduceF <span class="function"><span class="keyword">func</span><span class="params">(key <span class="keyword">string</span>, values []<span class="keyword">string</span>)</span> <span class="title">string</span>,</span></span><br><span class="line">) &#123;</span><br><span class="line">	<span class="comment">// <span class="doctag">TODO:</span></span></span><br><span class="line">	<span class="comment">// You will need to write this function.</span></span><br><span class="line">	<span class="comment">// You can find the intermediate file for this reduce task from map task number</span></span><br><span class="line">	<span class="comment">// m using reduceName(jobName, m, reduceTaskNumber).</span></span><br><span class="line">	<span class="comment">// Remember that you&#x27;ve encoded the values in the intermediate files, so you</span></span><br><span class="line">	<span class="comment">// will need to decode them. If you chose to use JSON, you can read out</span></span><br><span class="line">	<span class="comment">// multiple decoded values by creating a decoder, and then repeatedly calling</span></span><br><span class="line">	<span class="comment">// .Decode() on it until Decode() returns an error.</span></span><br><span class="line">	<span class="comment">//</span></span><br><span class="line">	<span class="comment">// You should write the reduced output in as JSON encoded KeyValue</span></span><br><span class="line">	<span class="comment">// objects to a file named mergeName(jobName, reduceTaskNumber). We require</span></span><br><span class="line">	<span class="comment">// you to use JSON here because that is what the merger than combines the</span></span><br><span class="line">	<span class="comment">// output from all the reduce tasks expects. There is nothing &quot;special&quot; about</span></span><br><span class="line">	<span class="comment">// JSON -- it is just the marshalling format we chose to use. It will look</span></span><br><span class="line">	<span class="comment">// something like this:</span></span><br><span class="line">	<span class="comment">//</span></span><br><span class="line">	<span class="comment">// enc := json.NewEncoder(mergeFile)</span></span><br><span class="line">	<span class="comment">// for key in ... &#123;</span></span><br><span class="line">	<span class="comment">// 	enc.Encode(KeyValue&#123;key, reduceF(...)&#125;)</span></span><br><span class="line">	<span class="comment">// &#125;</span></span><br><span class="line">	<span class="comment">// file.Close()</span></span><br><span class="line">	kvs := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>][]<span class="keyword">string</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; nMap; i++ &#123;</span><br><span class="line">		reduceFileName := reduceName(jobName, i, reduceTaskNumber)</span><br><span class="line">		file, err := os.Open(reduceFileName)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			log.Fatal(err)</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">defer</span> file.Close()</span><br><span class="line">		enc := json.NewDecoder(file)</span><br><span class="line">		<span class="keyword">for</span> &#123;</span><br><span class="line">			<span class="keyword">var</span> kv KeyValue</span><br><span class="line">			<span class="keyword">if</span> err := enc.Decode(&amp;kv); err == io.EOF &#123;</span><br><span class="line">				<span class="keyword">break</span></span><br><span class="line">			&#125; <span class="keyword">else</span> <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">				log.Fatal(err)</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				log.Println(kv.Key + kv.Value)</span><br><span class="line">				kvs[kv.Key] = <span class="built_in">append</span>(kvs[kv.Key], kv.Value)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> keys []<span class="keyword">string</span></span><br><span class="line">	<span class="keyword">for</span> k, _ := <span class="keyword">range</span> kvs &#123;</span><br><span class="line">		keys = <span class="built_in">append</span>(keys, k)</span><br><span class="line">	&#125;</span><br><span class="line">	sort.Sort(sort.StringSlice(keys))</span><br><span class="line">	mergeFileName := mergeName(jobName, reduceTaskNumber)</span><br><span class="line">	mergeFile, err := os.Create(mergeFileName)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatal(err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> mergeFile.Close()</span><br><span class="line">	enc := json.NewEncoder(mergeFile)</span><br><span class="line">	<span class="keyword">for</span> _, key := <span class="keyword">range</span> keys &#123;</span><br><span class="line">		enc.Encode(KeyValue&#123;key, reduceF(key, kvs[key])&#125;)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>Reduce任务的处理逻辑如下：</p>
+<ul>
+<li>根据之前约定好的命名格式，找到该Reduce Worker需要处理的文件，然后，按照约定的方式进行解码</li>
+<li>得到所有的K/V对之后，根据Key对K/V对排序</li>
+<li>调用用户指定的ReduceF函数，对相同的Key的所有Value进行处理</li>
+<li>把处理后的结果以一定的编码方式写入文件</li>
+</ul>
+<h2 id="MapReduce的Distributed实现-带Worker容灾"><a href="#MapReduce的Distributed实现-带Worker容灾" class="headerlink" title="MapReduce的Distributed实现(带Worker容灾)"></a>MapReduce的Distributed实现(带Worker容灾)</h2><p>Distributed和Sequencial的主要区别在于调度函数的实现，如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// schedule starts and waits for all tasks in the given phase (Map or Reduce).</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mr *Master)</span> <span class="title">schedule</span><span class="params">(phase jobPhase)</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> ntasks <span class="keyword">int</span></span><br><span class="line">	<span class="keyword">var</span> nios <span class="keyword">int</span> <span class="comment">// number of inputs (for reduce) or outputs (for map)</span></span><br><span class="line">	<span class="keyword">switch</span> phase &#123;</span><br><span class="line">	<span class="keyword">case</span> mapPhase:</span><br><span class="line">		ntasks = <span class="built_in">len</span>(mr.files)</span><br><span class="line">		nios = mr.nReduce</span><br><span class="line">	<span class="keyword">case</span> reducePhase:</span><br><span class="line">		ntasks = mr.nReduce</span><br><span class="line">		nios = <span class="built_in">len</span>(mr.files)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">&quot;Schedule: %v %v tasks (%d I/Os)\n&quot;</span>, ntasks, phase, nios)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// All ntasks tasks have to be scheduled on workers, and only once all of</span></span><br><span class="line">	<span class="comment">// them have been completed successfully should the function return.</span></span><br><span class="line">	<span class="comment">// Remember that workers may fail, and that any given worker may finish</span></span><br><span class="line">	<span class="comment">// multiple tasks.</span></span><br><span class="line">	<span class="comment">//</span></span><br><span class="line">	<span class="comment">// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO</span></span><br><span class="line">	<span class="comment">//</span></span><br><span class="line">	<span class="keyword">switch</span> phase &#123;</span><br><span class="line">	<span class="keyword">case</span> mapPhase:</span><br><span class="line">		mr.scheduleMap()</span><br><span class="line">	<span class="keyword">case</span> reducePhase:</span><br><span class="line">		mr.scheduleReduce()</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Schedule: %v phase done\n&quot;</span>, phase)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>分为Map和Reduce两阶段的调度，先来看ScheduleMap部分：</p>
+<h3 id="ScheduleMap"><a href="#ScheduleMap" class="headerlink" title="ScheduleMap"></a>ScheduleMap</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> taskStat <span class="keyword">struct</span> &#123;</span><br><span class="line">	taskNumber <span class="keyword">int</span></span><br><span class="line">	ok         <span class="keyword">bool</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mr *Master)</span> <span class="title">checkWorkerExist</span><span class="params">(w <span class="keyword">string</span>)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	mr.Lock()</span><br><span class="line">	<span class="keyword">defer</span> mr.Unlock()</span><br><span class="line">	<span class="keyword">for</span> _, v := <span class="keyword">range</span> mr.workers &#123;</span><br><span class="line">		<span class="keyword">if</span> w == v &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mr *Master)</span> <span class="title">chooseTask</span><span class="params">(failedTasks []<span class="keyword">int</span>, nTaskIndex <span class="keyword">int</span>)</span> <span class="params">([]<span class="keyword">int</span>, <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="number">0</span> == <span class="built_in">len</span>(failedTasks) &#123;</span><br><span class="line">		<span class="keyword">return</span> failedTasks, nTaskIndex</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;choose failed tasks&quot;</span>)</span><br><span class="line">		task := failedTasks[<span class="number">0</span>]</span><br><span class="line">		failedTasks = failedTasks[<span class="number">1</span>:<span class="built_in">len</span>(failedTasks)]</span><br><span class="line">		fmt.Println(<span class="string">&quot;failedTasks&quot;</span>, failedTasks)</span><br><span class="line">		<span class="keyword">return</span> failedTasks, task</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mr *Master)</span> <span class="title">runMapTask</span><span class="params">(nTaskNumber <span class="keyword">int</span>, w <span class="keyword">string</span>, doneTask <span class="keyword">chan</span> taskStat)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> nTaskNumber &lt; <span class="built_in">len</span>(mr.files) &#123;</span><br><span class="line">		<span class="keyword">var</span> args DoTaskArgs</span><br><span class="line">		args.JobName = mr.jobName</span><br><span class="line">		args.File = mr.files[nTaskNumber]</span><br><span class="line">		args.Phase = mapPhase</span><br><span class="line">		args.TaskNumber = nTaskNumber</span><br><span class="line">		args.NumOtherPhase = mr.nReduce</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			ok := call(w, <span class="string">&quot;Worker.DoTask&quot;</span>, args, <span class="built_in">new</span>(<span class="keyword">struct</span>&#123;&#125;))</span><br><span class="line">			<span class="keyword">var</span> taskstat taskStat</span><br><span class="line">			taskstat.taskNumber = args.TaskNumber</span><br><span class="line">			taskstat.ok = ok</span><br><span class="line">			<span class="keyword">if</span> ok &#123;</span><br><span class="line">				doneTask &lt;- taskstat</span><br><span class="line">				fmt.Println(<span class="string">&quot;done task %d&quot;</span>, args.TaskNumber)</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				doneTask &lt;- taskstat</span><br><span class="line">				fmt.Println(<span class="string">&quot;get failed task %d&quot;</span>, args.TaskNumber)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		fmt.Printf(<span class="string">&quot;all tasks sent out&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mr *Master)</span> <span class="title">scheduleMap</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;begin scheduling map tasks&quot;</span>)</span><br><span class="line">	taskWorkerMap := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">int</span>]<span class="keyword">string</span>)</span><br><span class="line">	doneTask := <span class="built_in">make</span>(<span class="keyword">chan</span> taskStat, <span class="number">1</span>)</span><br><span class="line">	<span class="keyword">var</span> nTaskIndex = <span class="number">0</span></span><br><span class="line">	<span class="keyword">var</span> failedTasks []<span class="keyword">int</span></span><br><span class="line">	mr.Lock()</span><br><span class="line">	<span class="keyword">var</span> nInitTask = min(<span class="built_in">len</span>(mr.files), <span class="built_in">len</span>(mr.workers))</span><br><span class="line">	mr.Unlock()</span><br><span class="line">	<span class="keyword">for</span> ; nTaskIndex &lt; nInitTask; nTaskIndex++ &#123;</span><br><span class="line">		mr.Lock()</span><br><span class="line">		w := mr.workers[nTaskIndex]</span><br><span class="line">		mr.Unlock()</span><br><span class="line">		mr.runMapTask(nTaskIndex, w, doneTask)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> newWorker := &lt;-mr.registerChannel:</span><br><span class="line">			fmt.Println(<span class="string">&quot;New Worker register %s&quot;</span>, newWorker)</span><br><span class="line">			<span class="keyword">var</span> nextTask <span class="keyword">int</span></span><br><span class="line">			failedTasks, nextTask = mr.chooseTask(failedTasks, nTaskIndex)</span><br><span class="line">			<span class="keyword">if</span> nextTask &lt; <span class="built_in">len</span>(mr.files) &#123;</span><br><span class="line">				fmt.Println(<span class="string">&quot;nextTask %d, total %d&quot;</span>, nextTask, <span class="built_in">len</span>(mr.files))</span><br><span class="line">				mr.runMapTask(nextTask, newWorker, doneTask)</span><br><span class="line">				taskWorkerMap[nextTask] = newWorker</span><br><span class="line">				<span class="keyword">if</span> nTaskIndex == nextTask &#123;</span><br><span class="line">					nTaskIndex++</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		<span class="keyword">case</span> taskStat := &lt;-doneTask:</span><br><span class="line">			<span class="keyword">var</span> w <span class="keyword">string</span></span><br><span class="line">			taskNumber, ok := taskStat.taskNumber, taskStat.ok</span><br><span class="line">			<span class="keyword">if</span> !ok &#123;</span><br><span class="line">				failedTasks = <span class="built_in">append</span>(failedTasks, taskNumber)</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				w = taskWorkerMap[taskNumber]</span><br><span class="line">				<span class="built_in">delete</span>(taskWorkerMap, taskNumber)</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> mr.checkWorkerExist(w) &#123;</span><br><span class="line">				fmt.Println(<span class="string">&quot;failed task count, failed tasks&quot;</span>, <span class="built_in">len</span>(failedTasks), failedTasks)</span><br><span class="line">				<span class="keyword">var</span> nextTask <span class="keyword">int</span></span><br><span class="line">				failedTasks, nextTask = mr.chooseTask(failedTasks, nTaskIndex)</span><br><span class="line">				<span class="keyword">if</span> nextTask &lt; <span class="built_in">len</span>(mr.files) &#123;</span><br><span class="line">					fmt.Println(<span class="string">&quot;failed task count, failed tasks&quot;</span>, <span class="built_in">len</span>(failedTasks), failedTasks)</span><br><span class="line">					fmt.Println(<span class="string">&quot;nextTask %d, total %d&quot;</span>, nextTask, <span class="built_in">len</span>(mr.files))</span><br><span class="line">					mr.runMapTask(nextTask, w, doneTask)</span><br><span class="line">					taskWorkerMap[nextTask] = w</span><br><span class="line">					<span class="keyword">if</span> nTaskIndex == nextTask &#123;</span><br><span class="line">						nTaskIndex++</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			fmt.Println(<span class="string">&quot;task index %d, task number %d, map count&quot;</span>, nTaskIndex, taskNumber, <span class="built_in">len</span>(taskWorkerMap))</span><br><span class="line">			<span class="keyword">for</span> k, v := <span class="keyword">range</span> taskWorkerMap &#123;</span><br><span class="line">				fmt.Println(<span class="string">&quot;%s:%v&quot;</span>, k, v)</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> (nTaskIndex == <span class="built_in">len</span>(mr.files)) &amp;&amp; (<span class="number">0</span> == <span class="built_in">len</span>(taskWorkerMap)) &#123;</span><br><span class="line">				fmt.Println(<span class="string">&quot;all tasks in mapPhase is done&quot;</span>)</span><br><span class="line">				<span class="keyword">return</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>先根据已注册的Worker数量，生成相应数量的Map任务，然后发送给Worker执行</li>
+<li>接下来在，在select中处理两种事件：一是有新Worker注册的事件；二是之前调度的任务执行完成的事件</li>
+</ul>
+<p><strong>不带Worker容灾的处理：</strong></p>
+<p>处理新Worker注册的事件的方式为选择下一个要执行的任务，发送给新注册的Worker去执行。</p>
+<p>处理调度完成的事件的方式为选择下个需要执行的任务，调度给刚刚完成执行任务的Worker执行。当所有的Map任务都处理完成后，表示Map阶段完成，退出调度。</p>
+<p><strong>带Worker容灾的处理：</strong></p>
+<p>Worker容灾的处理逻辑为，当任务执行失败时，加入到执行失败的任务队列中，当发生上述两种事件时，先从失败的任务队列中拿下一个任务执行，只有当失败的任务队列为空时，才调度新的任务执行。</p>
+<h3 id="ScheduleReduce"><a href="#ScheduleReduce" class="headerlink" title="ScheduleReduce"></a>ScheduleReduce</h3><p>ScheduleReduce的实现如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mr *Master)</span> <span class="title">scheduleReduce</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;start scheduling reduce tasks&quot;</span>)</span><br><span class="line">	taskWorkerMap := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">int</span>]<span class="keyword">string</span>)</span><br><span class="line">	doneTask := <span class="built_in">make</span>(<span class="keyword">chan</span> taskStat, <span class="number">1</span>)</span><br><span class="line">	<span class="keyword">var</span> failedTasks []<span class="keyword">int</span></span><br><span class="line">	<span class="keyword">var</span> nTaskIndex = <span class="number">0</span></span><br><span class="line">	mr.Lock()</span><br><span class="line">	<span class="keyword">var</span> nInitTask = min(mr.nReduce, <span class="built_in">len</span>(mr.workers))</span><br><span class="line">	mr.Unlock()</span><br><span class="line">	<span class="keyword">for</span> ; nTaskIndex &lt; nInitTask; nTaskIndex++ &#123;</span><br><span class="line">		mr.Lock()</span><br><span class="line">		w := mr.workers[nTaskIndex]</span><br><span class="line">		mr.Unlock()</span><br><span class="line">		taskWorkerMap[nTaskIndex] = w</span><br><span class="line">		mr.runReduceTask(nTaskIndex, w, doneTask)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> newWorker := &lt;-mr.registerChannel:</span><br><span class="line">			fmt.Println(<span class="string">&quot;New Worker register %s&quot;</span>, newWorker)</span><br><span class="line">			<span class="keyword">var</span> nextTask <span class="keyword">int</span></span><br><span class="line">			failedTasks, nextTask = mr.chooseTask(failedTasks, nTaskIndex)</span><br><span class="line">			<span class="keyword">if</span> nextTask &lt; mr.nReduce &#123;</span><br><span class="line">				fmt.Println(<span class="string">&quot;nextTask %d, total %d&quot;</span>, nextTask, <span class="built_in">len</span>(mr.files))</span><br><span class="line">				mr.runReduceTask(nextTask, newWorker, doneTask)</span><br><span class="line">				taskWorkerMap[nextTask] = newWorker</span><br><span class="line">				<span class="keyword">if</span> nTaskIndex == nextTask &#123;</span><br><span class="line">					nTaskIndex++</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		<span class="keyword">case</span> taskStat := &lt;-doneTask:</span><br><span class="line">			<span class="keyword">var</span> w <span class="keyword">string</span></span><br><span class="line">			taskNumber, ok := taskStat.taskNumber, taskStat.ok</span><br><span class="line">			<span class="keyword">if</span> !ok &#123;</span><br><span class="line">				failedTasks = <span class="built_in">append</span>(failedTasks, taskNumber)</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				w = taskWorkerMap[taskNumber]</span><br><span class="line">				<span class="built_in">delete</span>(taskWorkerMap, taskNumber)</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> mr.checkWorkerExist(w) &#123;</span><br><span class="line">				<span class="keyword">var</span> nextTask <span class="keyword">int</span></span><br><span class="line">				failedTasks, nextTask = mr.chooseTask(failedTasks, nTaskIndex)</span><br><span class="line">				<span class="keyword">if</span> nextTask &lt; mr.nReduce &#123;</span><br><span class="line">					fmt.Println(<span class="string">&quot;nextTask %d, total %d&quot;</span>, nextTask, <span class="built_in">len</span>(mr.files))</span><br><span class="line">					mr.runReduceTask(nextTask, w, doneTask)</span><br><span class="line">					taskWorkerMap[nextTask] = w</span><br><span class="line">					<span class="keyword">if</span> nTaskIndex == nextTask &#123;</span><br><span class="line">						nTaskIndex++</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			fmt.Println(<span class="string">&quot;task index %d, task number %d, map count&quot;</span>, nTaskIndex, taskNumber, <span class="built_in">len</span>(taskWorkerMap))</span><br><span class="line">			<span class="keyword">for</span> k, v := <span class="keyword">range</span> taskWorkerMap &#123;</span><br><span class="line">				fmt.Println(<span class="string">&quot;%s:%v&quot;</span>, k, v)</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> (nTaskIndex == mr.nReduce) &amp;&amp; (<span class="number">0</span> == <span class="built_in">len</span>(taskWorkerMap)) &#123;</span><br><span class="line">				fmt.Println(<span class="string">&quot;all tasks in mapPhase is done&quot;</span>)</span><br><span class="line">				<span class="keyword">return</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>整体的处理逻辑和ScheduleMap类似，如下</p>
+<ul>
+<li>先根据已注册的Worker数量，生成相应数量的Reduce任务，然后发送给Worker执行</li>
+<li>接下来在，在select中处理两种事件：一是有新Worker注册的事件；二是之前调度的任务执行完成的事件</li>
+</ul>
+<p>容灾过程也是类似的，不再赘述。</p>
+<p>博客中用到的程序放在<a target="_blank" rel="noopener" href="https://github.com/Charles0429/toys/tree/master/6.824/src/mapreduce">链接</a>中，有需要的同学自取。</p>
+<p>PS:<br>本博客更新会在第一时间推送到微信公众号，欢迎大家关注。</p>
+<p><img src="http://oserror.com/images/qcode_wechat.jpg" alt="qocde_wechat"></p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><ul>
+<li><a target="_blank" rel="noopener" href="http://research.google.com/archive/mapreduce-osdi04.pdf">MapReduce: Simplified Data Processing on Large Clusters</a></li>
+<li><a target="_blank" rel="noopener" href="http://oserror.com/distributed/mapreduce/">MapReduce原理</a></li>
+<li><a target="_blank" rel="noopener" href="https://pdos.csail.mit.edu/6.824/labs/lab-1.html">MIT 6.824 MapReduce lab</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/golang/" rel="tag">#golang</a>
+          
+            <a href="/tags/MapReduce/" rel="tag">#MapReduce</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/language/C-template/" rel="next" title="C++ template基础">
+                <i class="fa fa-chevron-left"></i> C++ template基础
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/language/golang-reflection/" rel="prev" title="golang reflection学习笔记">
+                golang reflection学习笔记 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">36</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">33</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Charles0429" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MapReduce%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">MapReduce基本原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#MapReduce%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6"><span class="nav-number">2.1.</span> <span class="nav-text">MapReduce核心组件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Master"><span class="nav-number">2.1.1.</span> <span class="nav-text">Master</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Worker"><span class="nav-number">2.1.2.</span> <span class="nav-text">Worker</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MapReduce%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8"><span class="nav-number">3.</span> <span class="nav-text">MapReduce简单使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Map%E5%87%BD%E6%95%B0"><span class="nav-number">3.1.</span> <span class="nav-text">Map函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reduce%E5%87%BD%E6%95%B0"><span class="nav-number">3.2.</span> <span class="nav-text">Reduce函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B0%83%E7%94%A8MapReduce%E5%BA%93%E5%87%BD%E6%95%B0"><span class="nav-number">3.3.</span> <span class="nav-text">调用MapReduce库函数</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MapReduce%E5%8D%95%E6%9C%BA%E7%89%88%E5%AE%9E%E7%8E%B0"><span class="nav-number">4.</span> <span class="nav-text">MapReduce单机版实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#MapReduce%E7%9A%84Sequential%E5%AE%9E%E7%8E%B0"><span class="nav-number">4.1.</span> <span class="nav-text">MapReduce的Sequential实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MapReduce%E7%9A%84Distributed%E5%AE%9E%E7%8E%B0-%E5%B8%A6Worker%E5%AE%B9%E7%81%BE"><span class="nav-number">4.2.</span> <span class="nav-text">MapReduce的Distributed实现(带Worker容灾)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ScheduleMap"><span class="nav-number">4.2.1.</span> <span class="nav-text">ScheduleMap</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ScheduleReduce"><span class="nav-number">4.2.2.</span> <span class="nav-text">ScheduleReduce</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">5.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Charles0429</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,736 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.lug.ustc.edu.cn/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="libeasy,C/C++,数据结构," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Charles的技术博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="1. 简介libeasy网络框架包含了基础数据结构、内存管理、线程池、io管理以及包处理等模块，本文分析的是基础数据结构模块。基础数据结构模块包括简单的内存池、缓冲区管理、链表、数组、字符串、哈希表等。 2. 简单内存池 libeasy内存池的内存分配情况如上图所示，主要有两种大小的内存，一种是默认的小块内存，称为Block；另一种是大块的内存，用于存放大块内存申请的数据部分，称为Large Da">
+<meta property="og:type" content="article">
+<meta property="og:title" content="libeasy基础数据结构">
+<meta property="og:url" content="http://yoursite.com/backend/libeasy-data-structure/index.html">
+<meta property="og:site_name" content="Charles的技术博客">
+<meta property="og:description" content="1. 简介libeasy网络框架包含了基础数据结构、内存管理、线程池、io管理以及包处理等模块，本文分析的是基础数据结构模块。基础数据结构模块包括简单的内存池、缓冲区管理、链表、数组、字符串、哈希表等。 2. 简单内存池 libeasy内存池的内存分配情况如上图所示，主要有两种大小的内存，一种是默认的小块内存，称为Block；另一种是大块的内存，用于存放大块内存申请的数据部分，称为Large Da">
+<meta property="og:locale">
+<meta property="og:image" content="http://oserror.com/images/libeasy_simple_pool.png">
+<meta property="og:image" content="http://oserror.com/images/libeasy_buffer.png">
+<meta property="og:image" content="http://oserror.com/images/qcode_wechat.jpg">
+<meta property="article:published_time" content="2016-06-14T00:05:25.000Z">
+<meta property="article:modified_time" content="2021-06-14T13:00:05.525Z">
+<meta property="article:author" content="Charles0429">
+<meta property="article:tag" content="libeasy">
+<meta property="article:tag" content="C&#x2F;C++">
+<meta property="article:tag" content="数据结构">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://oserror.com/images/libeasy_simple_pool.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 3109763,
+      author: 'Charles0429'
+    }
+  };
+</script>
+
+  <title> libeasy基础数据结构 | Charles的技术博客 </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Charles的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                libeasy基础数据结构
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-06-14T08:05:25+08:00" content="2016-06-14">
+              2016-06-14
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/backend/" itemprop="url" rel="index">
+                    <span itemprop="name">后台开发</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="1-简介"><a href="#1-简介" class="headerlink" title="1. 简介"></a>1. 简介</h1><p>libeasy网络框架包含了基础数据结构、内存管理、线程池、io管理以及包处理等模块，本文分析的是基础数据结构模块。基础数据结构模块包括简单的内存池、缓冲区管理、链表、数组、字符串、哈希表等。</p>
+<h1 id="2-简单内存池"><a href="#2-简单内存池" class="headerlink" title="2. 简单内存池"></a>2. 简单内存池</h1><p><img src="http://oserror.com/images/libeasy_simple_pool.png" alt="libeasy pool"></p>
+<p>libeasy内存池的内存分配情况如上图所示，主要有两种大小的内存，一种是默认的小块内存，称为Block；另一种是大块的内存，用于存放大块内存申请的数据部分，称为Large Data Area。</p>
+<p>Block的大小是固定的，由内存池的使用者在初始化的时候指定，其用于存放申请的小块内存的Header和Data部分，以及大块内存的Header部分，多个Block之间采用链表的方式链接。Large Data Area的大小不是固定的，由用户申请的内存大小决定，但一定比Block要大，用来存放大块内存申请的数据部分。</p>
+<p>以小块内存申请和大块内存申请的过程来讨论libeasy内存池的管理：</p>
+<h2 id="2-1-小块内存申请"><a href="#2-1-小块内存申请" class="headerlink" title="2.1 小块内存申请"></a>2.1 小块内存申请</h2><p>如图所示，假设申请的内存空间为S1字节，其中S1小于Block的大小。libeasy会从资源池的某个Block开始遍历，寻找Block剩余空间能容纳下当前申请S1字节的空间，则在当前Block分配存储空间；如果要申请的内存空间S2比当前所有Block的剩余空间要大，那么需要重新分配Block来存放。</p>
+<h2 id="2-2-大块内存申请"><a href="#2-2-大块内存申请" class="headerlink" title="2.2 大块内存申请"></a>2.2 大块内存申请</h2><p>如图所示，当申请的内存空间的大小大于Block时，说明任何一个Block都不可能存放下，此时，libeasy采用的方式是完全重新分配一块内存空间，大小正好和申请的内存空间大小相同，用于存放数据部分，而头部字段则还是存放在Block中。</p>
+<p>注意：大块内存申请的时候有头部字段，主要用于将Large Area Data用链表方式串联起来，方便后续释放Large Data Area的内存空间。</p>
+<p>另外，这里小块内存申请的时候是没有头部字段的，所以，小块内存申请的空间是不允许释放的（如果可以释放，需要管理Block内部的内存碎片，会使得资源池管理复杂），libeasy只允许以整个内存池为单位来进行内存空间的释放，这种方式是会造成一定程度上的内存空间浪费的，有可能Block中或Large Data Area中有部分数据不需要使用可以释放，但用户无法主动释放。</p>
+<h1 id="3-缓冲区"><a href="#3-缓冲区" class="headerlink" title="3. 缓冲区"></a>3. 缓冲区</h1><p>libeasy中的缓冲区包括三种，字符串缓冲区、普通缓冲区和文件缓冲区。</p>
+<h2 id="3-1-字符串缓冲区"><a href="#3-1-字符串缓冲区" class="headerlink" title="3.1 字符串缓冲区"></a>3.1 字符串缓冲区</h2><p>其定义如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">easy_buf_string_t</span> &#123;</span></span><br><span class="line">	<span class="keyword">char</span> *data;</span><br><span class="line">    <span class="keyword">int</span> len;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>相对于C的普通字符串，多了一个字段记录长度信息。字符串缓冲区的内存申请都是使用简单内存池的接口，以其中的缓冲区copy函数为例来说明</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">easy_buf_string_copy</span><span class="params">(<span class="keyword">easy_pool_t</span> *pool, <span class="keyword">easy_buf_string_t</span> *d, <span class="keyword">const</span> <span class="keyword">easy_buf_string_t</span> *s)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (s-&gt;len &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    	d-&gt;data = (<span class="keyword">char</span> *)<span class="built_in">easy_pool_alloc</span>(pool, s-&gt;len + <span class="number">1</span>);</span><br><span class="line">        <span class="built_in">memcpy</span>(d-&gt;data, s-&gt;data, s-&gt;len);</span><br><span class="line">        d-&gt;data[s-&gt;len] = <span class="string">&#x27;\0&#x27;</span>;</span><br><span class="line">        d-&gt;len = s-&gt;len;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> s-&gt;len;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如上所示，目标d直接从简单内存池中申请内存空间，然后使用memcpy把源字符串缓冲区内容拷贝过来。</p>
+<p>注意：这里d之前的内存空间如果不是采用简单内存池方式申请，那么需要先释放，否则会造成内存泄露。如果是从简单内存池申请的，则会有内存池最后清理的时候释放空间。</p>
+<h2 id="3-2-普通缓冲区"><a href="#3-2-普通缓冲区" class="headerlink" title="3.2 普通缓冲区"></a>3.2 普通缓冲区</h2><p>普通缓冲区的结构体如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EASY_BUF_DEFINE             \</span></span><br><span class="line"><span class="meta">    easy_list_t         node;       \</span></span><br><span class="line"><span class="meta">    int                 flags;      \</span></span><br><span class="line"><span class="meta">    easy_buf_cleanup_pt *cleanup;   \</span></span><br><span class="line"><span class="meta">    void                *args;</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">easy_buf_t</span> &#123;</span></span><br><span class="line">    EASY_BUF_DEFINE;</span><br><span class="line">    <span class="keyword">char</span>                *pos;</span><br><span class="line">    <span class="keyword">char</span>                *last;</span><br><span class="line">    <span class="keyword">char</span>                *end;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>其中，最关键的三个字段，pos,last和end的关系如下图。</p>
+<p><img src="http://oserror.com/images/libeasy_buffer.png" alt="libeasy buf"></p>
+<p>pos代表缓冲区的开始部分，last则表示缓冲区已经使用的部分，end表示缓冲区末尾的部分。</p>
+<p>libeasy在对读写缓冲区的管理上有所区别，如下</p>
+<ul>
+<li>对于读缓冲区，如果有个请求申请的空间大于其剩余空间，它会以1.5倍当前空间重新从简单资源池申请空间，然后把原先缓冲区的内容拷贝进去。</li>
+<li>对于写缓冲区，如果申请的空间大于其剩余空间，则会重新申请一个easy_buf_t，然后通过链表的方式串联在之前缓冲区的后面。</li>
+</ul>
+<p>个人认为，libeasy对于读写缓冲区管理不同的原因在于，对于server端，读到的数据量往往比较小，通常不需要扩展缓冲区的内存空间，而对于写来讲，一般数据量可能会比较大，所以，采用缓冲区链的方式，避免内存的多次重复拷贝。</p>
+<h2 id="3-3-文件缓冲区"><a href="#3-3-文件缓冲区" class="headerlink" title="3.3 文件缓冲区"></a>3.3 文件缓冲区</h2><p>文件缓冲区的结构体如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">easy_file_buf_t</span> &#123;</span></span><br><span class="line">    EASY_BUF_DEFINE;</span><br><span class="line">    <span class="keyword">int</span>                 fd;</span><br><span class="line">    <span class="keyword">int64_t</span>             offset;</span><br><span class="line">    <span class="keyword">int64_t</span>             count;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>比较特殊的是增加了fd,offset和count字段。fd是文件描述符，offset是要读写的偏移量，count目前还不清楚用来做什么。</p>
+<p>另外文件缓冲区还会在flag字段设置EASY_BUF_FILE以区别普通缓冲区，对于一个操作完成的文件，可以设置EASY_BUF_CLOSE_FILE，来标识文件需要关闭。</p>
+<h1 id="4-链表"><a href="#4-链表" class="headerlink" title="4. 链表"></a>4. 链表</h1><p>libeasy的双链表是借鉴linux内核双链表的，所以，本节以linux内核双链表为例来说明。</p>
+<p>首先，先说明一下为什么需要单独的写双链表，直接在结构体里面写<code>struct XXXType *next</code>不就完了吗？</p>
+<h2 id="4-1-为什么不采用普通的结构体定义next指针的方法？"><a href="#4-1-为什么不采用普通的结构体定义next指针的方法？" class="headerlink" title="4.1 为什么不采用普通的结构体定义next指针的方法？"></a>4.1 为什么不采用普通的结构体定义next指针的方法？</h2><p>在学数据结构时，我们经常用的定义双链表的方法这样的</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">linklist</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    ElementType data;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">linklist</span> *<span class="title">next</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">linklist</span> *<span class="title">prev</span>;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这么定义的话，一般会有下面几个缺点：</p>
+<p><strong>一个结构体对应多个链表的话，那么需要定义多次next和prev指针</strong>，比如，有一个结构体定义如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">student</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    ElementType data;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">linklist</span> *<span class="title">all_next</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">linklist</span> *<span class="title">all_prev</span>;</span> </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">linklist</span> *<span class="title">m_next</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">linklist</span> *<span class="title">m_prev</span>;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如上代码所示，一个学生属于整个学校的学生中的一个，所以，整个学生的学生组成了一个链表(all_next),而学校里面每个年级也有相应的学生，为了快速管理某个年级的学生的信息，那么需要把某个年级的学生串成一个链表(m_next)，那么这样的话，每次学生有个新角色要加入，都必须加入对应的链表的prev和next指针，并且，对应的遍历等操作也需要增加新的代码。</p>
+<p><strong>针对struct linklist写出来的代码可能不具有通用性</strong>，针对每一种ElementType，可能对应的代码都需要做相应的变化，造成linklist需要维护大量的额外的信息(每种ElementType可能只用到了其中的一种)</p>
+<h2 id="4-2-linux内核双链表"><a href="#4-2-linux内核双链表" class="headerlink" title="4.2 linux内核双链表"></a>4.2 linux内核双链表</h2><p>由于上面的缺点，linux内核中使用的双链表，把数据和链表结构分开，完美了克服了普通链表的缺点，其定义一般为如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>&#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> *<span class="title">next</span>, *<span class="title">prev</span>;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这是通用的链表结构，在我们需要使用链表的结构体中，定义一个它就能使用通用链表提供的插入，删除，遍历等等操作了。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">node</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    ElementType data;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">list</span>;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>先以一个例子来说明</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;../src/list.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">test</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="keyword">int</span> val;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">entry</span>;</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">head</span>;</span> <span class="comment">//定义链表的头节点，通过这个就可以做各种操作了。</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">test</span> *<span class="title">t</span>;</span></span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> *<span class="title">pos</span>, *<span class="title">next</span>;</span></span><br><span class="line">    <span class="built_in">INIT_LIST_HEAD</span>(&amp;head);</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        t = (struct test *)<span class="built_in">malloc</span>(<span class="built_in"><span class="keyword">sizeof</span></span>(struct test));</span><br><span class="line">        t-&gt;val = i;</span><br><span class="line">        <span class="built_in">list_add_tail</span>(&amp;(t-&gt;entry), &amp;head); <span class="comment">//往链表中插入数据</span></span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="built_in">list_for_each</span>(pos, &amp;head) <span class="comment">//遍历链表</span></span><br><span class="line">    &#123;</span><br><span class="line">        t = <span class="built_in">list_entry</span>(pos, struct test, entry);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%d\t&quot;</span>, t-&gt;val);</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="built_in">list_for_each_safe</span>(pos, next, &amp;head) <span class="comment">//在有删除的情况下，遍历链表</span></span><br><span class="line">    &#123;</span><br><span class="line">        t = <span class="built_in">list_entry</span>(pos, struct test, entry);</span><br><span class="line"> </span><br><span class="line">        <span class="keyword">if</span>(t-&gt;val == <span class="number">2</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">list_del_init</span>(pos);</span><br><span class="line">            <span class="built_in">free</span>(t);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    <span class="built_in">list_for_each</span>(pos, &amp;head)</span><br><span class="line">    &#123;</span><br><span class="line">        t = <span class="built_in">list_entry</span>(pos, struct test, entry);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%d\t&quot;</span>, t-&gt;val);</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+
+<h3 id="4-2-1-原理"><a href="#4-2-1-原理" class="headerlink" title="4.2.1 原理"></a>4.2.1 原理</h3><p>细心的朋友可能看到，在遍历双链表的时候，明明程序就只有一个头节点，类型为<code>struct list_head</code>，那么怎么能就获取到类型为 <code>struct test</code>对应结构体的指针呢？</p>
+<p>关于这个问题，需要理解两个宏，首先是</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> offsetof(type, member) \</span></span><br><span class="line"><span class="meta">    ((size_t)&amp;(((type *)0)-&gt;member))</span></span><br></pre></td></tr></table></figure>
+
+<p>首先是根据结构体中某个变量的名称来获得其在结构体中的偏移的宏，仔细看上面的定义：</p>
+<ul>
+<li><code>(type *)0</code> ,把0强制类型转换成<code>type *</code></li>
+<li><code>((type *)0)-&gt;member)</code>, 把0看成结构体的开始地址，那么member成员所在的地址就是member在结构体的偏移量</li>
+<li><code>&amp;(((type *)0)-&gt;member))</code> 则就是获取地址偏移量</li>
+<li>最后用size_t转成可移植的偏移量，在32位系统中是32位，在64位系统中是64位。</li>
+</ul>
+<p>理解了第一个宏之后，我们先来回顾一下上面遍历的代码:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">list_for_each</span>(pos, &amp;head) <span class="comment">//遍历链表</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//由类型为struct list_head *的pos，来获取其所在的结构体struct test *的位置</span></span><br><span class="line">    t = <span class="built_in">list_entry</span>(pos, struct test, entry); </span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d\t&quot;</span>, t-&gt;val);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有了上面的offset宏，我们可以想到的是，我们先由pos指针的值和pos结构体的entry变量的偏移量相减，得到结构体的对应的内存地址，然后再强制转换成(struct test *)即可，这也就是第二个要理解的宏所实现的功能：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> container_of(ptr, type, member) \</span></span><br><span class="line"><span class="meta">(&#123;                                      \</span></span><br><span class="line"><span class="meta">    const typeof( ((type *)0)-&gt;member ) *_mptr = (ptr); \</span></span><br><span class="line"><span class="meta">    (type *)((char *)_mptr - offsetof(type, member)); \</span></span><br><span class="line"><span class="meta">&#125;)</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>先定义了一个指针，其值等于ptr</li>
+<li><code>offsetof(type, member))</code>:获取ptr在struct的member相对于struct起始地址的偏移量</li>
+<li>因为offsetof等到的是个整数，为了准确减去这个整数，需要先把_mptr转成char *类型，一个<code>sizeof(char) == 1</code></li>
+<li>最后把得到的结构体的地址强制类型转换成<code>struct type *</code>，这样就能得到结构体的地址了。</li>
+</ul>
+<p>有了上面两个宏，实现双链表的各种操作就不难了，由于offsetof和container_of是定义在linux的标准库里面的，所以linux的双链表移植性不好，所以libeasy自己实现了类似的一套操作，这里不再赘述。</p>
+<h2 id="5-数组"><a href="#5-数组" class="headerlink" title="5. 数组"></a>5. 数组</h2><p>libeasy的数组的结构体定义如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">easy_array_t</span> &#123;</span></span><br><span class="line">	<span class="keyword">easy_pool_t</span> *pool;</span><br><span class="line">    <span class="keyword">easy_list_t</span> list;</span><br><span class="line">    <span class="keyword">int</span> object_size;</span><br><span class="line">    <span class="keyword">int</span> count;</span><br><span class="line">&#125; <span class="keyword">easy_array_t</span>;</span><br></pre></td></tr></table></figure>
+
+<p>其中pool是用来申请内存空间的简单内存池，list用来存free list，分配内存时优先从free list拿，拿不到再去pool里面申请。object_size记录的是单个array元素的size，count则是free list的元素个数。</p>
+<p>array主要涉及到alloc和free操作。</p>
+<p><strong>alloc</strong></p>
+<ol>
+<li>先看free list是否为空，若不为空，则从free list里摘取一个元素</li>
+<li>如果为空，则从pool申请一个元素</li>
+</ol>
+<p><strong>free</strong></p>
+<ol>
+<li>把释放的元素放到free list中</li>
+</ol>
+<h1 id="6-字符串"><a href="#6-字符串" class="headerlink" title="6. 字符串"></a>6. 字符串</h1><p>libeasy的easy_string中并没有定义新的字符串相关的类型，而是实现了一些字符串相关的操作，例如strncpy，toupper，tolower之类的，属于常见的C语言的字符串操作，这里不就详细讲了。</p>
+<h1 id="7-哈希表"><a href="#7-哈希表" class="headerlink" title="7. 哈希表"></a>7. 哈希表</h1><p>哈希表主要考虑的几个因素包括，哈希函数、解决冲突的方法和扩张的时机。</p>
+<h2 id="7-1-哈希函数"><a href="#7-1-哈希函数" class="headerlink" title="7.1 哈希函数"></a>7.1 哈希函数</h2><p>libeasy里面普通的哈希表和针对字符串的哈希函数不一样，猜测是针对字符串的是更好的在多个哈希桶之间做均衡。</p>
+<h2 id="7-2-解决冲突的方法"><a href="#7-2-解决冲突的方法" class="headerlink" title="7.2 解决冲突的方法"></a>7.2 解决冲突的方法</h2><p>libeasy里解决冲突的方法采用的是开链法，即每个桶对应的其实是一个链表，如果在某个key产生冲突的话，则放到相同的链表上即可。</p>
+<p>工业界的哈希表中大多数都是采用这种方法来做的，例如memcached和redis。</p>
+<h2 id="7-3-扩张的时机"><a href="#7-3-扩张的时机" class="headerlink" title="7.3 扩张的时机"></a>7.3 扩张的时机</h2><p>当哈希表的元素个数增加较多时，会造成哈希桶的链表中有较多的元素，这样每次查找时，都得遍历哈希桶的链表，才能找到对应元素。哈希表的元素越多，每个哈希桶的链表上的元素就越多，这样查找的效率就越低。</p>
+<p>为了避免上述情况，一般在哈希表元素/哈希桶个数超过某个比例时，就会考虑哈希表扩张，即增加哈希桶的数目，从而来减少每个哈希桶上的元素个数，提升查找效率。</p>
+<p>在libeasy中，并没有实现哈希表扩张的功能，不过在memcached和redis有实现，后续会讨论相关的实现。</p>
+<p>PS:<br>本博客更新会在第一时间推送到微信公众号，欢迎大家关注。</p>
+<p><img src="http://oserror.com/images/qcode_wechat.jpg" alt="qocde_wechat"></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/libeasy/" rel="tag">#libeasy</a>
+          
+            <a href="/tags/C-C/" rel="tag">#C/C++</a>
+          
+            <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag">#数据结构</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/language/effective-c-note/" rel="next" title="Effective C++ 学习笔记">
+                <i class="fa fa-chevron-left"></i> Effective C++ 学习笔记
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/language/the-go-programming-language-note-one/" rel="prev" title="The go programming language 学习笔记一">
+                The go programming language 学习笔记一 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">36</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">33</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Charles0429" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">1. 简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E7%AE%80%E5%8D%95%E5%86%85%E5%AD%98%E6%B1%A0"><span class="nav-number">2.</span> <span class="nav-text">2. 简单内存池</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E5%B0%8F%E5%9D%97%E5%86%85%E5%AD%98%E7%94%B3%E8%AF%B7"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 小块内存申请</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E5%A4%A7%E5%9D%97%E5%86%85%E5%AD%98%E7%94%B3%E8%AF%B7"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 大块内存申请</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E7%BC%93%E5%86%B2%E5%8C%BA"><span class="nav-number">3.</span> <span class="nav-text">3. 缓冲区</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E5%AD%97%E7%AC%A6%E4%B8%B2%E7%BC%93%E5%86%B2%E5%8C%BA"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 字符串缓冲区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E6%99%AE%E9%80%9A%E7%BC%93%E5%86%B2%E5%8C%BA"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 普通缓冲区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E6%96%87%E4%BB%B6%E7%BC%93%E5%86%B2%E5%8C%BA"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 文件缓冲区</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E9%93%BE%E8%A1%A8"><span class="nav-number">4.</span> <span class="nav-text">4. 链表</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E9%87%87%E7%94%A8%E6%99%AE%E9%80%9A%E7%9A%84%E7%BB%93%E6%9E%84%E4%BD%93%E5%AE%9A%E4%B9%89next%E6%8C%87%E9%92%88%E7%9A%84%E6%96%B9%E6%B3%95%EF%BC%9F"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 为什么不采用普通的结构体定义next指针的方法？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-linux%E5%86%85%E6%A0%B8%E5%8F%8C%E9%93%BE%E8%A1%A8"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 linux内核双链表</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-1-%E5%8E%9F%E7%90%86"><span class="nav-number">4.2.1.</span> <span class="nav-text">4.2.1 原理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E6%95%B0%E7%BB%84"><span class="nav-number">4.3.</span> <span class="nav-text">5. 数组</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E5%AD%97%E7%AC%A6%E4%B8%B2"><span class="nav-number">5.</span> <span class="nav-text">6. 字符串</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-%E5%93%88%E5%B8%8C%E8%A1%A8"><span class="nav-number">6.</span> <span class="nav-text">7. 哈希表</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#7-1-%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0"><span class="nav-number">6.1.</span> <span class="nav-text">7.1 哈希函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-2-%E8%A7%A3%E5%86%B3%E5%86%B2%E7%AA%81%E7%9A%84%E6%96%B9%E6%B3%95"><span class="nav-number">6.2.</span> <span class="nav-text">7.2 解决冲突的方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-3-%E6%89%A9%E5%BC%A0%E7%9A%84%E6%97%B6%E6%9C%BA"><span class="nav-number">6.3.</span> <span class="nav-text">7.3 扩张的时机</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Charles0429</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

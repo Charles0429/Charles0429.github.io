@@ -1,0 +1,767 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.lug.ustc.edu.cn/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="MapReduce," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Charles的技术博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="1. Introduction本文是读MapReduce论文的总结，收录在我的github中papers项目，papers项目旨在学习和总结分布式系统相关的论文。 Google发现有一些应用的计算模型比较简单，但涉及到大量数据，需要成百上千的机器来处理。如何并行化计算、分布数据和处理故障需要复杂的处理呢？MapReduce的出现即为了解决这个问题。通过提供的编程库，用户能轻松地写出处理逻辑，而内部">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MapReduce原理">
+<meta property="og:url" content="http://yoursite.com/distributed/mapreduce/index.html">
+<meta property="og:site_name" content="Charles的技术博客">
+<meta property="og:description" content="1. Introduction本文是读MapReduce论文的总结，收录在我的github中papers项目，papers项目旨在学习和总结分布式系统相关的论文。 Google发现有一些应用的计算模型比较简单，但涉及到大量数据，需要成百上千的机器来处理。如何并行化计算、分布数据和处理故障需要复杂的处理呢？MapReduce的出现即为了解决这个问题。通过提供的编程库，用户能轻松地写出处理逻辑，而内部">
+<meta property="og:locale">
+<meta property="og:image" content="http://oserror.com/images/mapreduce_overview.png">
+<meta property="og:image" content="http://oserror.com/images/qcode_wechat.jpg">
+<meta property="article:published_time" content="2016-07-16T00:49:23.000Z">
+<meta property="article:modified_time" content="2021-06-14T13:00:05.525Z">
+<meta property="article:author" content="Charles0429">
+<meta property="article:tag" content="MapReduce">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://oserror.com/images/mapreduce_overview.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 3109763,
+      author: 'Charles0429'
+    }
+  };
+</script>
+
+  <title> MapReduce原理 | Charles的技术博客 </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Charles的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                MapReduce原理
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-07-16T08:49:23+08:00" content="2016-07-16">
+              2016-07-16
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/distributed/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="1-Introduction"><a href="#1-Introduction" class="headerlink" title="1. Introduction"></a>1. Introduction</h1><p>本文是读MapReduce论文的总结，收录在我的github中<a target="_blank" rel="noopener" href="https://github.com/Charles0429/papers">papers项目</a>，papers项目旨在学习和总结分布式系统相关的论文。</p>
+<p>Google发现有一些应用的计算模型比较简单，但涉及到大量数据，需要成百上千的机器来处理。如何并行化计算、分布数据和处理故障需要复杂的处理呢？MapReduce的出现即为了解决这个问题。通过提供的编程库，用户能轻松地写出处理逻辑，而内部的并行化计算、数据分布等问题由MapReduce来处理，大大简化了用户的编程逻辑。</p>
+<p>MapReduce受到lisp等函数式编程语言的启发，发现大部分的计算任务包括两个处理流程：</p>
+<ul>
+<li>map操作：对每条逻辑记录计算Key/Value对</li>
+<li>reduce操作：对Key/Value按照Key进行聚合</li>
+</ul>
+<p>接下来，按照如下结构分析MapReduce系统</p>
+<ul>
+<li>Programming Model</li>
+<li>Implementation</li>
+<li>Refinements</li>
+</ul>
+<h1 id="2-Programming-Model"><a href="#2-Programming-Model" class="headerlink" title="2 Programming Model"></a>2 Programming Model</h1><p>MapReduce的计算以一组Key/Value对为输入，然后输出一组Key/Value对，用户通过编写Map和Reduce函数来控制处理逻辑。</p>
+<p>Map函数把输入转换成一组中间的Key/Value对，MapReduce library会把所有Key的中间结果传递给Reduce函数处理。</p>
+<p>Reduce函数接收Key和其对应的一组Value，它的作用就是聚合这些Value，产生最终的结果。Reduce的输入是以迭代器的方式输入，使得MapReduce可以处理数据量比内存大的情况。</p>
+<h2 id="2-1-Example"><a href="#2-1-Example" class="headerlink" title="2.1 Example"></a>2.1 Example</h2><p>以经典的word count为例，其伪代码为</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">map(String key, String value):</span><br><span class="line">// key: document name</span><br><span class="line">// value: document contents</span><br><span class="line">for each word w in value:</span><br><span class="line">	EmitIntermediate(w, &quot;1&quot;);</span><br><span class="line"></span><br><span class="line">reduce(String key, Iterator values):</span><br><span class="line">// key: a word</span><br><span class="line">// values: a list of counts</span><br><span class="line">int result = 0;</span><br><span class="line">for each v in values:</span><br><span class="line">	result += ParseInt(v);</span><br><span class="line">Emit(AsString(result));</span><br></pre></td></tr></table></figure>
+
+<p>Map函数吐出(word, count)的K/V对，Reduce把某个单词的所有的count加起来，最终每个单词吐出一个值。</p>
+<p>除了Map和Reduce函数之外，用户还需要指定输入和输出文件名，以及一些可选的调节的参数。</p>
+<h2 id="2-2-Types"><a href="#2-2-Types" class="headerlink" title="2.2 Types"></a>2.2 Types</h2><p>Map和Reduce函数的操作可以抽象的表示为</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">map    (k1,v2)          ======&gt;list(k2,v2)</span><br><span class="line">reduce (k2, list(v2))   ======&gt;list(v2)</span><br></pre></td></tr></table></figure>
+
+<p>如上所示，map函数生成一系列的K/V中间结果，然后reduce对每个key，聚合其value。</p>
+<h2 id="2-3-More-Examples"><a href="#2-3-More-Examples" class="headerlink" title="2.3 More Examples"></a>2.3 More Examples</h2><p><strong>Distributed Grep</strong></p>
+<ul>
+<li>对于map，如果输入的行匹配到相应的pattern，则吐出这行</li>
+<li>对于reduce，仅仅是把map吐出的行拷贝到输出中</li>
+</ul>
+<p><strong>Count of URL Access Frequency</strong></p>
+<ul>
+<li>对于map，处理web日志，生成(URL, 1)中间结果</li>
+<li>对于reduce，聚合相同URL的值，生成(URL, total count)结果</li>
+</ul>
+<p><strong>Reverse Web-Link Graph</strong></p>
+<ul>
+<li>对于map，吐出(target, source)中间结果，其中target是被source引用的URL</li>
+<li>对于reduce，聚合相同target的source，吐出(target, list(source))</li>
+</ul>
+<p><strong>Term-Vector per Host</strong></p>
+<p>Term Vector指的是一篇文档中的(word, frequency)K/V对。</p>
+<ul>
+<li>对于map，吐出(hostname, term vector)中间结果</li>
+<li>对于reduce，聚合相同hostname的term vector，吐出最终(hostname, term vector)</li>
+</ul>
+<p><strong>Inverted Index</strong></p>
+<ul>
+<li>对于map，吐出一系列的(word, document ID)</li>
+<li>对于reduce，对相同word，按照document ID排序进行聚合，吐出(word, list(document ID))</li>
+</ul>
+<p><strong>Distributed Sort</strong></p>
+<ul>
+<li>对于map，吐出(key, record)中间结果</li>
+<li>对于reduce，把map的中间结果写入到结果文件中，这里不需要显式地排序，因为MapReduce会自动地排序，方便在reduce的时候进行聚合。</li>
+</ul>
+<h1 id="3-Implementation"><a href="#3-Implementation" class="headerlink" title="3. Implementation"></a>3. Implementation</h1><p>根据不同的环境，MapReduce的实现可以多种多样，例如，基于共享内存的，基于NUMA多核环境的，以及基于多台机器组成的集群环境的。</p>
+<p>Google的环境如下</p>
+<ul>
+<li>双核X86系统，运行linux系统，2-4GB内存。</li>
+<li>100M或1000M带宽网卡</li>
+<li>集群由大量机器组成，故障是常态</li>
+<li>每台机器使用廉价的IDE磁盘，采用GFS作为底层存储</li>
+<li>使用一个调度系统来处理用户的任务</li>
+</ul>
+<h2 id="3-1-Execution-Overview"><a href="#3-1-Execution-Overview" class="headerlink" title="3.1 Execution Overview"></a>3.1 Execution Overview</h2><p>Map会自动地把输入数据划分成M份，这些数据划分可以并行地被不同机器处理。Reduce按照划分函数划分数据，例如hash(key) mod R，其中R是由用户指定的。下图描述了MapReduce的整个流程，如下</p>
+<p><img src="http://oserror.com/images/mapreduce_overview.png"></p>
+<ol>
+<li>MapReduce library会把输入文件划分成多个16到64MB大小的分片（大小可以通过参数调节），然后在一组机器上启动程序。</li>
+<li>其中比较特殊的程序是master，剩下的由master分配任务的程序叫worker。总共有M个map任务和R个reduce任务需要分配，master会选取空闲的worker，然后分配一个map任务或者reduce任务。</li>
+<li>处理map任务的worker会从输入分片读入数据，解析出输入数据的K/V对，然后传递给Map函数，生成的K/V中间结果会缓存在内存中。</li>
+<li>map任务的中间结果会被周期性地写入到磁盘中，以partition函数来分成R个部分。R个部分的磁盘地址会推送到master，然后由它转发给响应的reduce worker。</li>
+<li>当reduce worker接收到master发送的地址信息时，它会通过RPC来向map worker读取对应的数据。当reduce worker读取到了所有的数据，它先按照key来排序，方便聚合操作。</li>
+<li>reduce worker遍历排序好的中间结果，对于相同的key，把其所有数据传入到Reduce函数进行处理，生成最终的结果会被追加到结果文件中。</li>
+<li>当所有的map和reduce任务都完成时，master会唤醒用户程序，然后返回到用户程序空间执行用户代码。</li>
+</ol>
+<p>成功执行后，输出结果在R个文件中，通常，用户不需要合并这R个文件，因为，可以把它们作为新的MapReduce处理逻辑的输入数据，或者其它分布式应用的输入数据。</p>
+<h2 id="3-2-Master-Data-Structure"><a href="#3-2-Master-Data-Structure" class="headerlink" title="3.2 Master Data Structure"></a>3.2 Master Data Structure</h2><p>master维护了以下信息</p>
+<ul>
+<li>对每个map和reduce任务，记录了任务状态，包括idle,in-progress或completed，并且对于非idle状态的任务还记录了worker机器的信息</li>
+<li>记录了map任务生成R个部分的文件位置信息</li>
+</ul>
+<h2 id="3-3-Fault-Tolerance"><a href="#3-3-Fault-Tolerance" class="headerlink" title="3.3 Fault Tolerance"></a>3.3 Fault Tolerance</h2><p>分为两块，worker fault tolerance和master fault tolerance</p>
+<p><strong>Worker Failure</strong></p>
+<p>master采用ping的方式检测故障，如果一台worker机器在一定时间内没有响应，则认为这台机器故障。</p>
+<ul>
+<li>对于map任务机器故障，完成了的map任务也需要完全重新执行，因为计算结果是存储在map任务所在机器的本地磁盘上的</li>
+</ul>
+<p>当一个map任务开始由A来执行，而后挂掉后由B来执行，所有的为接收改任务数据的reduce任务的机器都会收到新的通知。</p>
+<ul>
+<li>对于完成了的reduce任务则不需要重新执行，因为结果已经输出到GFS中</li>
+</ul>
+<p><strong>Master Failure</strong></p>
+<p>可以通过定期的checkpoint来保存状态，master挂掉后，可以回到最近checkpoint所在的状态。</p>
+<p>但google没有采用这种方案，因为任务master挂掉概率极小，只需要让应用重试这次操作。</p>
+<p><strong>Semantics in the Presence of Failure</strong></p>
+<p>当用户提供的Map和Reduce函数的执行结果是确定的，那么最终的执行结果就是确定的。</p>
+<p>当用户提供的执行结果不是确定的，那么最终结果也是不确定的，但是每个reduce任务产生的结果都是不确定的某次串行执行的结果。</p>
+<h2 id="3-4-Locality"><a href="#3-4-Locality" class="headerlink" title="3.4 Locality"></a>3.4 Locality</h2><p>由于输入数据是存储在GFS上的，所以，MapReduce为了减少网络通信，采取了以下优化策略</p>
+<ol>
+<li>因为GFS是按照64MB的chunk来存储数据的，这样可以把worker按照这个信息调度，尽量是每个worker都起到相应的GFS副本上，这样输入基本上是走本地磁盘</li>
+<li>如果上面的条件无法满足，那么尽量找一台和GFS副本机器在同一个交换机的机器</li>
+</ol>
+<h2 id="3-5-Task-Granularity"><a href="#3-5-Task-Granularity" class="headerlink" title="3.5 Task Granularity"></a>3.5 Task Granularity</h2><p>MapReduce将map任务分成M份，reduce任务分成R份，理想状态M和R的值应该比worker机器大很多，这样有助于负载均衡以及故障恢复。因为当一台机器挂掉后，它的map任务可以分配给很多其他的机器执行。</p>
+<p>实际应用中，因为master需要O(M+R)的空间来做调度决策，需要存储O(M*R)的任务产生的结果位置信息，对于每个任务产生的结果位置信息大约每个任务需要一个字节。</p>
+<p>通常R的数量是由用户执行的，实际应用中对M的划分是要保证一个分片的数据量大小大约是16-64M，R的期望值是一个比较小的数。典型的M和R的值为 M = 200000，R = 5000，使用2000台worker机器。</p>
+<h2 id="3-6-Backup-Tasks"><a href="#3-6-Backup-Tasks" class="headerlink" title="3.6 Backup Tasks"></a>3.6 Backup Tasks</h2><p>通常，在执行过程中，会有少数几台机器的执行特别慢，可能是由于磁盘故障等原因引起的，这些机器会大大地增加任务的执行时间，MapReduce采用的方案是</p>
+<ul>
+<li>当一个MapReduce操作快执行完成的时候，master会生成正在进行的任务的备份任务。备份任务和源任务做的是同样的事情，只要其中一个任务执行完成，就认为该任务执行完成。</li>
+</ul>
+<p>该机制在占有很少的计算资源的情况下，大大缩短了任务的执行时间。</p>
+<h1 id="4-Refinements"><a href="#4-Refinements" class="headerlink" title="4. Refinements"></a>4. Refinements</h1><p>本节描述了一些提升效率的策略。</p>
+<h2 id="4-1-Partitioning-Function"><a href="#4-1-Partitioning-Function" class="headerlink" title="4.1 Partitioning Function"></a>4.1 Partitioning Function</h2><p>map任务的中间结果按照partitioning function分成了R个部分，通常，默认的函数<code>hash(key) mod R</code>可以提供相对均衡的划分。但有时应用需要按照自己的需求的来划分，比如，当Key是URL时，用户可能希望相同host的URL划分到一起，方便处理。这时候，用户可以自己提供partitioning function，例如<code>hash(Hostname(url))</code>。</p>
+<h2 id="4-2-Ordering-Guarantees"><a href="#4-2-Ordering-Guarantees" class="headerlink" title="4.2 Ordering Guarantees"></a>4.2 Ordering Guarantees</h2><p>对于reduce任务生成的结果，MapReduce保证其是按照Key排序的，方便reduce worker聚合结果，并且还有两个好处</p>
+<ul>
+<li>按照key随机读性能较好</li>
+<li>用户程序需要排序时会比较方便</li>
+</ul>
+<h2 id="4-3-Combiner-Function"><a href="#4-3-Combiner-Function" class="headerlink" title="4.3 Combiner Function"></a>4.3 Combiner Function</h2><p>在有些情况下，map任务生成的中间结果中key的重复度很高，会造成对应的reduce任务通信量比较大。例如，word count程序中，可能和the相关的单词量特别大，组成了很多的(the, 1)K/V对，这些都会推送到某个reduce任务，会造成该reduce任务通信量和计算量高于其他的reduce任务。解决的方法是</p>
+<ul>
+<li>在map任务将数据发送到网络前，通过提供一个<code>combiner</code>函数，先把数据做聚合，以减少数据在网络上的传输量</li>
+</ul>
+<h2 id="4-4-Input-and-Output-Types"><a href="#4-4-Input-and-Output-Types" class="headerlink" title="4.4 Input and Output Types"></a>4.4 Input and Output Types</h2><p>MapReduce提供多种读写格式的支持，例如，文件中的偏移和行内容组成K/V对。</p>
+<p>用户也可以自定义读写格式的解析，实现对应的接口即可。</p>
+<h2 id="4-5-Side-effects"><a href="#4-5-Side-effects" class="headerlink" title="4.5 Side-effects"></a>4.5 Side-effects</h2><p>MapReduce允许用户程序生成辅助的输出文件，其原子性依赖于应用的实现。</p>
+<h2 id="4-6-Skipping-Bad-Records"><a href="#4-6-Skipping-Bad-Records" class="headerlink" title="4.6 Skipping Bad Records"></a>4.6 Skipping Bad Records</h2><p>有时候，可能用户程序有bug，导致任务在解析某些记录的时候会崩溃。普通的做法是修复用户程序的bug，但有时候，bug是来自第三方的库，无法修改源码。</p>
+<p>MapReduce的做法是通过监控任务进程的segementation violation和bus error信号，一旦发生，把响应的记录发送到master，如果master发现某条记录失败次数大于1，它就会在下次执行的时候跳过该条记录。</p>
+<h2 id="4-7-Local-Execution"><a href="#4-7-Local-Execution" class="headerlink" title="4.7 Local Execution"></a>4.7 Local Execution</h2><p>因为Map和Reduce任务是在分布式环境下执行的，要调试它们是非常困难的。MapReduce提供在本机串行化执行MapReduce的接口，方便用户调试。</p>
+<h2 id="4-8-Status-Information"><a href="#4-8-Status-Information" class="headerlink" title="4.8 Status Information"></a>4.8 Status Information</h2><p>master把内部的状态通过网页的方式展示出来，例如，计算的进度，包括，多少任务完成了，多少正在执行，输入的字节数，输出的中间结果，最终输出的字节数等；网页还包括每个任务的错误输出和标准输出，用户可以通过这些来判断计算需要的时间等；除此之外，还有worker失败的信息，方便排查问题。</p>
+<h2 id="4-9-Counters"><a href="#4-9-Counters" class="headerlink" title="4.9 Counters"></a>4.9 Counters</h2><p>MapReduce libaray提供一个counter接口来记录各种事件发生的次数。</p>
+<p>例如，word count用户想知道总共处理了多少大写单词，可以按照如下方式统计</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Counter* uppercase;</span><br><span class="line">uppercase = GetCounter(&quot;uppercase&quot;);</span><br><span class="line"></span><br><span class="line">map(String name, String contents):</span><br><span class="line">	for each word w in contents:</span><br><span class="line">		if (IsCapitalized(w)):</span><br><span class="line">			uppercase-&gt;Increment();</span><br><span class="line">		EmitIntermediate(w, &quot;1&quot;);</span><br></pre></td></tr></table></figure>
+
+<p>master通过ping-pong消息来拉取worker的count信息，当MapReduce操作完成时，count值会返回给用户程序，需要注意的是，重复执行的任务的count只会统计一次。</p>
+<p>有些counter是MapReduce libaray内部自动维护的，例如，输入的K/V对数量，输出的K/V对数量等。</p>
+<p>Counter机制在有些情况很有用，比如用户希望输入和输出的K/V数量是完全相同的，就可以通过Counter机制来检查。</p>
+<p>PS:<br>本博客更新会在第一时间推送到微信公众号，欢迎大家关注。</p>
+<p><img src="http://oserror.com/images/qcode_wechat.jpg" alt="qocde_wechat"></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/MapReduce/" rel="tag">#MapReduce</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/distributed/distributed-system-time-ordering/" rel="next" title="分布式系统时序基础">
+                <i class="fa fa-chevron-left"></i> 分布式系统时序基础
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/backend/libeasy-server-side-framework/" rel="prev" title="libeasy服务端框架实现原理">
+                libeasy服务端框架实现原理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">36</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">33</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Charles0429" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-Introduction"><span class="nav-number">1.</span> <span class="nav-text">1. Introduction</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-Programming-Model"><span class="nav-number">2.</span> <span class="nav-text">2 Programming Model</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-Example"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 Example</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-Types"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 Types</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-More-Examples"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 More Examples</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-Implementation"><span class="nav-number">3.</span> <span class="nav-text">3. Implementation</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-Execution-Overview"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 Execution Overview</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-Master-Data-Structure"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 Master Data Structure</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-Fault-Tolerance"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 Fault Tolerance</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-Locality"><span class="nav-number">3.4.</span> <span class="nav-text">3.4 Locality</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-5-Task-Granularity"><span class="nav-number">3.5.</span> <span class="nav-text">3.5 Task Granularity</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-6-Backup-Tasks"><span class="nav-number">3.6.</span> <span class="nav-text">3.6 Backup Tasks</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-Refinements"><span class="nav-number">4.</span> <span class="nav-text">4. Refinements</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-Partitioning-Function"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 Partitioning Function</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-Ordering-Guarantees"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 Ordering Guarantees</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-Combiner-Function"><span class="nav-number">4.3.</span> <span class="nav-text">4.3 Combiner Function</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-Input-and-Output-Types"><span class="nav-number">4.4.</span> <span class="nav-text">4.4 Input and Output Types</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-Side-effects"><span class="nav-number">4.5.</span> <span class="nav-text">4.5 Side-effects</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-6-Skipping-Bad-Records"><span class="nav-number">4.6.</span> <span class="nav-text">4.6 Skipping Bad Records</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-7-Local-Execution"><span class="nav-number">4.7.</span> <span class="nav-text">4.7 Local Execution</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-8-Status-Information"><span class="nav-number">4.8.</span> <span class="nav-text">4.8 Status Information</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-9-Counters"><span class="nav-number">4.9.</span> <span class="nav-text">4.9 Counters</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Charles0429</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

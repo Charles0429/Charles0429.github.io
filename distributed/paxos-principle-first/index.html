@@ -1,0 +1,755 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.lug.ustc.edu.cn/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="分布式,Paxos," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Charles的技术博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="引言Paxos算法由lamport大师提出，目标是解决分布式环境下数据一致性的问题。Paxos算法自发表以来以晦涩难懂著称，因此，其作者于2001年发表了一篇简化版的论文，Paxos Made Simple。虽然这篇论文比前面的充满公式证明的论文容易理解，但是，如果对于Paxos算法本身要解决的问题不够理解的话，还是会很难理解该算法。Paxos原理系列文章的目标是在充分讨论Paxos要解决的问题的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Paxos原理（一）：Basic Paxos">
+<meta property="og:url" content="http://yoursite.com/distributed/paxos-principle-first/index.html">
+<meta property="og:site_name" content="Charles的技术博客">
+<meta property="og:description" content="引言Paxos算法由lamport大师提出，目标是解决分布式环境下数据一致性的问题。Paxos算法自发表以来以晦涩难懂著称，因此，其作者于2001年发表了一篇简化版的论文，Paxos Made Simple。虽然这篇论文比前面的充满公式证明的论文容易理解，但是，如果对于Paxos算法本身要解决的问题不够理解的话，还是会很难理解该算法。Paxos原理系列文章的目标是在充分讨论Paxos要解决的问题的">
+<meta property="og:locale">
+<meta property="og:image" content="http://oserror.com/images/distributed_consensus_problem.png">
+<meta property="og:image" content="http://oserror.com/images/distributed_log_sequence.png">
+<meta property="og:image" content="http://oserror.com/images/distributed_log_item_consensus.png">
+<meta property="og:image" content="http://oserror.com/images/consensus_one_acceptor.png">
+<meta property="og:image" content="http://oserror.com/images/consensus_acceptor_p1_split_vote.png">
+<meta property="og:image" content="http://oserror.com/images/paxos_p2a_problem.png">
+<meta property="og:image" content="http://oserror.com/images/paxos_p2c_problem.png">
+<meta property="og:image" content="http://oserror.com/images/paxos_p2c_problem1.png">
+<meta property="og:image" content="http://oserror.com/images/qcode_wechat.jpg">
+<meta property="article:published_time" content="2016-11-08T12:46:13.000Z">
+<meta property="article:modified_time" content="2021-06-14T13:00:05.525Z">
+<meta property="article:author" content="Charles0429">
+<meta property="article:tag" content="分布式">
+<meta property="article:tag" content="Paxos">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://oserror.com/images/distributed_consensus_problem.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 3109763,
+      author: 'Charles0429'
+    }
+  };
+</script>
+
+  <title> Paxos原理（一）：Basic Paxos | Charles的技术博客 </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Charles的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Paxos原理（一）：Basic Paxos
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-11-08T20:46:13+08:00" content="2016-11-08">
+              2016-11-08
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/distributed/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>Paxos算法由lamport大师提出，目标是解决分布式环境下数据一致性的问题。Paxos算法自发表以来以晦涩难懂著称，因此，其作者于2001年发表了一篇简化版的论文，<a target="_blank" rel="noopener" href="http://research.microsoft.com/en-us/um/people/lamport/pubs/paxos-simple.pdf">Paxos Made Simple</a>。虽然这篇论文比前面的充满公式证明的论文容易理解，但是，如果对于Paxos算法本身要解决的问题不够理解的话，还是会很难理解该算法。Paxos原理系列文章的目标是在充分讨论Paxos要解决的问题的前提下，深入地分析和理解Paxos的原理。本文是此系列文章第一篇，主要内容如下：</p>
+<ul>
+<li>Paxos算法要解决的问题是什么？</li>
+<li>Basic Paxos在整个Paxos算法中的地位及其原理</li>
+</ul>
+<p>本文收录在我的github中<a target="_blank" rel="noopener" href="https://github.com/Charles0429/papers">papers项目</a>，papers项目旨在学习和总结分布式系统相关的论文。</p>
+<h1 id="Paxos算法要解决的问题"><a href="#Paxos算法要解决的问题" class="headerlink" title="Paxos算法要解决的问题"></a>Paxos算法要解决的问题</h1><p>首先，来描述一下Paxos要解决的问题，分布式环境下数据一致性问题。</p>
+<p>考虑下面的环境，如下图：</p>
+<p><img src="http://oserror.com/images/distributed_consensus_problem.png" alt="Distrubted Consensus Problem"></p>
+<p>在分布式环境中，为了保证服务的高可用，需要对数据做多个副本，一般是日志的方式来实现，即图中的log sequence，当某台机器宕机后，其上的请求可以自动的转到其他的Server上，同时会新找一台机器（为了保证副本数量足够），自动地把其他活着机器的日志同步过去，然后逐步回放到State Machine中去。如果Server 1,2,3中的日志是一致的话，可以保证这些Server回放到State Machine中的数据是一致的。那么问题来了，如何保证日志的一致性呢？这正是Paxos算法解决的问题，即如图中的Consensus Module所示，它们之间需要交互，保证日志中内容是完全一致的。</p>
+<p>进一步来看日志中的内容，如下：</p>
+<p><img src="http://oserror.com/images/distributed_log_sequence.png" alt="Log Sequence"></p>
+<p>一个Log Sequence一般由多个Log Item组成，每个Log Item会包含一个Command，用于记录对应的客户端请求的命令，如图中的Add，Mov，Jmp和Set等等，每个Server会根据日志的内容和顺序，一个个的把命令回放到State Machine中。Paxos算法的目标就是为了保证每个Server上的Log Sequence中的Log Item中的Command和相对顺序完全一致，这样，在任意一台机器宕机之后，能保证可以快速地将服务切换到另外一台具有完全相同数据的Server上，从而达到高可用。</p>
+<h1 id="Basic-Paxos"><a href="#Basic-Paxos" class="headerlink" title="Basic Paxos"></a>Basic Paxos</h1><h2 id="Basic-Paxos要解决的问题"><a href="#Basic-Paxos要解决的问题" class="headerlink" title="Basic Paxos要解决的问题"></a>Basic Paxos要解决的问题</h2><p>整个Paxos算法是为了解决整个Log Sequence一致性的问题，一般也称为Multi Paxos。而本小节要讨论的Basic Paxos是为了确定一个不变量的取值，放到上面的Log Sequence一致性上来讲，即为了确定某一个Log Item中的Command的取值，保证多个Server一旦确认该Log Item的Command之后，其值就不会再变化。</p>
+<p>以一个例子描述确认Log Item的取值问题，如下：</p>
+<p><img src="http://oserror.com/images/distributed_log_item_consensus.png" alt="Distributed Log Item Consensus"></p>
+<p>如上图所示，每个Server从客户端接受到的请求可能不一样，例如，图中的三个Server分别接收到Add，Mov和Jmp等三个不同的请求，而对于当对于当前的Log Item来讲，只能存储一个请求，而为了保证Log的一致性，又必须要Log Item中存储的Command是一致的，因此，三个Server需要协调，最终确定此Log Item存储哪一个请求，这个确定的过程就是一轮Basic Paxos过程。</p>
+<p>最后，以比较正式的方式来定义此问题：</p>
+<p>假设一组进程能提出（propose）value，分布式一致性算法能保证最终只有一个value被选择（chosen）。如果没有value被提出，那么就没有value被选择。如果一个value被选择了，那么这组进程能学习（learn）到被选择的value。</p>
+<p>总体看来，一致性算法的需求如下：</p>
+<ul>
+<li>被提出的value中，只有一个value被选择</li>
+<li>进程在value被选择前，不应该能学习到该value</li>
+</ul>
+<p>根据上面的问题，算法中总共有三类角色，即proposers，acceptors和learners，实际的实现中，一个进程可能承担三种角色中的一个或多个。这些角色之间通过发送消息的方式来相互通信，并且是在非拜占庭场景下：</p>
+<ul>
+<li>角色的计算速度可能不同，甚至可能因为宕机而终止运行，随后又被重启。在没有记录之前已选择的value的情况下，之前选择的value会丢失，因此，需要记录之前已选择的value</li>
+<li>消息可以时延很长，可以重复，可以丢失，但是其内容不能被篡改</li>
+</ul>
+<p>在了解了上述需求，问题定义及场景后，接下来一步步地推导出Basic Paxos的最终算法。</p>
+<h2 id="如何解决问题？"><a href="#如何解决问题？" class="headerlink" title="如何解决问题？"></a>如何解决问题？</h2><p>整个问题分为两块：</p>
+<ul>
+<li>如何选择value？</li>
+<li>如何学习value？</li>
+</ul>
+<h3 id="如何选择value？"><a href="#如何选择value？" class="headerlink" title="如何选择value？"></a>如何选择value？</h3><p>首先，来看一个最简单的方案，如下：</p>
+<p><img src="http://oserror.com/images/consensus_one_acceptor.png" alt="Consensus one acceptor"></p>
+<p>只有一个acceptor，这个acceptor只认第一个Proposer给它提出的value，例如，在上图中，如果Proposer1先把value提给acceptor，那么acceptor最终会选择该value，即Add。</p>
+<p>此方案的优点是简单易懂，但当acceptor挂掉并无法恢复之后，被选择的value也跟着丢失了，不满足需求。</p>
+<p>因此，接下来的方案中，只考虑多个acceptor的场景。</p>
+<p>为了保证仅有一个value被选择，需要在多数派的Server接受该value时，才认为该value被选择。因为任意两个多数派的acceptor集合中，必然有一个acceptor是相同的。举个例子，如果不是必须多数派的话，可能出现的场景时，有前1/3的acceptor选择value1，中间1/3的acceptor选择value2，最后1/3的acceptor选择value3，这样就会导致不止一个value被选择，不符合要求。</p>
+<p>因为消息是有可能丢失的，因此，当只有一个value被提出的时候，acceptor应该接受它，即</p>
+<blockquote>
+<p>P1. acceptor必须要接受它接受到的第一个value</p>
+</blockquote>
+<p>但这会导致如下问题：</p>
+<p><img src="http://oserror.com/images/consensus_acceptor_p1_split_vote.png" alt="Paxos p1-split accept"></p>
+<p>假设Proposer 1,2,3分别提出Add，Mov和Jmp，且Proposeri{i=1,2,3}首先提给Accepti{i=1,2,3}，这样会导致最终每个acceptor都接受（accept）了不同的值，最终没有value被选择。</p>
+<p>P1和某个value只有被多数派的acceptor接受后的条件表明，每个acceptor需要能接受多个value，因此，需要通过某种方法来区分，这里采用假设每个proposer提出的value都被分配了一个id，id为自然数，每个(id,value)组合称为一个proposal（提案）。每个proposal的id都是不同的。此时，如果一个value被选择，会对应于一个或多个proposal被多数派的acceptor接受，且该proposal的value对应于被选择的value。</p>
+<p>由于允许多个proposal被选择，因此，需要保证每个被acceptor接受的proposal的value都相同，故有如下推论</p>
+<blockquote>
+<p>P2. 如果一个proposal(id1, v1)被选择，那么，每个id大于id1的，被接受的proposal的value都等于v</p>
+</blockquote>
+<p>由于proposal被选择，至少需要一个acceptor接受，因此，可以由P2进一步地加强约束到</p>
+<blockquote>
+<p>P2a. 如果一个proposal(id1, v1)被选择，那么，每个id大于id1的proposal(id,value)，如果被任意一个acceptor接受的话，value=v1</p>
+</blockquote>
+<p>但P2a会存在如下问题：</p>
+<p><img src="http://oserror.com/images/paxos_p2a_problem.png" alt="P2a problem"></p>
+<p>考虑以上场景，Proposal1的(10, Add)proposal被三个acceptor接受，但是，Proposer1和acceptor4之间网络不联通，导致acceptor4一致为接受任何的proposal。此时，有一个新的proposal2加入，并且能和acceptor4联通，并且，其提出的proposal为(11, Jmp)，根据P1原则，acceptor4必须要接受第一个接收到的proposal，即(11, Jmp)，导致其和P2a冲突。</p>
+<p>因此，进一步增强P2a的约束为</p>
+<blockquote>
+<p>P2b. 如果一个proposal(id1, v1)被选择，那么任意一个id大于id1的proposal的value等于v1</p>
+</blockquote>
+<p>根据P2b，如果一个proposal(m,v)被选择，那么对于n&gt;m的proposal的value也必须是v。假如当前最大的proposal的id为x-1，那么必定会存在一个多数派的acceptor组合C，使得每个acceptor接受的proposal都的id都属于[m,x-1]，且都拥有值v，并且，每个id属于[m,x-1]的proposal，如果其被任意的acceptor接受，其value必为v。</p>
+<p>继续对P2b加强约束，由于任意的多数的集合S，至少包含C中的一个acceptor，而每个这样的集合中，id最大的proposal的value肯定是已经选择的value，因为，P2b保证了在有proposal(m,v)被选择后，其后id大于m的proposal的value肯定是v，因此，所有acceptor中只可能处于id小于m的proposal的value不等于v，所有id大于或或等于m的proposal其value必定是v。<br>从而，我们可以得出，任意一个proposal(x,v)，至少满足以下条件之一：</p>
+<blockquote>
+<p>P2c. 存在多数派的acceptor集合S，对于任意的proposal(x,v)，需要满足以下条件之一：</p>
+<ol>
+<li>S中的任意一个acceptor都没有接受过id小于x的proposal</li>
+<li>S中的acceptor接受了id处于[0…x-1]的proposal，其中，v是当中id最大的proposal的value</li>
+</ol>
+</blockquote>
+<p>因此，对于一个新提出的proposal，其必须要先学习到已经被或者将要被accept的id最大的value。要预测将要被accept的proposal是很困难的，但是，我们可以在acceptor中加限制，即，如果acceptor已经接受过(n,v)了，那么任何的id小于n的proposal都不会被接受，这样就能保证当前获取到的最大的id是正确的，举个例子说明：</p>
+<p><img src="http://oserror.com/images/paxos_p2c_problem.png" alt="P2c problem"></p>
+<p>上述例子发生的场景如下：</p>
+<ol>
+<li>Proposal2在Acceptor2还没有accept (1,Jmp)的时候，学习到当前最大的proposal的value是(0,Add)，因此，提出了Proposal2(2,Add)</li>
+<li>Proposal3在Acceptor3接受了(1, Jmp)的时候，学习到当前最大id的Proposal的value是(1,Jmp)，因此，提出了Proposal3(3,Jmp)</li>
+<li>由于网络或其他原因，Proposal3先到达Acceptor3，于是，acceptor3接受Proposal3，此时，多数派的已经达成，Jmp被选择</li>
+</ol>
+<p>而后，Proposal2达到acceptor3，如果acceptor3选择接受它，那么，会出现以下情况：</p>
+<p><img src="http://oserror.com/images/paxos_p2c_problem1.png" alt="Paxos problem 1"></p>
+<p>Proposal2覆盖了Acceptor3已经接受过的值，导致Add成为新的多数派而被选择，不符合要求。实际上，在Proposal3提出时，由于Proposal2并没有被接受，导致，Proposal3只能学习到(1,Jmp)，从这个角度来讲，Proposal2是属于Proposal3提出后被确认的，因此，需要在acceptor加以限制，不再接受比其接受过的proposal id小的proposal。</p>
+<p>由上面的讨论，对于一个proposer需要经历如下两个步骤：</p>
+<ul>
+<li>对于一个proposer，选择一个新的proposer id，假设为n，然后发送请求到一些acceptor组合（保证大于多数派的数量），acceptor的回应保证如下：<ul>
+<li>不再接受proposal id小于n的请求</li>
+<li>已接受的最大的id的proposal的value</li>
+</ul>
+</li>
+</ul>
+<p>第一步称为Prepare</p>
+<ul>
+<li>如果proposer接收到多数派的acceptor的回应，那么，它可以提出该proposal，id为n，value为第一步的value，或者是如果第一步的获得的value为空的话，proposer则使用自己提出的value，然后把该proposal发给一些acceptor组合（保证大于多数派的数量）。</li>
+</ul>
+<p>第二步称为Accept</p>
+<p>对于acceptor来讲，Prepare时，它都可以回应，但是，对于accept的时候，需要满足如下条件：</p>
+<blockquote>
+<p>P1a. 一个acceptor在它没有回应一个比n大的prepare请求时，其可以接受id为n的proposal的value</p>
+</blockquote>
+<p>值得注意的是，当一个acceptor已经回应了比n大的prepare请求时，就没必要回应小于或等于n的prepare请求了，因为后者肯定不会被accept了。因此，对于acceptor来讲，需要记录最大的prepare的proposal id，为了防止acceptor宕机后重启的情况，故最大的proposer的id需要被持久化存储。</p>
+<p>用伪代码表达proposer的算法如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">Prepare()</span><br><span class="line">&#123;</span><br><span class="line">    select a proposal id n;</span><br><span class="line">    send a prepare request with id n to a majority of acceptors</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Accept()</span><br><span class="line">&#123;</span><br><span class="line">    if get responce from majority &#123;</span><br><span class="line">        send proposal(n, v); // v is the hightest-numbered proposal&#x27;s value from reponses, or if any value if the responsed reported no proposals</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        abort()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>用为代码表达acceptor的算法如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">Prepare()</span><br><span class="line">&#123;</span><br><span class="line">    if receive prepare request id with n &gt; max_prepared_id recoreded &#123;</span><br><span class="line">        send(not accept proposal numbered less than n);</span><br><span class="line">        send(highest-numbered proposal it has accepted if exist)</span><br><span class="line">        max_prepared_id = id</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        do nothing;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Accept()</span><br><span class="line">&#123;</span><br><span class="line">    if max_prepared_id == request_accept_id &#123;</span><br><span class="line">        accept the proposal</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        do nothing</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="如何学习value？"><a href="#如何学习value？" class="headerlink" title="如何学习value？"></a>如何学习value？</h3><p>最简单粗暴的方案是，每当一个acceptor接受了新的proposal的时候，就广播给所有的learner，假设acceptor的数量为m，learner的数量为n，那么需要O(m*n)通信的开销。</p>
+<p>为了减少通信开销，可以选出一个learner，负责接收acceptor的消息，然后再由它通知给其他的learner，这时需要O(m+n)。这个方法的缺点是如果这个learner宕机了，整个系统就无法正常工作了。改进的方案是，选择一组learner，假设数量为c，负责接受acceptor的消息，这些leaner负责通知其他的leaner，该方案的通信开销为c*o(m+n)，且可用性比较高，只要c个learner中没有全部宕机，系统就可以正常工作。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本文分析和讨论了Paxos算法要解决的问题，即分布式系统中数据一致性的问题。为了实现数据一致性，需要保证各个副本的日志序列的一致性，而日志序列是由一个个的日志项组成的，Basic Paxos算法的目标是为了解决单个日志项的一致性。直观的来看，日志序列的一致性可以用多轮的Basic Paxos来达到，但是，往往出于性能，算法稳定性等原因的考虑，需要对多轮的Basic Paxos做优化，这就是接下来要讨论的Multi Paxos算法，敬请期待。</p>
+<p>PS:<br>本博客更新会在第一时间推送到微信公众号，欢迎大家关注。</p>
+<p><img src="http://oserror.com/images/qcode_wechat.jpg" alt="qocde_wechat"></p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><ul>
+<li><a target="_blank" rel="noopener" href="http://research.microsoft.com/en-us/um/people/lamport/pubs/paxos-simple.pdf">Paxos Made Simple</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" rel="tag">#分布式</a>
+          
+            <a href="/tags/Paxos/" rel="tag">#Paxos</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/distributed/implement-raft-with-golang-first/" rel="next" title="golang实现Raft（一）：选主">
+                <i class="fa fa-chevron-left"></i> golang实现Raft（一）：选主
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/backend/bloomfilter/" rel="prev" title="BloomFilter原理，实现及优化">
+                BloomFilter原理，实现及优化 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">36</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">33</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Charles0429" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  Github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%95%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Paxos%E7%AE%97%E6%B3%95%E8%A6%81%E8%A7%A3%E5%86%B3%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">2.</span> <span class="nav-text">Paxos算法要解决的问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Basic-Paxos"><span class="nav-number">3.</span> <span class="nav-text">Basic Paxos</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Basic-Paxos%E8%A6%81%E8%A7%A3%E5%86%B3%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">3.1.</span> <span class="nav-text">Basic Paxos要解决的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%EF%BC%9F"><span class="nav-number">3.2.</span> <span class="nav-text">如何解决问题？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E9%80%89%E6%8B%A9value%EF%BC%9F"><span class="nav-number">3.2.1.</span> <span class="nav-text">如何选择value？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%AD%A6%E4%B9%A0value%EF%BC%9F"><span class="nav-number">3.2.2.</span> <span class="nav-text">如何学习value？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">3.3.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">4.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Charles0429</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>
